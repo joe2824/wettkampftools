@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addItem, moveItem, removeItem } from "./sortableList";
+import { addItem, formatTextList, moveItem, parseTextList, removeItem } from "./sortableList";
 
 describe("moveItem", () => {
 	it("verschiebt einen Eintrag nach hinten und vorne", () => {
@@ -43,5 +43,25 @@ describe("removeItem", () => {
 
 	it("lässt die Liste bei ungültiger Position unverändert", () => {
 		expect(removeItem(["a"], 3)).toEqual(["a"]);
+	});
+});
+
+describe("Textmodus", () => {
+	it("schreibt jeden Eintrag in eine eigene Zeile", () => {
+		expect(formatTextList(["AK 10", "AK 12", "AK Offen"])).toBe("AK 10\nAK 12\nAK Offen");
+	});
+
+	it("liest Zeilen, entfernt Leerzeilen und Leerzeichen", () => {
+		expect(parseTextList("  AK 10 \n\nAK 12\r\n\tAK Offen\n").list).toEqual(["AK 10", "AK 12", "AK Offen"]);
+	});
+
+	it("entfernt doppelte Einträge ohne Beachtung der Groß-/Kleinschreibung und meldet sie", () => {
+		const result = parseTextList("AK 10\nak 10\nAK 12\nAK 10");
+		expect(result.list).toEqual(["AK 10", "AK 12"]);
+		expect(result.duplicates).toEqual(["ak 10", "AK 10"]);
+	});
+
+	it("liefert für leeren Text eine leere Liste", () => {
+		expect(parseTextList(" \n ")).toEqual({ list: [], duplicates: [] });
 	});
 });

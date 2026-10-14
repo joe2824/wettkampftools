@@ -32,3 +32,32 @@ export function addItem(list: readonly string[], value: string): AddItemResult {
 export function removeItem(list: readonly string[], index: number): string[] {
 	return list.filter((_, position) => position !== index);
 }
+
+export interface ParsedTextList {
+	list: string[];
+	duplicates: string[];
+}
+
+/** Ein Eintrag je Zeile, zum Bearbeiten und Kopieren als Text. */
+export function formatTextList(list: readonly string[]): string {
+	return list.join("\n");
+}
+
+/** Liest einen Eintrag je Zeile; leere Zeilen fallen weg, Doppelte werden gemeldet. */
+export function parseTextList(text: string): ParsedTextList {
+	const list: string[] = [];
+	const duplicates: string[] = [];
+	const seen = new Set<string>();
+	for (const line of text.split(/\r?\n/)) {
+		const value = line.trim();
+		if (!value) continue;
+		const key = value.toLowerCase();
+		if (seen.has(key)) {
+			duplicates.push(value);
+			continue;
+		}
+		seen.add(key);
+		list.push(value);
+	}
+	return { list, duplicates };
+}
