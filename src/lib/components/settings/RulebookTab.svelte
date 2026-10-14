@@ -11,15 +11,15 @@
 	const rulebook = $derived(settingsStore.settings.rulebook);
 	let error = $state<string | null>(null);
 
-	function handleFile(file: CheckedFile) {
+	async function handleFile(file: CheckedFile) {
 		const outcome = readRulebook(file.bytes);
 		if (!outcome.ok) {
 			error = outcome.message;
 			return;
 		}
 		error = null;
-		settingsStore.settings.rulebook = outcome.rulebook;
-		toast.success("Regelwerk geladen", { description: "Zum Übernehmen bitte speichern." });
+		await settingsStore.saveFields({ rulebook: outcome.rulebook });
+		toast.success("Regelwerk geladen und gespeichert");
 	}
 </script>
 
@@ -32,7 +32,7 @@
 		<div class="flex flex-col gap-3 rounded-lg border border-border p-4">
 			<div class="flex items-center justify-between gap-4">
 				<p class="font-medium">{rulebook.name}</p>
-				<Button variant="outline" size="sm" onclick={() => (settingsStore.settings.rulebook = null)}>
+				<Button variant="outline" size="sm" onclick={() => settingsStore.saveFields({ rulebook: null })}>
 					<Trash2Icon data-icon="inline-start" />
 					Entfernen
 				</Button>

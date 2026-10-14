@@ -140,3 +140,29 @@ describe("SettingsStore Export und Import", () => {
 		expect(store.settings.event.title).toBe("Pokalturnier");
 	});
 });
+
+describe("SettingsStore.saveFields", () => {
+	it("speichert nur die übergebenen Felder sofort und lässt andere Änderungen ungespeichert", async () => {
+		const store = new SettingsStore({ readLegacy: async () => null });
+		await store.load();
+		store.settings.waveStartAgeGroup = "AK 15/16";
+		const rulebook = { name: "Beispiel-Regelwerk", ageGroups: [{ name: "AK 12", minMembers: 4, maxMembers: 5 }] };
+
+		await store.saveFields({ rulebook });
+
+		expect(store.settings.rulebook).toEqual(rulebook);
+		expect(store.settings.waveStartAgeGroup).toBe("AK 15/16");
+		expect(store.dirty).toBe(true);
+		const reloaded = new SettingsStore({ readLegacy: async () => null });
+		await reloaded.load();
+		expect(reloaded.settings.rulebook).toEqual(rulebook);
+		expect(reloaded.settings.waveStartAgeGroup).toBe(defaultSettings().waveStartAgeGroup);
+	});
+
+	it("macht ohne andere Änderungen nichts ungespeichert", async () => {
+		const store = new SettingsStore({ readLegacy: async () => null });
+		await store.load();
+		await store.saveFields({ rulebook: null });
+		expect(store.dirty).toBe(false);
+	});
+});

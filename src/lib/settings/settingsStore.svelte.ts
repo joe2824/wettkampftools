@@ -73,6 +73,14 @@ export class SettingsStore {
 		this.#savedJson = snapshot(this.settings);
 	}
 
+	/** Speichert einzelne Felder sofort, ohne andere ungespeicherte Änderungen mitzuspeichern. */
+	async saveFields(patch: Partial<Settings>): Promise<void> {
+		const saved: Settings = { ...(JSON.parse(this.#savedJson) as Settings), ...patch };
+		await writeJson(SETTINGS_FILE, saved);
+		this.#savedJson = snapshot(saved);
+		this.settings = { ...this.settings, ...patch };
+	}
+
 	/** Nur im Speicher; bleibt ungespeichert, bis gespeichert wird. */
 	resetToDefaults(): void {
 		this.settings = { ...defaultSettings(), legacyMigrated: this.settings.legacyMigrated };
