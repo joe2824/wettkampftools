@@ -1,4 +1,5 @@
-// Geladene Dateien der laufenden Sitzung; nur im Arbeitsspeicher, nie gespeichert.
+// Geladene Dateien des laufenden Wettkampfs. Der Stand wird im App-Datenordner gesichert,
+// bis „Neuer Wettkampf“ gewählt wird; Inhalte nie in Logs oder Einstellungs-Exporte.
 import type { TextEncodingName } from "$lib/io/csv";
 import type { Workbook } from "$lib/platform/workbook";
 import type { Rename, Team } from "$lib/wwk/registrations";
@@ -6,6 +7,10 @@ import type { CompetitionKind, ResultRow } from "$lib/wwk/results";
 
 export interface SessionRegistration {
 	fileName: string;
+	/** Originaldatei, damit sie bei geänderten Einstellungen neu eingelesen werden kann. */
+	sourceBytes: Uint8Array;
+	/** Einstellungen, mit denen eingelesen wurde. */
+	settingsKey: string;
 	encoding: TextEncodingName;
 	teams: Team[];
 	renames: Rename[];
@@ -19,6 +24,8 @@ export interface SessionResults {
 	workbook: Workbook;
 	kind: CompetitionKind;
 	rows: ResultRow[];
+	/** Jahr der Datei, wenn es nicht das laufende ist; sonst null. */
+	yearWarning: number | null;
 }
 
 export class SessionState {

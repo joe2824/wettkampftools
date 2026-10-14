@@ -17,7 +17,6 @@
 	let { results }: Props = $props();
 
 	let replacing = $state(false);
-	let yearWarning = $state<number | null>(null);
 	let loadError = $state<string | null>(null);
 
 	const KIND_LABELS = { team: "Mannschaftswettkampf", individual: "Einzelwettkampf" } as const;
@@ -30,7 +29,6 @@
 		}
 		loadError = null;
 		replacing = false;
-		yearWarning = outcome.summary.yearWarning;
 		toast.success("Ergebnisdatei geladen", { description: `${outcome.summary.rowCount} Einträge gelesen.` });
 	}
 </script>
@@ -68,10 +66,10 @@
 		</Alert.Root>
 	{/if}
 
-	{#if yearWarning !== null && results && !replacing}
+	{#if results && results.yearWarning !== null && !replacing}
 		<Alert.Root>
 			<CalendarXIcon />
-			<Alert.Title>Die Datei stammt aus {yearWarning} – richtige Datei?</Alert.Title>
+			<Alert.Title>Die Datei stammt aus {results.yearWarning} – richtige Datei?</Alert.Title>
 			<Alert.Description>Die Ergebnisdatei ist nicht aus diesem Jahr. Bitte kurz prüfen.</Alert.Description>
 		</Alert.Root>
 	{/if}

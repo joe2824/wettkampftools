@@ -48,6 +48,13 @@ describe("loadRegistrations", () => {
 		});
 	});
 
+	it("behält die Originaldatei und die verwendeten Einstellungen", () => {
+		const bytes = encode(buildRegistrationCsv([{ gliederung: "Musterstadt" }]));
+		const outcome = loadRegistrations(bytes, "meldungen.csv", settings);
+		expect(outcome.ok && outcome.registration.sourceBytes).toEqual(bytes);
+		expect(outcome.ok && outcome.registration.settingsKey).toBe(registrationSettingsKey(settings));
+	});
+
 	it("zeigt ältere Exporte als Windows-Kodierung an", () => {
 		const bytes = encodeWindows1252(buildRegistrationCsv([{ gliederung: "Großstadt" }]));
 		const outcome = loadRegistrations(bytes, "alt.csv", settings);

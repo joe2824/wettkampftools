@@ -3,6 +3,8 @@ import { SessionState, type SessionRegistration, type SessionResults } from "./s
 
 const registration: SessionRegistration = {
 	fileName: "meldungen.csv",
+	sourceBytes: new Uint8Array(),
+	settingsKey: "",
 	encoding: "utf-8",
 	teams: [],
 	renames: [],
@@ -14,7 +16,8 @@ const results: SessionResults = {
 	lastModified: 0,
 	workbook: { sheets: [], properties: { created: null, modified: null } },
 	kind: "team",
-	rows: []
+	rows: [],
+	yearWarning: null
 };
 
 describe("SessionState", () => {

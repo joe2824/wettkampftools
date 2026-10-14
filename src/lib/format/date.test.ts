@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatGermanDate } from "./date";
+import { formatGermanDate, formatGermanDateTime } from "./date";
 
 describe("formatGermanDate", () => {
   it("schreibt ISO-Datum lang auf Deutsch", () => {
@@ -11,5 +11,16 @@ describe("formatGermanDate", () => {
     expect(formatGermanDate("")).toBe("");
     expect(formatGermanDate("14.11.2026")).toBe("");
     expect(formatGermanDate("2026-13-01")).toBe("");
+  });
+});
+
+describe("formatGermanDateTime", () => {
+  it("schreibt Datum und Uhrzeit in Ortszeit", () => {
+    expect(formatGermanDateTime("2026-10-14T09:05:00.000Z")).toBe("14.10.2026, 11:05 Uhr");
+    expect(formatGermanDateTime("2026-01-02T23:30:00.000Z")).toBe("03.01.2026, 00:30 Uhr");
+  });
+
+  it("liefert leer bei ungültigem Zeitpunkt", () => {
+    expect(formatGermanDateTime("gestern")).toBe("");
   });
 });

@@ -4,6 +4,9 @@ import { resetAppDataStore, setAppDataStore } from "$lib/platform/fs";
 import { flushLog } from "$lib/log";
 import { SettingsStore } from "$lib/settings/settingsStore.svelte";
 import { LayoutStore } from "$lib/certificates/layoutStore.svelte";
+import { CompetitionStore } from "$lib/competition/competitionStore.svelte";
+import { SelectionState } from "$lib/components/certificates/selectionState.svelte";
+import { SessionState } from "$lib/session.svelte";
 import { initApp, migrationMessage } from "./appInit";
 
 let fs: FakeStore;
@@ -58,6 +61,24 @@ describe("initApp", () => {
 		const text = new TextDecoder().decode(log[0][1]);
 		expect(text).toContain("init.settingsFailed");
 		expect(text).not.toContain("Anna Meier");
+	});
+
+	it("stellt den Wettkampfstand mit den geladenen Einstellungen wieder her und sichert danach", async () => {
+		const settings = new SettingsStore({ readLegacy: async () => null });
+		const competition = new CompetitionStore({ session: new SessionState(), selection: new SelectionState() });
+		const order: string[] = [];
+		vi.spyOn(settings, "load").mockImplementation(async () => {
+			order.push("settings");
+			return null;
+		});
+		const restore = vi.spyOn(competition, "restore").mockImplementation(async () => void order.push("restore"));
+		const autosave = vi.spyOn(competition, "startAutosave").mockImplementation(() => () => {});
+
+		await initApp({ settings, layouts: new LayoutStore(), competition, errorTarget: fakeTarget() });
+
+		expect(order).toEqual(["settings", "restore"]);
+		expect(restore).toHaveBeenCalledWith(settings.settings);
+		expect(autosave).toHaveBeenCalledOnce();
 	});
 });
 

@@ -60,6 +60,7 @@ function results(overrides: Partial<SessionResults> = {}): SessionResults {
 		workbook: { sheets: [{ name: "Übersicht", rows: [] }, DATA_SHEET], properties: { created: null, modified: null } },
 		kind: "team",
 		rows: ROWS,
+		yearWarning: null,
 		...overrides
 	};
 }

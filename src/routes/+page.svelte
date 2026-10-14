@@ -3,6 +3,7 @@
 	import { Badge } from "$lib/components/ui/badge";
 	import { buttonVariants } from "$lib/components/ui/button";
 	import * as Card from "$lib/components/ui/card";
+	import CompetitionStatus from "$lib/components/home/CompetitionStatus.svelte";
 	import { FOOTER_ITEMS, NAVIGATION_GROUPS } from "$lib/navigation";
 	import { session } from "$lib/session.svelte";
 
@@ -42,6 +43,8 @@
 			<p class="text-muted-foreground">Vorbereitung, Auswertung und Urkunden für den DLRG Wellenwettkampf – Schritt für Schritt.</p>
 		</div>
 	</header>
+
+	<CompetitionStatus />
 
 	<section aria-label="Ablauf des Wettkampfs" class="grid gap-4 md:grid-cols-3">
 		{#each steps as step (step.href)}

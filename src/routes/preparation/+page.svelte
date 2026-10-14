@@ -1,8 +1,3 @@
-<script lang="ts" module>
-	// Quelldatei bleibt beim Seitenwechsel im Speicher, damit geänderte Einstellungen neu eingelesen werden können.
-	let source: { bytes: Uint8Array; fileName: string; settingsKey: string } | null = null;
-</script>
-
 <script lang="ts">
 	import LightbulbIcon from "@lucide/svelte/icons/lightbulb";
 	import { toast } from "svelte-sonner";
@@ -45,7 +40,6 @@
 			return false;
 		}
 		loadError = null;
-		source = { bytes, fileName, settingsKey };
 		session.setRegistration(outcome.registration);
 		return true;
 	}
@@ -56,9 +50,9 @@
 
 	// Geänderte Altersklassen-Einstellungen: Datei neu einlesen, Wellenauswahl neu vorbelegen.
 	$effect(() => {
-		const key = settingsKey;
-		if (!source || source.settingsKey === key || session.registration?.fileName !== source.fileName) return;
-		if (load(source.bytes, source.fileName)) {
+		const current = session.registration;
+		if (!current || current.settingsKey === settingsKey) return;
+		if (load(current.sourceBytes, current.fileName)) {
 			toast.info("Einstellungen geändert", { description: "Die Meldedatei wurde neu eingelesen." });
 		}
 	});

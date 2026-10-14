@@ -52,6 +52,7 @@ describe("loadResultsFile", () => {
 	it("warnt, wenn die Datei aus einem anderen Jahr stammt", async () => {
 		const outcome = await loadResultsFile(fileOf([teamSheet()], new Date(2025, 5, 1).getTime()), TODAY);
 		expect(outcome.ok && outcome.summary.yearWarning).toBe(2025);
+		expect(session.results?.yearWarning).toBe(2025);
 	});
 
 	it("berücksichtigt das Erstellungsdatum der Arbeitsmappe", async () => {

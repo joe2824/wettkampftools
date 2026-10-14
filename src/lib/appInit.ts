@@ -1,11 +1,13 @@
-// Start der Anwendung: Protokoll, Aufräumen, gespeicherte Einstellungen und Layout laden.
+// Start der Anwendung: Protokoll, Aufräumen, gespeicherte Einstellungen, Layout und Wettkampfstand laden.
 import { installErrorLogging, logError, pruneOldLogs } from "$lib/log";
 import { settingsStore, type MigrationReport, type SettingsStore } from "$lib/settings/settingsStore.svelte";
 import { layoutStore, type LayoutStore } from "$lib/certificates/layoutStore.svelte";
+import { competitionStore, type CompetitionStore } from "$lib/competition/competitionStore.svelte";
 
 export interface InitDeps {
 	settings?: SettingsStore;
 	layouts?: LayoutStore;
+	competition?: CompetitionStore;
 	errorTarget?: Parameters<typeof installErrorLogging>[0];
 	today?: Date;
 }
@@ -24,11 +26,15 @@ async function step<T>(code: string, run: () => Promise<T>): Promise<T | null> {
 export async function initApp(deps: InitDeps = {}): Promise<MigrationReport | null> {
 	const settings = deps.settings ?? settingsStore;
 	const layouts = deps.layouts ?? layoutStore;
+	const competition = deps.competition ?? competitionStore;
 	installErrorLogging(deps.errorTarget);
 	await step("pruneLogs", () => pruneOldLogs(deps.today));
 	const report = await step("settings", () => settings.load());
 	await step("layout", () => layouts.load());
 	await step("images", () => layouts.loadImages());
+	// Meldungen brauchen die geladenen Einstellungen.
+	await step("competition", () => competition.restore(settings.settings));
+	competition.startAutosave();
 	return report;
 }
 

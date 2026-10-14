@@ -62,7 +62,11 @@ export function loadRegistrations(bytes: Uint8Array, fileName: string, settings:
 		const { teams, renames } = parseRegistrations(rows, settings);
 		logInfo("preparation.loaded", { teams: teams.length, renames: renames.length });
 		const waveSelection = defaultWaveSelection(teams, settings);
-		return { ok: true, registration: { fileName, encoding, teams, renames, waveSelection } };
+		const settingsKey = registrationSettingsKey(settings);
+		return {
+			ok: true,
+			registration: { fileName, sourceBytes: bytes, settingsKey, encoding, teams, renames, waveSelection },
+		};
 	} catch (error) {
 		if (error instanceof MissingColumnsError) return { ok: false, message: NOT_A_TEAM_EXPORT };
 		throw error;

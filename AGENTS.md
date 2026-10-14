@@ -86,7 +86,9 @@ Meldedateien enthalten Daten von **Minderjährigen**. Dateien mit den Endungen
 ## Datenschutz
 
 - Logs enthalten keine Namen und keinen Zeileninhalt, nur Codes und Anzahlen.
-- Die Sitzung (eingelesene Meldungen, Ergebnisse) liegt nur im Speicher.
+- Der Wettkampfstand (Original-Meldedatei, Ergebnisse, Urkunden-Auswahl) liegt im
+  App-Datenordner (`competition/state.json`), bis „Neuer Wettkampf“ gewählt wird.
+  Er erscheint nie in Logs, Einstellungs- oder Layout-Exporten.
 - Exporte enthalten keine Bilder.
 
 ## Fachbegriffe

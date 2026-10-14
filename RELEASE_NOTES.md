@@ -29,6 +29,8 @@ schneller und mit allem, was die bisherige Version konnte.
   Mitgliedernamen können wahlweise mit gedruckt werden. Ein Layout-Editor mit
   Kalibrierungsseite sorgt dafür, dass der Druck genau auf das vorbedruckte
   Papier passt.
+- Der Arbeitsstand bleibt über mehrere Tage erhalten; ‚Neuer Wettkampf‘ auf der
+  Startseite beginnt von vorn.
 - **Einstellungen** lassen sich als Datei sichern und auf einem anderen
   Rechner wieder einlesen.
 - **Automatische Updates:** Neue Versionen werden beim Start gemeldet und

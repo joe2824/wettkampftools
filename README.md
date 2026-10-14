@@ -99,9 +99,10 @@ Anwendung eintragen.
 ## Datenschutz
 
 Meldedaten und Ergebnisse werden nur auf dem eigenen Rechner verarbeitet und
-nirgendwohin übertragen. Die Anwendung speichert keine Teilnehmerdaten;
-gespeichert werden nur Einstellungen, Layout und erzeugte Dateien dort, wo man
-sie selbst ablegt. Aus dem Internet geladen werden nur die öffentlichen
+nirgendwohin übertragen. Damit ein Wettkampf über mehrere Tage bearbeitet werden
+kann, bleiben Meldedaten lokal auf diesem Rechner, bis ‚Neuer Wettkampf‘
+gewählt wird; sie werden nie in Logs oder Exporte der Einstellungen geschrieben.
+Erzeugte Dateien liegen dort, wo man sie selbst ablegt. Aus dem Internet geladen werden nur die öffentlichen
 DLRG-Standortdaten und Updates.
 
 ## Entwicklung
