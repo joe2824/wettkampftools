@@ -134,9 +134,34 @@ describe("layoutPage – Ränder", () => {
 			template: "**{mitglied}** Punkte {platz}",
 			align: "left"
 		});
-		const ops = textOps(layoutPage(page([object]), { mitglied: "", platz: "" }, OPTIONS, metrics));
-		expect(ops.map((op) => op.text)).toEqual(["Punkte"]);
+		const ops = textOps(layoutPage(page([object]), { mitglied: "", platz: "3" }, OPTIONS, metrics));
+		expect(ops.map((op) => op.text)).toEqual(["Punkte 3"]);
 		expect(ops[0].xMm).toBe(25);
+	});
+});
+
+describe("layoutPage – leere Platzhalter", () => {
+	it("lässt Zeilen weg, deren Platzhalter alle leer sind", () => {
+		const object = text({ template: "({gliederung})" });
+		expect(layoutPage(page([object]), { gliederung: "" }, OPTIONS, metrics)).toEqual([]);
+		const signer = text({ template: "{unterzeichner1} ({funktion1})" });
+		expect(layoutPage(page([signer]), { unterzeichner1: " ", funktion1: "" }, OPTIONS, metrics)).toEqual([]);
+	});
+
+	it("behält Zeilen, wenn mindestens ein Platzhalter gefüllt ist", () => {
+		const signer = text({ template: "{unterzeichner1} ({funktion1})", align: "left" });
+		const ops = textOps(layoutPage(page([signer]), { unterzeichner1: "Max Mustermann", funktion1: "" }, OPTIONS, metrics));
+		expect(ops.map((op) => op.text)).toEqual(["Max Mustermann ()"]);
+	});
+
+	it("lässt Vorlagen ohne Platzhalter unverändert", () => {
+		const ops = textOps(layoutPage(page([text({ template: "Urkunde" })]), {}, OPTIONS, metrics));
+		expect(ops.map((op) => op.text)).toEqual(["Urkunde"]);
+	});
+
+	it("wertet unbekannte Platzhalter nicht als leer", () => {
+		const ops = textOps(layoutPage(page([text({ template: "({unbekannt})" })]), {}, OPTIONS, metrics));
+		expect(ops.map((op) => op.text)).toEqual(["({unbekannt})"]);
 	});
 });
 
