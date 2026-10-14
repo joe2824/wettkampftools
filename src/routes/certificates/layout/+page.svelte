@@ -14,7 +14,6 @@
 	import PropertiesPanel from "$lib/components/certificates/PropertiesPanel.svelte";
 	import BackgroundControls from "$lib/components/layoutEditor/BackgroundControls.svelte";
 	import PreviewOptions from "$lib/components/layoutEditor/PreviewOptions.svelte";
-	import PrintCalibration from "$lib/components/layoutEditor/PrintCalibration.svelte";
 	import UndoControls from "$lib/components/layoutEditor/UndoControls.svelte";
 	import * as Alert from "$lib/components/ui/alert";
 	import * as Card from "$lib/components/ui/card";
@@ -139,6 +138,8 @@
 			<Card.Content class="flex flex-col gap-4">
 				<PreviewOptions bind:withMemberNames bind:zoom />
 				<Separator />
+				<BackgroundControls bind:visible={backgroundVisible} bind:opacityPercent />
+				<Separator />
 				<ObjectList
 					objects={layout.objects}
 					{selectedId}
@@ -178,19 +179,6 @@
 		<Card.Root class="lg:max-h-[calc(100vh-14rem)] lg:overflow-y-auto">
 			<Card.Content>
 				<PropertiesPanel object={selected} onchange={patchSelected} />
-			</Card.Content>
-		</Card.Root>
-	</div>
-
-	<div class="grid gap-4 md:grid-cols-2">
-		<Card.Root>
-			<Card.Content>
-				<BackgroundControls bind:visible={backgroundVisible} bind:opacityPercent />
-			</Card.Content>
-		</Card.Root>
-		<Card.Root>
-			<Card.Content>
-				<PrintCalibration />
 			</Card.Content>
 		</Card.Root>
 	</div>

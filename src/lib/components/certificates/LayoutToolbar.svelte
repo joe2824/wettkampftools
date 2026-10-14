@@ -1,5 +1,6 @@
 <script lang="ts">
 	import DownloadIcon from "@lucide/svelte/icons/download";
+	import PrinterIcon from "@lucide/svelte/icons/printer";
 	import RotateCcwIcon from "@lucide/svelte/icons/rotate-ccw";
 	import SaveIcon from "@lucide/svelte/icons/save";
 	import UploadIcon from "@lucide/svelte/icons/upload";
@@ -7,6 +8,7 @@
 	import type { LayoutVariant } from "$lib/certificates/layout";
 	import { layoutStore } from "$lib/certificates/layoutStore.svelte";
 	import LayoutImportDialog from "$lib/components/layoutEditor/LayoutImportDialog.svelte";
+	import PrintCalibration from "$lib/components/layoutEditor/PrintCalibration.svelte";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
 	import { Badge } from "$lib/components/ui/badge";
 	import { Button, buttonVariants } from "$lib/components/ui/button";
@@ -26,6 +28,7 @@
 
 	let saving = $state(false);
 	let importOpen = $state(false);
+	let calibrationOpen = $state(false);
 
 	async function save() {
 		saving = true;
@@ -68,6 +71,10 @@
 	{/if}
 
 	<div class="ms-auto flex flex-wrap gap-2">
+		<Button variant="outline" onclick={() => (calibrationOpen = true)}>
+			<PrinterIcon data-icon="inline-start" />
+			Drucker ausrichten
+		</Button>
 		<AlertDialog.Root>
 			<AlertDialog.Trigger class={buttonVariants({ variant: "ghost" })}>
 				<RotateCcwIcon data-icon="inline-start" />
@@ -99,3 +106,4 @@
 </div>
 
 <LayoutImportDialog bind:open={importOpen} />
+<PrintCalibration bind:open={calibrationOpen} />
