@@ -4,8 +4,18 @@
 	import AppSidebar from "$lib/components/shell/AppSidebar.svelte";
 	import * as Sidebar from "$lib/components/ui/sidebar";
 	import { Toaster } from "$lib/components/ui/sonner";
+	import { onMount } from "svelte";
+	import { toast } from "svelte-sonner";
+	import { initApp, migrationMessage } from "$lib/appInit";
 
 	let { children } = $props();
+
+	onMount(async () => {
+		const report = await initApp();
+		if (report === null) return;
+		const { title, description } = migrationMessage(report);
+		toast.success(title, { description });
+	});
 </script>
 
 <ModeWatcher />
