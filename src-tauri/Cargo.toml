@@ -26,6 +26,8 @@ serde_json = "1"
 # Excel lesen (.xls/.xlsx) und schreiben.
 calamine = "0.36"
 rust_xlsxwriter = "0.99"
+# Dokumenteigenschaften aus .xlsx lesen (ohnehin über calamine im Baum).
+zip = { version = "8.6", default-features = false, features = ["deflate"] }
 chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
 
 [target.'cfg(windows)'.dependencies]

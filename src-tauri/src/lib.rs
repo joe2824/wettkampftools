@@ -1,4 +1,7 @@
+mod legacy_settings;
 mod logging;
+mod output;
+mod workbook;
 
 /// Holt das Hauptfenster nach vorn (zweiter Programmstart).
 #[cfg(desktop)]
@@ -32,6 +35,14 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_opener::init())
+        .invoke_handler(tauri::generate_handler![
+            // Befehle werden von den Modulen ergänzt.
+            legacy_settings::read_legacy_settings,
+            workbook::read_workbook,
+            workbook::write_workbook,
+            output::open_output_file,
+            output::reveal_output_file,
+        ])
         .setup(|app| {
             use tauri::Manager;
             if let Ok(dir) = app.path().app_data_dir() {
