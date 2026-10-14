@@ -136,14 +136,21 @@ export function insertAtCursor(
 	return { text: next, cursor: from + token.length };
 }
 
-/** Klickfläche: Textrahmen von Grundlinie minus Schriftgröße bis Grundlinie, Bilder als Rechteck. */
+// Ober- und Unterlänge von Nunito (hhea 1011 / −353 bei 1000 Einheiten), damit der Rahmen keine Buchstaben schneidet.
+const FONT_ASCENT_EM = 1.011;
+const FONT_DESCENT_EM = 0.353;
+const BOX_PADDING_MM = 0.5;
+
+/** Klickfläche: Textrahmen über die volle Schrifthöhe, Bilder als Rechteck. */
 export function hitBox(object: LayoutObject): BoxMm {
 	if (object.kind === "image") {
 		const { xMm, yMm, widthMm, heightMm } = object;
 		return { xMm, yMm, widthMm, heightMm };
 	}
-	const heightMm = ptToMm(object.sizePt);
-	return { xMm: object.xMm, yMm: object.yMm - heightMm, widthMm: object.widthMm, heightMm };
+	const sizeMm = ptToMm(object.sizePt);
+	const topMm = object.yMm - FONT_ASCENT_EM * sizeMm - BOX_PADDING_MM;
+	const bottomMm = object.yMm + FONT_DESCENT_EM * sizeMm + BOX_PADDING_MM;
+	return { xMm: object.xMm, yMm: topMm, widthMm: object.widthMm, heightMm: bottomMm - topMm };
 }
 
 export function isShown(object: LayoutObject, withMemberNames: boolean): boolean {

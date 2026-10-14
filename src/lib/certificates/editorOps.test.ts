@@ -171,11 +171,13 @@ describe("insertAtCursor", () => {
 });
 
 describe("hitBox", () => {
-	it("Text: Rahmenbreite, von Grundlinie minus Schriftgröße bis Grundlinie", () => {
+	it("Text: umschließt Ober- und Unterlängen von Nunito mit etwas Luft", () => {
 		const box = hitBox(text({ xMm: 25, yMm: 100, widthMm: 160, sizePt: 18 }));
+		const sizeMm = ptToMm(18);
 		expect(box).toMatchObject({ xMm: 25, widthMm: 160 });
-		expect(box.yMm).toBeCloseTo(100 - ptToMm(18), 5);
-		expect(box.heightMm).toBeCloseTo(ptToMm(18), 5);
+		expect(box.yMm).toBeLessThan(100 - 1.011 * sizeMm);
+		expect(box.yMm + box.heightMm).toBeGreaterThan(100 + 0.353 * sizeMm);
+		expect(box.heightMm).toBeLessThan(1.6 * sizeMm);
 	});
 
 	it("Bild: sein Rechteck", () => {
