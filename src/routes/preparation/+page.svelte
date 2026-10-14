@@ -118,6 +118,7 @@
 				<WaveStep
 					teams={registration.teams}
 					selection={registration.waveSelection}
+					eligible={defaultWaveSelection(registration.teams, settings)}
 					onchange={(selection) => session.setWaveSelection(selection)}
 					onreset={resetWave}
 				/>

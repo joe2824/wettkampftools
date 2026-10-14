@@ -12,11 +12,13 @@
 	interface Props {
 		teams: Team[];
 		selection: Set<string>;
+		/** Teams, deren Altersklasse laut Einstellungen in der Welle starten darf. */
+		eligible: ReadonlySet<string>;
 		onchange: (selection: Set<string>) => void;
 		onreset: () => void;
 	}
 
-	let { teams, selection, onchange, onreset }: Props = $props();
+	let { teams, selection, eligible, onchange, onreset }: Props = $props();
 
 	let chosen = $state<string | null>(null);
 
@@ -25,11 +27,11 @@
 	const totalSelected = $derived(groups.reduce((sum, group) => sum + group.selected, 0));
 
 	function toggle(teamId: string, inWave: boolean) {
-		onchange(setTeamsInWave(selection, [teamId], inWave));
+		onchange(setTeamsInWave(selection, [teamId], inWave, eligible));
 	}
 
 	function setAll(inWave: boolean) {
-		if (current) onchange(setTeamsInWave(selection, current.teams.map((team) => team.id), inWave));
+		if (current) onchange(setTeamsInWave(selection, current.teams.map((team) => team.id), inWave, eligible));
 	}
 </script>
 
@@ -79,19 +81,26 @@
 			<ul class="flex flex-col gap-3">
 				{#each current.teams as team (team.id)}
 					{@const id = `wave-${team.id}`}
+					{@const allowed = eligible.has(team.id)}
 					<li class="flex items-center gap-3">
 						<Checkbox
 							{id}
 							checked={selection.has(team.id)}
+							disabled={!allowed && !selection.has(team.id)}
 							onCheckedChange={(checked) => toggle(team.id, checked === true)}
 						/>
-						<Label for={id} class="font-normal">
+						<Label for={id} class={cn("font-normal", !allowed && "text-muted-foreground")}>
 							{team.name} · {team.ageGroup} · {team.gender}
+							{#if !allowed}
+								<span class="text-xs">(nicht startberechtigt)</span>
+							{/if}
 						</Label>
 					</li>
 				{/each}
 			</ul>
-			<p class="text-xs text-muted-foreground">Häkchen = startet in der Welle.</p>
+			<p class="text-xs text-muted-foreground">
+				Häkchen = startet in der Welle. Startberechtigt sind die Altersklassen ab der Einstellung „Wellen-Starterlaubnis ab“.
+			</p>
 		</div>
 	{/if}
 </div>

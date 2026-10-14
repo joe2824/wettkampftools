@@ -120,6 +120,17 @@ describe("Wellenauswahl", () => {
 		expect([...setTeamsInWave(selection, ["r1"], false)]).toEqual([]);
 		expect([...selection]).toEqual(["r1"]);
 	});
+
+	it("nimmt nur startberechtigte Mannschaften in die Welle auf", () => {
+		const eligible = new Set(["r1", "r2"]);
+		const result = setTeamsInWave(new Set(), ["r1", "r2", "r3"], true, eligible);
+		expect([...result].sort()).toEqual(["r1", "r2"]);
+	});
+
+	it("entfernt auch nicht startberechtigte Mannschaften", () => {
+		const result = setTeamsInWave(new Set(["r3"]), ["r3"], false, new Set(["r1"]));
+		expect([...result]).toEqual([]);
+	});
 });
 
 describe("exportRegistrations", () => {

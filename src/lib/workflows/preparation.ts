@@ -126,11 +126,17 @@ export function groupByOrganisation(teams: readonly Team[], selection: ReadonlyS
 		.sort((a, b) => a.organisation.localeCompare(b.organisation, LOCALE));
 }
 
-export function setTeamsInWave(selection: ReadonlySet<string>, teamIds: readonly string[], inWave: boolean): Set<string> {
+/** Setzt oder entfernt Teams in der Welle; aufgenommen werden nur startberechtigte (falls angegeben). */
+export function setTeamsInWave(
+	selection: ReadonlySet<string>,
+	teamIds: readonly string[],
+	inWave: boolean,
+	eligible?: ReadonlySet<string>
+): Set<string> {
 	const next = new Set(selection);
 	for (const id of teamIds) {
-		if (inWave) next.add(id);
-		else next.delete(id);
+		if (!inWave) next.delete(id);
+		else if (!eligible || eligible.has(id)) next.add(id);
 	}
 	return next;
 }
