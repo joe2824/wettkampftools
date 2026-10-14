@@ -2,8 +2,9 @@
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
-/* bits-ui setzt data-state="..."; shadcn-Komponenten nutzen passende data-* Varianten: */
-@custom-variant data-active (&[data-state="active"]);
+/* bits-ui setzt data-state="..."; shadcn-Komponenten nutzen passende data-* Varianten.
+   Die Seitenleiste setzt stattdessen data-active="true|false". */
+@custom-variant data-active (&:is([data-state="active"], [data-active="true"]));
 @custom-variant data-checked (&[data-state="checked"]);
 @custom-variant data-unchecked (&[data-state="unchecked"]);
 

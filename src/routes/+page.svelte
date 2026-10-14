@@ -1,3 +1,2 @@
-<main class="flex min-h-screen items-center justify-center">
-	<h1 class="text-2xl font-bold">Wettkampftools</h1>
-</main>
+<h1 class="text-2xl font-bold">Wettkampftools</h1>
+<p class="text-muted-foreground mt-2">Vorbereitung, Auswertung und Urkunden für den DLRG Wellenwettkampf.</p>
