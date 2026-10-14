@@ -3,6 +3,7 @@
 	import FileSpreadsheetIcon from "@lucide/svelte/icons/file-spreadsheet";
 	import LoaderCircleIcon from "@lucide/svelte/icons/loader-circle";
 	import { toast } from "svelte-sonner";
+	import MissingDateAlert from "$lib/components/MissingDateAlert.svelte";
 	import SaveResult from "$lib/components/SaveResult.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import type { SessionResults } from "$lib/session.svelte";
@@ -49,6 +50,7 @@
 </script>
 
 <div class="flex flex-col gap-4">
+	<MissingDateAlert message="Auf dem Aushang fehlt das Datum – in der Vorbereitung eintragen." withLink />
 	<div class="flex flex-wrap gap-3">
 		<Button size="lg" disabled={busy !== null} onclick={saveNotice}>
 			{#if busy === "notice"}

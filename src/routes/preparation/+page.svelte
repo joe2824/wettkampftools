@@ -6,10 +6,12 @@
 	import StepHeader from "$lib/components/StepHeader.svelte";
 	import type { CheckedFile } from "$lib/components/fileCheck";
 	import CheckStep from "$lib/components/preparation/CheckStep.svelte";
+	import EventStep from "$lib/components/preparation/EventStep.svelte";
 	import ExportStep from "$lib/components/preparation/ExportStep.svelte";
 	import LoadStep from "$lib/components/preparation/LoadStep.svelte";
 	import WaveStep from "$lib/components/preparation/WaveStep.svelte";
 	import { session } from "$lib/session.svelte";
+	import { isEventComplete } from "$lib/settings/eventInfo";
 	import { settingsStore } from "$lib/settings/settingsStore.svelte";
 	import { defaultWaveSelection } from "$lib/wwk/registrationExport";
 	import {
@@ -86,14 +88,21 @@
 
 	<Card.Root>
 		<Card.Content class="flex flex-col gap-4">
-			<StepHeader step={1} title="Meldedatei laden" description="Mannschaften-Export (CSV) aus dem Meldeportal." done={registration !== null} />
+			<StepHeader step={1} title="Veranstaltung" description="Angaben für Urkunden und Aushang – werden sofort gespeichert." done={isEventComplete(settings.event)} />
+			<EventStep />
+		</Card.Content>
+	</Card.Root>
+
+	<Card.Root>
+		<Card.Content class="flex flex-col gap-4">
+			<StepHeader step={2} title="Meldedatei laden" description="Mannschaften-Export (CSV) aus dem Meldeportal." done={registration !== null} />
 			<LoadStep {registration} error={loadError} yearWarning={fileYearWarning} onfile={handleFile} />
 		</Card.Content>
 	</Card.Root>
 
 	<Card.Root>
 		<Card.Content class="flex flex-col gap-4">
-			<StepHeader step={2} title="Prüfen" description="Gründe, aus denen JAuswertung Meldungen verwerfen würde." done={check !== null && check.errors.length === 0} />
+			<StepHeader step={3} title="Prüfen" description="Gründe, aus denen JAuswertung Meldungen verwerfen würde." done={check !== null && check.errors.length === 0} />
 			{#if registration && check}
 				<CheckStep {check} renames={registration.renames} />
 			{:else}
@@ -104,7 +113,7 @@
 
 	<Card.Root>
 		<Card.Content class="flex flex-col gap-4">
-			<StepHeader step={3} title="Wellenwettkampf" description="Welche Mannschaften starten zusätzlich in der Welle?" done={registration !== null} />
+			<StepHeader step={4} title="Wellenwettkampf" description="Welche Mannschaften starten zusätzlich in der Welle?" done={registration !== null} />
 			{#if registration}
 				<WaveStep
 					teams={registration.teams}
@@ -120,7 +129,7 @@
 
 	<Card.Root>
 		<Card.Content class="flex flex-col gap-4">
-			<StepHeader step={4} title="Exportieren" description="Excel-Datei zum Import in JAuswertung speichern." done={check !== null && exportedFor === check} />
+			<StepHeader step={5} title="Exportieren" description="Excel-Datei zum Import in JAuswertung speichern." done={check !== null && exportedFor === check} />
 			{#if check}
 				<ExportStep {check} onexported={() => (exportedFor = check)} />
 			{:else}

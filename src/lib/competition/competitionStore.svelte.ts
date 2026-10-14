@@ -2,7 +2,9 @@
 import { certificateSelection, type SelectionState } from "$lib/components/certificates/selectionState.svelte";
 import { logError, logInfo } from "$lib/log";
 import { session as defaultSession, type SessionState } from "$lib/session.svelte";
+import { nextCompetitionEvent } from "$lib/settings/eventInfo";
 import type { Settings } from "$lib/settings/settings";
+import { settingsStore as defaultSettingsStore, type SettingsStore } from "$lib/settings/settingsStore.svelte";
 import { loadRegistrations } from "$lib/workflows/preparation";
 import { readJAuswertungResults } from "$lib/wwk/results";
 import {
@@ -23,6 +25,7 @@ export const AUTOSAVE_DELAY_MS = 500;
 export interface CompetitionDeps {
 	session: SessionState;
 	selection: SelectionState;
+	settings?: SettingsStore;
 	now?: () => Date;
 }
 
@@ -33,6 +36,7 @@ export class CompetitionStore {
 	savedAt = $state<string | null>(null);
 	#session: SessionState;
 	#selection: SelectionState;
+	#settings: SettingsStore;
 	#now: () => Date;
 	#timer: ReturnType<typeof setTimeout> | null = null;
 	#queue: Promise<void> = Promise.resolve();
@@ -40,6 +44,7 @@ export class CompetitionStore {
 	constructor(deps: CompetitionDeps) {
 		this.#session = deps.session;
 		this.#selection = deps.selection;
+		this.#settings = deps.settings ?? defaultSettingsStore;
 		this.#now = deps.now ?? (() => new Date());
 	}
 
@@ -74,12 +79,13 @@ export class CompetitionStore {
 		return this.#enqueue(() => this.#write());
 	}
 
-	/** Alle Wettkampfdaten entfernen; Einstellungen, Layout und Unterschriften bleiben. */
+	/** Alle Wettkampfdaten entfernen und die Veranstaltung weiterzählen; Layout und Unterschriften bleiben. */
 	async newCompetition(): Promise<void> {
 		this.#cancel();
 		this.#session.clear();
 		this.#selection.attach(null);
 		await this.#enqueue(() => this.#clear());
+		await this.#advanceEvent();
 		logInfo("competition.cleared");
 	}
 
@@ -139,6 +145,16 @@ export class CompetitionStore {
 		if (selection) {
 			this.#selection.hidden = selection.hidden;
 			this.#selection.excluded = new Set(selection.excluded);
+		}
+	}
+
+	/** Nummer hochzählen und Datum leeren; ein Fehler hält den neuen Wettkampf nicht auf. */
+	async #advanceEvent(): Promise<void> {
+		try {
+			const event = nextCompetitionEvent($state.snapshot(this.#settings.settings.event));
+			await this.#settings.saveFields({ event });
+		} catch {
+			logError("competition.eventAdvanceFailed");
 		}
 	}
 

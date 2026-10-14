@@ -24,6 +24,9 @@ können direkt aus der Anwendung installiert werden.
 
 ### Vorbereitung
 
+- Als erster Schritt die **Veranstaltung**: Nummer, Titel, Ausrichter, Datum,
+  Ort und die beiden Unterzeichner samt Unterschrift. Alles wird sofort
+  gespeichert.
 - Meldedatei aus dem DLRG-Meldeportal per Ziehen und Ablegen oder Auswahl laden.
 - Prüfung der Meldungen nach denselben Regeln wie JAuswertung, mit
   verständlichen Hinweisen zu jeder auffälligen Zeile.
@@ -74,15 +77,16 @@ Internet verfügbar.
 ### Einstellungen
 
 Altersklassen, Senioren-Altersklassen, Starterlaubnis für die Welle,
-Zusammenfassen der Senioren, Umgang mit nicht angetretenen Teams,
-Veranstaltungsdaten und Unterschriften. Einstellungen lassen sich als Datei
-exportieren und importieren. Einstellungen der alten Version werden beim ersten
+Zusammenfassen der Senioren, Umgang mit nicht angetretenen Teams und Urkunden.
+Einstellungen lassen sich als Datei exportieren und importieren; die
+Veranstaltungsdaten sind darin enthalten, die Unterschriften nicht. Einstellungen der alten Version werden beim ersten
 Start übernommen.
 
 ## Ablauf am Wettkampftag
 
 1. **Meldedatei** aus dem DLRG-Meldeportal herunterladen (eine Datei).
-2. In der Anwendung **Vorbereitung** öffnen, Meldedatei laden, Hinweise prüfen,
+2. In der Anwendung **Vorbereitung** öffnen, zuerst die **Veranstaltung**
+   prüfen (Nummer und Datum), dann Meldedatei laden, Hinweise prüfen,
    Mannschaften auswählen und die Meldungen exportieren.
 3. Die Meldungen in **JAuswertung importieren** und die angezeigte Anzahl mit
    der **Kontrollzahl** vergleichen.

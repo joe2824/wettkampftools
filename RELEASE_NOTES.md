@@ -31,6 +31,10 @@ schneller und mit allem, was die bisherige Version konnte.
   Papier passt.
 - Der Arbeitsstand bleibt über mehrere Tage erhalten; ‚Neuer Wettkampf‘ auf der
   Startseite beginnt von vorn.
+- Die **Veranstaltung** wird als erster Schritt der Vorbereitung eingetragen
+  und sofort gespeichert. ‚Neuer Wettkampf‘ zählt die Nummer hoch und leert das
+  Datum; die Startseite zeigt die aktuelle Veranstaltung, fehlt das Datum, gibt
+  es einen Hinweis.
 - **Einstellungen** lassen sich als Datei sichern und auf einem anderen
   Rechner wieder einlesen.
 - **Automatische Updates:** Neue Versionen werden beim Start gemeldet und

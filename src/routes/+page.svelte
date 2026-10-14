@@ -4,6 +4,7 @@
 	import { buttonVariants } from "$lib/components/ui/button";
 	import * as Card from "$lib/components/ui/card";
 	import CompetitionStatus from "$lib/components/home/CompetitionStatus.svelte";
+	import EventSummary from "$lib/components/home/EventSummary.svelte";
 	import { FOOTER_ITEMS, NAVIGATION_GROUPS } from "$lib/navigation";
 	import { session } from "$lib/session.svelte";
 
@@ -12,7 +13,7 @@
 
 	const STEP_DETAILS: Record<string, { description: string; loaded: () => boolean }> = {
 		"/preparation": {
-			description: "Meldedatei aus dem DLRG-Meldeportal aufbereiten und für JAuswertung speichern.",
+			description: "Veranstaltung eintragen, Meldedatei aus dem DLRG-Meldeportal aufbereiten und für JAuswertung speichern.",
 			loaded: () => session.hasRegistration
 		},
 		"/evaluation": {
@@ -43,6 +44,8 @@
 			<p class="text-muted-foreground">Vorbereitung, Auswertung und Urkunden für den DLRG Wellenwettkampf – Schritt für Schritt.</p>
 		</div>
 	</header>
+
+	<EventSummary />
 
 	<CompetitionStatus />
 

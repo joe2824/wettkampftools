@@ -3,7 +3,6 @@
 	import * as Tabs from "$lib/components/ui/tabs";
 	import AgeGroupsTab from "$lib/components/settings/AgeGroupsTab.svelte";
 	import CertificatesTab from "$lib/components/settings/CertificatesTab.svelte";
-	import EventTab from "$lib/components/settings/EventTab.svelte";
 	import RulebookTab from "$lib/components/settings/RulebookTab.svelte";
 	import SeniorsTab from "$lib/components/settings/SeniorsTab.svelte";
 	import SettingsActions from "$lib/components/settings/SettingsActions.svelte";
@@ -16,7 +15,6 @@
 		{ value: "wave", label: "Wellenwettkampf", component: WaveTab },
 		{ value: "ageGroups", label: "Altersklassen", component: AgeGroupsTab },
 		{ value: "seniors", label: "Senioren", component: SeniorsTab },
-		{ value: "event", label: "Veranstaltung", component: EventTab },
 		{ value: "certificates", label: "Urkunden", component: CertificatesTab },
 		{ value: "rulebook", label: "Regelwerk", component: RulebookTab }
 	];
@@ -33,7 +31,7 @@
 <div class="mx-auto flex max-w-4xl flex-col gap-6">
 	<header class="flex flex-col gap-1">
 		<h1 class="text-2xl font-bold">Einstellungen</h1>
-		<p class="text-muted-foreground">Altersklassen, Veranstaltung und Urkunden einstellen. Änderungen gelten nach dem Speichern.</p>
+		<p class="text-muted-foreground">Altersklassen, Wertung und Urkunden einstellen. Die Veranstaltung wird in der Vorbereitung eingetragen. Änderungen gelten nach dem Speichern.</p>
 	</header>
 
 	<Tabs.Root bind:value={active}>

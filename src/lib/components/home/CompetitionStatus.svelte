@@ -7,9 +7,12 @@
 	import { competitionStore } from "$lib/competition/competitionStore.svelte";
 	import { formatGermanDateTime } from "$lib/format/date";
 	import { session } from "$lib/session.svelte";
+	import { nextCompetitionHint } from "$lib/settings/eventInfo";
+	import { settingsStore } from "$lib/settings/settingsStore.svelte";
 
 	const hasData = $derived(session.hasRegistration || session.hasResults);
 	const savedAt = $derived(competitionStore.savedAt);
+	const eventHint = $derived(nextCompetitionHint(settingsStore.settings.event));
 
 	async function startNew() {
 		await competitionStore.newCompetition();
@@ -35,8 +38,8 @@
 			<AlertDialog.Header>
 				<AlertDialog.Title>Neuen Wettkampf beginnen?</AlertDialog.Title>
 				<AlertDialog.Description>
-					Alle geladenen Meldungen und Ergebnisse werden entfernt. Einstellungen, Layout und Unterschriften bleiben
-					erhalten.
+					Alle geladenen Meldungen und Ergebnisse werden entfernt. {eventHint} Titel, Ausrichter, Ort,
+					Unterzeichner, Einstellungen und Layout bleiben erhalten.
 				</AlertDialog.Description>
 			</AlertDialog.Header>
 			<AlertDialog.Footer>

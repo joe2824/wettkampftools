@@ -4,6 +4,7 @@
 	import CertificateOptions from "$lib/components/certificates/CertificateOptions.svelte";
 	import EntryFilters from "$lib/components/certificates/EntryFilters.svelte";
 	import EntryTable from "$lib/components/certificates/EntryTable.svelte";
+	import MissingDateAlert from "$lib/components/MissingDateAlert.svelte";
 	import ResultsSource from "$lib/components/ResultsSource.svelte";
 	import {
 		filterOptions,
@@ -41,6 +42,8 @@
 			Urkunden aus der JAuswertung-Ergebnisdatei auswählen und als druckfertiges PDF erzeugen.
 		</p>
 	</header>
+
+	<MissingDateAlert message="Auf den Urkunden fehlt das Datum – in der Vorbereitung eintragen." withLink />
 
 	<Card.Root>
 		<Card.Content class="flex flex-col gap-4">

@@ -7,6 +7,7 @@ import { resetAppDataStore, setAppDataStore } from "$lib/platform/fs";
 import type { Sheet } from "$lib/platform/workbook";
 import { SessionState } from "$lib/session.svelte";
 import { defaultSettings } from "$lib/settings/settings";
+import { SETTINGS_FILE, SettingsStore } from "$lib/settings/settingsStore.svelte";
 import { createFakeStore, type FakeStore } from "$lib/testing/fakeFs";
 import { buildRegistrationCsv } from "$lib/testing/fixtures";
 import { loadRegistrations } from "$lib/workflows/preparation";
@@ -35,6 +36,7 @@ let fs: FakeStore;
 let session: SessionState;
 let selection: SelectionState;
 let store: CompetitionStore;
+let settingsStore: SettingsStore;
 
 function loadRegistration() {
 	const outcome = loadRegistrations(csv, "meldungen.csv", settings);
@@ -51,7 +53,8 @@ beforeEach(() => {
 	setAppDataStore(fs);
 	session = new SessionState();
 	selection = new SelectionState();
-	store = new CompetitionStore({ session, selection, now: () => NOW });
+	settingsStore = new SettingsStore({ readLegacy: async () => null });
+	store = new CompetitionStore({ session, selection, settings: settingsStore, now: () => NOW });
 	vi.spyOn(console, "info").mockImplementation(() => {});
 	vi.spyOn(console, "error").mockImplementation(() => {});
 });
@@ -172,6 +175,23 @@ describe("newCompetition", () => {
 		expect(selection.excluded.size).toBe(0);
 		expect(fs.files.has(COMPETITION_STATE_PATH)).toBe(false);
 		expect(store.savedAt).toBeNull();
+	});
+
+	it("zählt die Nummer hoch, leert das Datum und behält den Rest der Veranstaltung", async () => {
+		await settingsStore.load();
+		settingsStore.settings.waveStartAgeGroup = "AK 15/16";
+		settingsStore.settings.event.number = "39";
+		settingsStore.settings.event.date = "2026-11-14";
+		settingsStore.settings.event.signers[0].name = "Anna Meier";
+
+		await store.newCompetition();
+
+		const event = settingsStore.settings.event;
+		expect(event).toMatchObject({ number: "40", date: "", title: defaultSettings().event.title });
+		expect(event.signers[0].name).toBe("Anna Meier");
+		const saved = JSON.parse(new TextDecoder().decode(fs.files.get(SETTINGS_FILE)));
+		expect(saved.event).toMatchObject({ number: "40", date: "" });
+		expect(saved.waveStartAgeGroup).toBe(defaultSettings().waveStartAgeGroup);
 	});
 
 	it("verwirft eine noch ausstehende Sicherung", async () => {
