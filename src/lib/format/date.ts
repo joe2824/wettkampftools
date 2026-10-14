@@ -1,0 +1,24 @@
+const MONTHS = [
+  "Januar",
+  "Februar",
+  "März",
+  "April",
+  "Mai",
+  "Juni",
+  "Juli",
+  "August",
+  "September",
+  "Oktober",
+  "November",
+  "Dezember",
+];
+const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/** „2026-11-14“ → „14. November 2026“; leer oder ungültig → leer. */
+export function formatGermanDate(iso: string): string {
+  const match = ISO_DATE.exec(iso);
+  if (!match) return "";
+  const month = MONTHS[Number(match[2]) - 1];
+  if (month === undefined) return "";
+  return `${Number(match[3])}. ${month} ${match[1]}`;
+}
