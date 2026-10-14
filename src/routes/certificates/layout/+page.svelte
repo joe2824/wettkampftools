@@ -3,6 +3,7 @@
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 	import CircleAlertIcon from "@lucide/svelte/icons/circle-alert";
+	import { canRedo, canUndo, emptyHistory, record, redo, undo, type HistoryStep } from "$lib/certificates/editHistory";
 	import { updateObject, replaceObject, type ObjectPatch } from "$lib/certificates/editorOps";
 	import { createMetrics, type TextMetrics } from "$lib/certificates/fonts";
 	import { SIGNATURE_SLOTS, type LayoutObject, type LayoutVariant } from "$lib/certificates/layout";
@@ -14,6 +15,7 @@
 	import BackgroundControls from "$lib/components/layoutEditor/BackgroundControls.svelte";
 	import PreviewOptions from "$lib/components/layoutEditor/PreviewOptions.svelte";
 	import PrintCalibration from "$lib/components/layoutEditor/PrintCalibration.svelte";
+	import UndoControls from "$lib/components/layoutEditor/UndoControls.svelte";
 	import * as Alert from "$lib/components/ui/alert";
 	import * as Card from "$lib/components/ui/card";
 	import { Separator } from "$lib/components/ui/separator";
@@ -37,6 +39,11 @@
 	let fontsFailed = $state(false);
 	let savedSnapshot = $state(layoutSnapshot(layoutStore.layouts));
 	let imageUrls = $state<Partial<Record<ImageSlot, string>>>({});
+	let history = $state.raw(emptyHistory());
+	// Zuletzt gesehener Stand; Änderungen dagegen landen im Verlauf.
+	let currentSnapshot = layoutSnapshot(layoutStore.layouts);
+	let changeKey = "other";
+	let applyingHistory = false;
 
 	const layout = $derived(layoutStore.layouts[variant]);
 	const selected = $derived(layout.objects.find((object) => object.id === selectedId) ?? null);
@@ -64,6 +71,23 @@
 		return () => Object.values(urls).forEach((url) => URL.revokeObjectURL(url));
 	});
 
+	// Jede Layout-Änderung (Bearbeiten, Import, Zurücksetzen) wird für Rückgängig gemerkt.
+	$effect(() => {
+		const snapshot = layoutSnapshot(layoutStore.layouts);
+		if (snapshot === currentSnapshot) return;
+		if (!applyingHistory) history = record(history, currentSnapshot, changeKey, Date.now());
+		currentSnapshot = snapshot;
+		applyingHistory = false;
+		changeKey = "other";
+	});
+
+	function applyStep(step: HistoryStep) {
+		if (step.snapshot === null) return;
+		history = step.history;
+		applyingHistory = true;
+		layoutStore.layouts = JSON.parse(step.snapshot);
+	}
+
 	// Schließen des Fensters ist ausgenommen: dort gibt es keine eigene Rückfrage.
 	beforeNavigate(({ cancel, type }) => {
 		if (type === "leave" || !dirty) return;
@@ -71,6 +95,7 @@
 	});
 
 	function commit(object: LayoutObject) {
+		changeKey = `${variant}:${object.id}`;
 		layoutStore.layouts[variant] = replaceObject(layout, object);
 	}
 
@@ -99,7 +124,15 @@
 		</p>
 	</header>
 
-	<LayoutToolbar bind:variant {dirty} onsave={save} onreset={reset} />
+	<div class="flex flex-wrap items-center justify-between gap-2">
+		<LayoutToolbar bind:variant {dirty} onsave={save} onreset={reset} />
+		<UndoControls
+			canUndo={canUndo(history)}
+			canRedo={canRedo(history)}
+			onundo={() => applyStep(undo(history, currentSnapshot))}
+			onredo={() => applyStep(redo(history, currentSnapshot))}
+		/>
+	</div>
 
 	<div class="grid gap-4 lg:grid-cols-[13rem_minmax(0,1fr)_19rem]">
 		<Card.Root class="lg:max-h-[calc(100vh-14rem)] lg:overflow-y-auto">
