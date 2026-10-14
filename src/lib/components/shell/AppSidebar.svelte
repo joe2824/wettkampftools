@@ -1,7 +1,18 @@
 <script lang="ts">
 	import * as Sidebar from "$lib/components/ui/sidebar";
 	import { FOOTER_ITEMS, NAVIGATION_GROUPS } from "$lib/navigation";
+	import InfoIcon from "@lucide/svelte/icons/info";
+	import { onMount } from "svelte";
+	import InfoDialog from "$lib/components/InfoDialog.svelte";
+	import UpdateDialog from "$lib/components/UpdateDialog.svelte";
+	import { updater } from "$lib/release/updater.svelte";
 	import NavigationLink from "./NavigationLink.svelte";
+
+	let infoOpen = $state(false);
+
+	onMount(() => {
+		void updater.checkOnStart();
+	});
 </script>
 
 <Sidebar.Root collapsible="icon">
@@ -38,7 +49,16 @@
 			{#each FOOTER_ITEMS as item (item.href)}
 				<NavigationLink {item} />
 			{/each}
+			<Sidebar.MenuItem>
+				<Sidebar.MenuButton tooltipContent="Info" onclick={() => (infoOpen = true)}>
+					<InfoIcon />
+					<span>Info</span>
+				</Sidebar.MenuButton>
+			</Sidebar.MenuItem>
 		</Sidebar.Menu>
 	</Sidebar.Footer>
 	<Sidebar.Rail />
 </Sidebar.Root>
+
+<InfoDialog bind:open={infoOpen} />
+<UpdateDialog />
