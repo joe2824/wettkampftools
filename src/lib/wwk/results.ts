@@ -1,0 +1,163 @@
+/*
+ * Blatt „Daten“ des JAuswertung-Excel-Exports (results(wk, false) in DataTableUtils).
+ * Überschriften in Zeile 1, deutsche Texte aus jauswertung.properties:
+ * - Mannschaft: Platz, Name, Mitglied 1..n, Gliederung, Qualifikationsgliederung,
+ *   Altersklasse, Geschlecht, Bemerkung, Meldepunkte, Punkte, Differenz, Startnummer,
+ *   Außer Konkurrenz, Disziplinen, je Disziplin „Platz n“, „Zeit n“, „Punkte n“, „Strafe n“,
+ *   danach Zusatzwertung (z. B. HLW) und ggf. Qualifiziert.
+ * - Einzel: wie oben, aber statt Mitglied-Spalten Nachname, Vorname, Jahrgang.
+ * Platz ist leer bei „keine Wertung“. Daher zählt nur exakte Übereinstimmung, die erste gewinnt.
+ */
+
+// Strukturtyp des Workbook-Adapters; später mit dem Plattform-Typ zusammenführen.
+export type Cell = string | number | boolean | null;
+export interface SheetData {
+	name: string;
+	rows: Cell[][];
+}
+export interface WorkbookProperties {
+	created: string | null;
+	modified: string | null;
+}
+export interface WorkbookData {
+	sheets: SheetData[];
+	properties: WorkbookProperties;
+}
+
+export type CompetitionKind = "team" | "individual";
+
+export interface ResultRow {
+	sourceRow: number;
+	place: number | null;
+	name: string;
+	organisation: string;
+	ageGroupRaw: string;
+	gender: string;
+	competitionPoints: number | null;
+	members: string[];
+}
+
+export interface ResultsData {
+	kind: CompetitionKind;
+	rows: ResultRow[];
+}
+
+export class ResultsError extends Error {
+	constructor(message: string) {
+		super(message);
+		this.name = "ResultsError";
+	}
+}
+
+export const RESULTS_SHEET = "Daten";
+
+const HEADER = {
+	place: "Platz",
+	name: "Name",
+	organisation: "Gliederung",
+	ageGroup: "Altersklasse",
+	gender: "Geschlecht",
+	points: "Punkte",
+} as const;
+
+const REQUIRED_COLUMNS = ["place", "name", "organisation", "ageGroup", "gender"] as const;
+const MEMBER_HEADER = /^mitglied (\d+)$/;
+const INTEGER_TEXT = /^\d+$/;
+const DECIMAL_TEXT = /^-?\d+(?:[.,]\d+)?$/;
+
+type ColumnKey = keyof typeof HEADER;
+type ColumnMap = Record<ColumnKey, number>;
+
+function normalizeHeader(cell: Cell): string {
+	return cellText(cell).toLowerCase();
+}
+
+function cellText(cell: Cell | undefined): string {
+	return cell === null || cell === undefined ? "" : String(cell).trim();
+}
+
+function findSheet(workbook: WorkbookData): SheetData {
+	const wanted = RESULTS_SHEET.toLowerCase();
+	const sheet = workbook.sheets.find((s) => s.name.trim().toLowerCase() === wanted);
+	if (!sheet) {
+		throw new ResultsError("Das Blatt „Daten“ fehlt – bitte den Excel-Export aus JAuswertung verwenden.");
+	}
+	return sheet;
+}
+
+function mapColumns(headers: string[]): ColumnMap {
+	const entries = (Object.keys(HEADER) as ColumnKey[]).map(
+		(key) => [key, headers.indexOf(HEADER[key].toLowerCase())] as const,
+	);
+	const columns = Object.fromEntries(entries) as ColumnMap;
+	const missing = REQUIRED_COLUMNS.filter((key) => columns[key] < 0).map((key) => HEADER[key]);
+	if (missing.length > 0) {
+		throw new ResultsError(`Im Blatt „Daten“ fehlen die Spalten: ${missing.join(", ")}.`);
+	}
+	return columns;
+}
+
+/** Spaltenindizes der Mitglieder, nach Mitgliedsnummer sortiert. */
+function memberColumns(headers: string[]): number[] {
+	return headers
+		.map((header, index) => ({ match: MEMBER_HEADER.exec(header), index }))
+		.filter((entry) => entry.match !== null)
+		.sort((a, b) => Number(a.match?.[1]) - Number(b.match?.[1]))
+		.map((entry) => entry.index);
+}
+
+function parsePlace(cell: Cell | undefined): number | null {
+	if (typeof cell === "number") return Number.isInteger(cell) ? cell : null;
+	const text = cellText(cell);
+	return INTEGER_TEXT.test(text) ? Number(text) : null;
+}
+
+function parsePoints(cell: Cell | undefined): number | null {
+	if (typeof cell === "number") return Number.isFinite(cell) ? cell : null;
+	const text = cellText(cell);
+	return DECIMAL_TEXT.test(text) ? Number(text.replace(",", ".")) : null;
+}
+
+function isEmptyRow(row: Cell[]): boolean {
+	return row.every((cell) => cellText(cell) === "");
+}
+
+function toResultRow(row: Cell[], sourceRow: number, columns: ColumnMap, members: number[]): ResultRow {
+	return {
+		sourceRow,
+		place: parsePlace(row[columns.place]),
+		name: cellText(row[columns.name]),
+		organisation: cellText(row[columns.organisation]),
+		ageGroupRaw: cellText(row[columns.ageGroup]),
+		gender: cellText(row[columns.gender]),
+		competitionPoints: columns.points < 0 ? null : parsePoints(row[columns.points]),
+		members: members.map((index) => cellText(row[index])).filter((name) => name !== ""),
+	};
+}
+
+/** Liest das Blatt „Daten“; wirft ResultsError bei fehlendem Blatt oder fehlenden Spalten. */
+export function readJAuswertungResults(workbook: WorkbookData): ResultsData {
+	const [headerRow = [], ...dataRows] = findSheet(workbook).rows;
+	const headers = headerRow.map(normalizeHeader);
+	const columns = mapColumns(headers);
+	const members = memberColumns(headers);
+	const rows = dataRows
+		.map((row, index) => ({ row, sourceRow: index + 1 }))
+		.filter(({ row }) => !isEmptyRow(row))
+		.map(({ row, sourceRow }) => toResultRow(row, sourceRow, columns, members));
+	return { kind: members.length > 0 ? "team" : "individual", rows };
+}
+
+function yearOf(value: string | null): number | null {
+	if (value === null) return null;
+	const time = Date.parse(value);
+	return Number.isNaN(time) ? null : new Date(time).getFullYear();
+}
+
+/** Frühestes Jahr aus Erstellt-/Geändert-Datum und Dateidatum. */
+export function workbookYear(properties: WorkbookProperties, fileLastModifiedMs: number): number {
+	const years = [yearOf(properties.created), yearOf(properties.modified)].filter(
+		(year): year is number => year !== null,
+	);
+	return Math.min(new Date(fileLastModifiedMs).getFullYear(), ...years);
+}
