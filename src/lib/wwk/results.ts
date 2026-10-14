@@ -9,20 +9,7 @@
  * Platz ist leer bei „keine Wertung“. Daher zählt nur exakte Übereinstimmung, die erste gewinnt.
  */
 
-// Strukturtyp des Workbook-Adapters; später mit dem Plattform-Typ zusammenführen.
-export type Cell = string | number | boolean | null;
-export interface SheetData {
-	name: string;
-	rows: Cell[][];
-}
-export interface WorkbookProperties {
-	created: string | null;
-	modified: string | null;
-}
-export interface WorkbookData {
-	sheets: SheetData[];
-	properties: WorkbookProperties;
-}
+import type { Cell, Sheet, Workbook, WorkbookProperties } from "$lib/platform/workbook";
 
 export type CompetitionKind = "team" | "individual";
 
@@ -76,7 +63,7 @@ function cellText(cell: Cell | undefined): string {
 	return cell === null || cell === undefined ? "" : String(cell).trim();
 }
 
-function findSheet(workbook: WorkbookData): SheetData {
+function findSheet(workbook: Workbook): Sheet {
 	const wanted = RESULTS_SHEET.toLowerCase();
 	const sheet = workbook.sheets.find((s) => s.name.trim().toLowerCase() === wanted);
 	if (!sheet) {
@@ -136,7 +123,7 @@ function toResultRow(row: Cell[], sourceRow: number, columns: ColumnMap, members
 }
 
 /** Liest das Blatt „Daten“; wirft ResultsError bei fehlendem Blatt oder fehlenden Spalten. */
-export function readJAuswertungResults(workbook: WorkbookData): ResultsData {
+export function readJAuswertungResults(workbook: Workbook): ResultsData {
 	const [headerRow = [], ...dataRows] = findSheet(workbook).rows;
 	const headers = headerRow.map(normalizeHeader);
 	const columns = mapColumns(headers);

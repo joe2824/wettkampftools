@@ -1,11 +1,6 @@
 import { describe, expect, it } from "vitest";
-import {
-	type Cell,
-	readJAuswertungResults,
-	ResultsError,
-	type WorkbookData,
-	workbookYear,
-} from "./results";
+import type { Cell, Workbook } from "$lib/platform/workbook";
+import { readJAuswertungResults, ResultsError, workbookYear } from "./results";
 
 const TEAM_HEADER: Cell[] = [
 	"Platz",
@@ -37,7 +32,7 @@ const INDIVIDUAL_HEADER: Cell[] = [
 	"Punkte",
 ];
 
-function workbook(rows: Cell[][], sheetName = "Daten"): WorkbookData {
+function workbook(rows: Cell[][], sheetName = "Daten"): Workbook {
 	return {
 		sheets: [
 			{ name: "Andere", rows: [["x"]] },
