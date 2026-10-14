@@ -1,0 +1,180 @@
+name: Release
+
+# Ein Tag, ein Gate, dann der Windows-Installer samt Update-Manifest.
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # Ein rotes Testergebnis darf gar nicht erst zu einem Installer führen.
+  verify:
+    uses: ./.github/workflows/verify.yml
+
+  # Der Tag steht an einer Stelle, damit Build und Notiz dieselbe Fassung nutzen.
+  target:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.w.outputs.tag }}
+    steps:
+      - name: Version bestimmen
+        id: w
+        shell: bash
+        # Ref-Name über die Umgebung, nicht direkt im Skript: ein geschickt
+        # benannter Tag landete sonst wörtlich im Code eines Jobs mit
+        # Signierschlüssel.
+        env:
+          REF_NAME: ${{ github.ref_name }}
+          REF_TYPE: ${{ github.ref_type }}
+        run: |
+          set -euo pipefail
+          TAG="$REF_NAME"
+
+          if [ "$REF_TYPE" != "tag" ]; then
+            echo "::error::Dieser Ablauf gehört an einen Tag. Ausgelöst wurde er auf '${TAG}'."
+            exit 1
+          fi
+
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Release $TAG."
+
+  desktop:
+    needs: [verify, target]
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # volle History + Tags für das Changelog
+
+      - name: Changelog erzeugen
+        id: changelog
+        shell: bash
+        env:
+          TAG: ${{ needs.target.outputs.tag }}
+          COMPARE_BASE: ${{ github.server_url }}/${{ github.repository }}/compare
+        run: |
+          set -euo pipefail
+          if [ -f "RELEASE_NOTES.md" ]; then
+            # Die Datei ersetzt die generierten Notes komplett. Damit kein
+            # Release den Text der Vorversion trägt, muss die erste Zeile den
+            # Tag nennen.
+            head1="$(head -n1 RELEASE_NOTES.md)"
+            case "$head1" in
+              *"$TAG"*) ;;
+              *)
+                echo "::error file=RELEASE_NOTES.md::Erste Zeile nennt ${TAG} nicht: '${head1}'"
+                echo "::error::RELEASE_NOTES.md ersetzt die generierten Release-Notes. Entweder auf ${TAG} aktualisieren oder die Datei löschen - dann übernimmt der Generator aus den Commits."
+                exit 1
+                ;;
+            esac
+            body="$(cat RELEASE_NOTES.md)"$'\n\n'"Installer siehe Assets unten."
+          else
+            PREV=$(git describe --tags --abbrev=0 --match 'v*' "${TAG}^" 2>/dev/null || echo "")
+            if [ -n "$PREV" ]; then RANGE="${PREV}..${TAG}"; else RANGE="${TAG}"; fi
+            echo "Changelog-Bereich: ${RANGE}"
+
+            # In die Notes kommt nur, was einen Trailer "Release-Note:" trägt.
+            # Der Trailer ist der Satz für Nutzer, der Betreff der für Entwickler.
+            breaking=""; feats=""; fixes=""
+            while IFS='|' read -r hash subject note; do
+              [ -z "$hash" ] && continue
+              case "$subject" in 'chore'*[Rr]elease*) continue ;; esac
+              [ -z "$note" ] && continue
+
+              # Breaking: Ausrufezeichen im Typ oder BREAKING CHANGE im Body.
+              bang=""
+              case "$subject" in *'!:'*) bang="yes" ;; esac
+              git log -1 --pretty=%b "$hash" | grep -q '^BREAKING CHANGE' && bang="yes"
+
+              entry="- ${note}"$'\n'
+              if [ -n "$bang" ]; then breaking="${breaking}${entry}"
+              else
+                case "$subject" in
+                  feat*) feats="${feats}${entry}" ;;
+                  *)     fixes="${fixes}${entry}" ;;
+                esac
+              fi
+            # tformat statt format: sonst fehlt der Umbruch nach dem letzten
+            # Datensatz und der älteste Commit fiele aus den Notes.
+            done < <(git log --no-merges \
+                       --pretty=tformat:'%H|%s|%(trailers:key=Release-Note,valueonly,separator=%x20)' \
+                       "$RANGE")
+
+            # feat/fix ohne einen einzigen Trailer: vergessen - lieber abbrechen
+            # als ein Release mit leeren Notes.
+            if [ -z "$breaking$feats$fixes" ]; then
+              relevant=$(git log --no-merges --pretty=%s "$RANGE" | grep -cE '^(feat|fix)' || true)
+              if [ "$relevant" -gt 0 ]; then
+                echo "::error::${relevant} feat/fix-Commits in ${RANGE}, aber kein einziger Release-Note-Trailer. Entweder die Trailer nachtragen oder RELEASE_NOTES.md für dieses Release anlegen."
+                exit 1
+              fi
+            fi
+
+            body="## Wettkampftools ${TAG}"$'\n'
+            [ -n "$breaking" ] && body="${body}"$'\n'"### Wichtig vor dem Update"$'\n'"${breaking}"
+            [ -n "$feats" ]    && body="${body}"$'\n'"### Neue Funktionen"$'\n'"${feats}"
+            [ -n "$fixes" ]    && body="${body}"$'\n'"### Fehlerbehebungen"$'\n'"${fixes}"
+            [ -z "$breaking$feats$fixes" ] && body="${body}"$'\n'"_Wartungsrelease ohne sichtbare Änderungen._"$'\n'
+            if [ -n "$PREV" ]; then
+              body="${body}"$'\n'"**Vollständiges Changelog**: ${COMPARE_BASE}/${PREV}...${TAG}"$'\n'
+            fi
+            body="${body}"$'\n'"Installer siehe Assets unten."
+          fi
+
+          {
+            echo "body<<CHANGELOG_EOF"
+            echo "$body"
+            echo "CHANGELOG_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Node.js einrichten
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Rust stable installieren
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust-Cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: Abhängigkeiten installieren
+        run: npm ci
+
+      - name: Anwendung bauen
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          tagName: ${{ needs.target.outputs.tag }}
+          releaseName: 'Wettkampftools ${{ needs.target.outputs.tag }}'
+          releaseBody: ${{ steps.changelog.outputs.body }}
+          # Erst als Entwurf: sonst wäre das Release öffentlich, bevor
+          # latest.json hochgeladen ist, und die Update-Prüfung bekäme 404.
+          releaseDraft: true
+          # Nur der NSIS-Installer. Das Update-Artefakt (.nsis.zip + Signatur)
+          # entsteht über createUpdaterArtifacts.
+          args: '--bundles nsis'
+
+      - name: Release veröffentlichen
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.target.outputs.tag }}
+        run: |
+          set -euo pipefail
+          gh release view "$TAG" --json assets -q '.assets[].name' | grep -qx latest.json \
+            || { echo "::error::latest.json fehlt an ${TAG} - Release bleibt Entwurf."; exit 1; }
+          gh release edit "$TAG" --draft=false --latest
+          echo "${TAG} ist veröffentlicht."
