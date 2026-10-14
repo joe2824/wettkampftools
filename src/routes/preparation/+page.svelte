@@ -16,10 +16,12 @@
 		checkRegistration,
 		loadRegistrations,
 		registrationSettingsKey,
+		registrationYearWarning,
 		type PreparationCheck,
 	} from "$lib/workflows/preparation";
 
 	let loadError = $state<string | null>(null);
+	let fileYearWarning = $state<number | null>(null);
 	let exportedFor = $state.raw<PreparationCheck | null>(null);
 
 	const settings = $derived(settingsStore.settings);
@@ -45,7 +47,9 @@
 	}
 
 	function handleFile(file: CheckedFile) {
-		if (load(file.bytes, file.name)) toast.success("Meldedatei geladen");
+		if (!load(file.bytes, file.name)) return;
+		fileYearWarning = registrationYearWarning(file);
+		toast.success("Meldedatei geladen");
 	}
 
 	// Geänderte Altersklassen-Einstellungen: Datei neu einlesen, Wellenauswahl neu vorbelegen.
@@ -83,7 +87,7 @@
 	<Card.Root>
 		<Card.Content class="flex flex-col gap-4">
 			<StepHeader step={1} title="Meldedatei laden" description="Mannschaften-Export (CSV) aus dem Meldeportal." done={registration !== null} />
-			<LoadStep {registration} error={loadError} onfile={handleFile} />
+			<LoadStep {registration} error={loadError} yearWarning={fileYearWarning} onfile={handleFile} />
 		</Card.Content>
 	</Card.Root>
 

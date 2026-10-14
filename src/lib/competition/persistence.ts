@@ -20,6 +20,8 @@ export interface StoredResults {
 	lastModified: number;
 	workbook: Workbook;
 	yearWarning: number | null;
+	creationUnknown: boolean;
+	yearConfirmed: boolean;
 }
 
 export interface StoredHidden {
@@ -94,7 +96,11 @@ function parseResults(raw: unknown): StoredResults | null {
 	const yearWarning = Number.isInteger(raw.yearWarning) ? (raw.yearWarning as number) : null;
 	const workbook = parseWorkbook(raw.workbook);
 	if (workbook === null) return null;
-	return { fileName: raw.fileName, lastModified: raw.lastModified as number, workbook, yearWarning };
+	// Ältere Stände kennen die beiden Angaben noch nicht.
+	const creationUnknown = raw.creationUnknown === true;
+	const yearConfirmed = raw.yearConfirmed === true;
+	const lastModified = raw.lastModified as number;
+	return { fileName: raw.fileName, lastModified, workbook, yearWarning, creationUnknown, yearConfirmed };
 }
 
 function parseHidden(raw: unknown): StoredHidden | null {

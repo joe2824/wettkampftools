@@ -14,6 +14,7 @@
 	import { session } from "$lib/session.svelte";
 	import { settingsStore } from "$lib/settings/settingsStore.svelte";
 	import { computeEvaluation } from "$lib/workflows/evaluation";
+	import { needsYearConfirmation, YEAR_CONFIRMATION_HINT } from "$lib/workflows/results";
 	import { trophyRulesText } from "$lib/wwk/rulesText";
 
 	const settings = $derived(settingsStore.settings);
@@ -21,6 +22,7 @@
 	// Rechnet bei geänderten Einstellungen (Altersklassen, Ausschluss) automatisch neu.
 	const evaluationState = $derived(results ? computeEvaluation(results, settings) : null);
 	const evaluation = $derived(evaluationState?.status === "ready" ? evaluationState.evaluation : null);
+	const locked = $derived(needsYearConfirmation(results));
 	const rules = $derived(trophyRulesText({ excludeUnplaced: settings.excludeUnplacedTeams }));
 </script>
 
@@ -38,7 +40,7 @@
 				step={1}
 				title="Ergebnisdatei"
 				description="Excel-Export aus JAuswertung laden – er wird danach auch für die Urkunden genutzt."
-				done={evaluation !== null}
+				done={evaluation !== null && !locked}
 			/>
 			<ResultsSource {results} />
 			{#if evaluationState?.status === "individualOnly"}
@@ -57,7 +59,9 @@
 		</Card.Content>
 	</Card.Root>
 
-	{#if evaluation && results}
+	{#if evaluation && results && locked}
+		<p class="text-sm text-muted-foreground">{YEAR_CONFIRMATION_HINT}</p>
+	{:else if evaluation && results}
 		<Card.Root>
 			<Card.Content class="flex flex-col gap-4">
 				<StepHeader

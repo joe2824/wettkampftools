@@ -5,7 +5,17 @@
 	import * as Alert from "$lib/components/ui/alert";
 	import { Button } from "$lib/components/ui/button";
 	import { cn } from "$lib/utils.js";
-	import { acceptAttribute, DEFAULT_MAX_BYTES, readCheckedFile, type CheckedFile, type FileKind } from "./fileCheck";
+	import { isTauri } from "$lib/platform/env";
+	import {
+		acceptAttribute,
+		DEFAULT_MAX_BYTES,
+		readCheckedFile,
+		type CheckedFile,
+		type FileKind,
+		type ReadFileResult
+	} from "./fileCheck";
+	import { registerNativeDropZone } from "./nativeDrop";
+	import { chooseNativeFile, loadNativeFile } from "./nativeFile";
 
 	interface Props {
 		kinds: FileKind[];
@@ -19,28 +29,53 @@
 
 	let { kinds, title, hint, maxBytes = DEFAULT_MAX_BYTES, disabled = false, compact = false, onfile }: Props = $props();
 
+	// In der Desktop-Hülle liefern Ablegen und Auswahl den Pfad, damit das Erstellungsdatum lesbar ist.
+	const native = isTauri();
+
 	let input = $state<HTMLInputElement | null>(null);
+	let zone = $state<HTMLDivElement | null>(null);
 	let dragDepth = $state(0);
+	let nativeHover = $state(false);
 	let loading = $state(false);
 	let error = $state<string | null>(null);
 	let notice = $state<string | null>(null);
 
-	const dragging = $derived(dragDepth > 0 && !disabled);
+	const dragging = $derived((dragDepth > 0 || nativeHover) && !disabled);
 	const accept = $derived(acceptAttribute(kinds));
 
-	async function take(files: FileList | null | undefined) {
-		const first = files?.[0];
-		if (!first || disabled || loading) return;
+	async function take<T>(items: ArrayLike<T> | null | undefined, read: (item: T) => Promise<ReadFileResult>) {
+		if (!items || items.length === 0 || disabled || loading) return;
 		error = null;
-		notice = files.length > 1 ? "Es wurde nur die erste Datei übernommen." : null;
+		notice = items.length > 1 ? "Es wurde nur die erste Datei übernommen." : null;
 		loading = true;
 		try {
-			const result = await readCheckedFile(first, kinds, maxBytes);
+			const result = await read(items[0]);
 			if (result.ok) onfile(result.file);
 			else error = result.message;
 		} finally {
 			loading = false;
 		}
+	}
+
+	const readBrowserFile = (file: File) => readCheckedFile(file, kinds, maxBytes);
+	const readNativePath = (path: string) => loadNativeFile(path, kinds, maxBytes);
+
+	$effect(() => {
+		if (!native || zone === null) return;
+		return registerNativeDropZone({
+			element: zone,
+			onPaths: (paths) => void take(paths, readNativePath),
+			onHover: (active) => (nativeHover = active)
+		});
+	});
+
+	async function choose() {
+		if (!native) {
+			input?.click();
+			return;
+		}
+		const path = await chooseNativeFile(kinds);
+		if (path !== null) await take([path], readNativePath);
 	}
 
 	function handleDragEnter(event: DragEvent) {
@@ -60,11 +95,11 @@
 	function handleDrop(event: DragEvent) {
 		event.preventDefault();
 		dragDepth = 0;
-		void take(event.dataTransfer?.files);
+		void take(event.dataTransfer?.files, readBrowserFile);
 	}
 
 	function handleChange() {
-		void take(input?.files).finally(() => {
+		void take(input?.files, readBrowserFile).finally(() => {
 			// Gleiche Datei soll erneut gewählt werden können.
 			if (input) input.value = "";
 		});
@@ -73,6 +108,7 @@
 
 <div class="flex flex-col gap-3">
 	<div
+		bind:this={zone}
 		role="group"
 		aria-label={title}
 		aria-busy={loading}
@@ -107,7 +143,7 @@
 				{hint ?? "Datei hierher ziehen oder auswählen."}
 			</p>
 		</div>
-		<Button variant={compact ? "outline" : "default"} disabled={disabled || loading} onclick={() => input?.click()}>
+		<Button variant={compact ? "outline" : "default"} disabled={disabled || loading} onclick={choose}>
 			{loading ? "Wird gelesen …" : "Datei auswählen"}
 		</Button>
 		<input bind:this={input} type="file" class="hidden" {accept} {disabled} onchange={handleChange} tabindex="-1" aria-hidden="true" />

@@ -1,3 +1,4 @@
+mod input;
 mod legacy_settings;
 mod logging;
 mod output;
@@ -42,7 +43,15 @@ pub fn run() {
             workbook::write_workbook,
             output::open_output_file,
             output::reveal_output_file,
+            input::read_input_file,
+            input::input_file_info,
         ])
+        .on_window_event(|window, event| {
+            use tauri::{DragDropEvent, Manager, WindowEvent};
+            if let WindowEvent::DragDrop(DragDropEvent::Drop { paths, .. }) = event {
+                input::allow_dropped_paths(window.app_handle(), paths);
+            }
+        })
         .setup(|app| {
             use tauri::Manager;
             if let Ok(dir) = app.path().app_data_dir() {

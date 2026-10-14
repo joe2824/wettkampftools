@@ -26,6 +26,10 @@ export interface SessionResults {
 	rows: ResultRow[];
 	/** Jahr der Datei, wenn es nicht das laufende ist; sonst null. */
 	yearWarning: number | null;
+	/** Erstellungsdatum der Datei war nicht ermittelbar. */
+	creationUnknown: boolean;
+	/** Benutzer hat bestätigt, dass die Datei trotz anderem Jahr richtig ist. */
+	yearConfirmed: boolean;
 }
 
 export class SessionState {

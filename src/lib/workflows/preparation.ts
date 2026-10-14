@@ -16,6 +16,7 @@ import {
 	type VerificationResult,
 } from "$lib/wwk/registrationExport";
 import { parseRegistrations, type Team } from "$lib/wwk/registrations";
+import { workbookYear } from "$lib/wwk/results";
 import { errorTeamIds, validateTeams, type Issue } from "$lib/wwk/validation";
 
 export const REGISTRATION_FILE_NAME = "WWK_Meldungen.xlsx";
@@ -147,4 +148,15 @@ export async function exportRegistrations(rows: readonly ExportRow[]): Promise<E
 	const verification = verifyRegistrationSheet(await readWorkbook(bytes), expected);
 	logInfo("preparation.exported", { rows: expected.total, verified: verification.ok });
 	return { status: "saved", path, expected, verification };
+}
+
+const NO_PROPERTIES = { created: null, modified: null };
+
+/** Jahr der Meldedatei, wenn es nicht das laufende ist; nur als Hinweis. */
+export function registrationYearWarning(
+	file: { createdMs: number | null; lastModified: number },
+	today: Date = new Date()
+): number | null {
+	const { year } = workbookYear(NO_PROPERTIES, { createdMs: file.createdMs, modifiedMs: file.lastModified });
+	return year === null || year === today.getFullYear() ? null : year;
 }

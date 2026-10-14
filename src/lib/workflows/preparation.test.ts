@@ -17,6 +17,7 @@ import {
 	groupByOrganisation,
 	loadRegistrations,
 	registrationSettingsKey,
+	registrationYearWarning,
 	setTeamsInWave,
 	summarizeRegistration,
 	uniqueIssueMessages,
@@ -160,5 +161,22 @@ describe("exportRegistrations", () => {
 		const registration = load([{ ak: "AK 12" }]);
 		const outcome = await exportRegistrations(checkRegistration(registration, settings).exportableRows);
 		expect(outcome).toEqual({ status: "cancelled" });
+	});
+});
+
+describe("registrationYearWarning", () => {
+	const today = new Date(2026, 9, 14);
+	const at = (year: number) => new Date(year, 5, 1).getTime();
+
+	it("schweigt bei einer Datei aus diesem Jahr", () => {
+		expect(registrationYearWarning({ createdMs: at(2026), lastModified: at(2026) }, today)).toBeNull();
+	});
+
+	it("nennt das Jahr einer älteren Datei", () => {
+		expect(registrationYearWarning({ createdMs: at(2025), lastModified: at(2026) }, today)).toBe(2025);
+	});
+
+	it("prüft ohne Erstellungsdatum nur das Änderungsdatum", () => {
+		expect(registrationYearWarning({ createdMs: null, lastModified: at(2026) }, today)).toBeNull();
 	});
 });

@@ -26,7 +26,9 @@ function fullState(): CompetitionState {
 				sheets: [{ name: "Daten", rows: [["Platz", "Name"], [1, "Musterstadt"], [null, true]] }],
 				properties: { created: "2026-10-01T10:00:00Z", modified: null }
 			},
-			yearWarning: 2025
+			yearWarning: 2025,
+			creationUnknown: true,
+			yearConfirmed: true
 		},
 		certificateSelection: { hidden: { ageGroups: ["AK 12"], genders: ["weiblich"], kinds: ["wave"] }, excluded: ["e1"] }
 	};
@@ -89,6 +91,13 @@ describe("parseCompetitionState", () => {
 			registration: { fileName: "m.csv", csvBase64: "", waveSelection: ["a"] },
 			certificateSelection: { hidden: { ageGroups: [], genders: [], kinds: ["rescue"] }, excluded: [] }
 		});
+	});
+
+	it("ergänzt fehlende Angaben zum Dateijahr mit Vorgaben", () => {
+		const { fileName, lastModified, workbook, yearWarning } = fullState().results!;
+		const older = { fileName, lastModified, workbook, yearWarning };
+		const parsed = parseCompetitionState({ schemaVersion: 1, ...fullState(), results: { ...older, yearConfirmed: "ja" } });
+		expect(parsed?.results).toEqual({ ...older, creationUnknown: false, yearConfirmed: false });
 	});
 
 	it("lehnt Unsinn und andere Versionen ab", async () => {

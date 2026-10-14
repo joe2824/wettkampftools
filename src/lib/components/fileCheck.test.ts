@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { acceptAttribute, checkFile, DEFAULT_MAX_BYTES, readCheckedFile } from "./fileCheck";
+import { acceptAttribute, checkFile, checkInputFile, DEFAULT_MAX_BYTES, dialogFilters, readCheckedFile } from "./fileCheck";
 
 const ZIP = [0x50, 0x4b, 0x03, 0x04];
 const OLE = [0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1];
@@ -92,7 +92,7 @@ describe("readCheckedFile", () => {
 	it("liefert Bytes, Name, Änderungszeit und Art", async () => {
 		const file = new File(["a;b"], "export.csv", { lastModified: 1234 });
 		const result = await readCheckedFile(file, ["csv"]);
-		expect(result).toEqual({ ok: true, file: { name: "export.csv", bytes: text("a;b"), lastModified: 1234, kind: "csv" } });
+		expect(result).toEqual({ ok: true, file: { name: "export.csv", bytes: text("a;b"), lastModified: 1234, createdMs: null, kind: "csv" } });
 	});
 
 	it("lehnt zu große Dateien ab, ohne sie zu lesen", async () => {
@@ -108,5 +108,38 @@ describe("readCheckedFile", () => {
 			ok: false,
 			message: "Die Datei konnte nicht gelesen werden. Bitte erneut versuchen."
 		});
+	});
+});
+
+describe("dialogFilters", () => {
+	it("bildet je Art einen Filter für den Öffnen-Dialog", () => {
+		expect(dialogFilters(["excel", "csv"])).toEqual([
+			{ name: "Excel-Datei", extensions: ["xlsx", "xlsm", "xls"] },
+			{ name: "CSV-Datei", extensions: ["csv"] }
+		]);
+	});
+});
+
+describe("checkInputFile", () => {
+	const NOW = 5000;
+
+	it("übernimmt Erstellungs- und Änderungszeit aus dem Dateisystem", () => {
+		const input = { name: "Ergebnisse.xls", bytes: bytes(...OLE), createdMs: 1000, modifiedMs: 2000 };
+		expect(checkInputFile(input, ["excel"], DEFAULT_MAX_BYTES, NOW)).toEqual({
+			ok: true,
+			file: { name: "Ergebnisse.xls", bytes: bytes(...OLE), lastModified: 2000, createdMs: 1000, kind: "excel" }
+		});
+	});
+
+	it("nimmt ohne Änderungszeit den aktuellen Zeitpunkt", () => {
+		const input = { name: "export.csv", bytes: text("a;b"), createdMs: null, modifiedMs: null };
+		const result = checkInputFile(input, ["csv"], DEFAULT_MAX_BYTES, NOW);
+		expect(result.ok && result.file).toMatchObject({ lastModified: NOW, createdMs: null });
+	});
+
+	it("meldet unpassende Dateien wie beim Ablegen", () => {
+		const input = { name: "Bild.png", bytes: bytes(...PNG), createdMs: 1, modifiedMs: 1 };
+		const result = checkInputFile(input, ["excel"], DEFAULT_MAX_BYTES, NOW);
+		expect(result).toEqual({ ok: false, message: expect.stringContaining("Diese Datei passt hier nicht.") });
 	});
 });

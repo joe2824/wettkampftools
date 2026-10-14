@@ -61,6 +61,8 @@ function results(overrides: Partial<SessionResults> = {}): SessionResults {
 		kind: "team",
 		rows: ROWS,
 		yearWarning: null,
+		creationUnknown: false,
+		yearConfirmed: false,
 		...overrides
 	};
 }

@@ -100,8 +100,8 @@ export class CompetitionStore {
 			};
 		}
 		if (results) {
-			const { fileName, lastModified, workbook, yearWarning } = results;
-			snapshot.results = { fileName, lastModified, workbook, yearWarning };
+			const { fileName, lastModified, workbook, yearWarning, creationUnknown, yearConfirmed } = results;
+			snapshot.results = { fileName, lastModified, workbook, yearWarning, creationUnknown, yearConfirmed };
 			const { hidden, excluded } = this.#selection;
 			snapshot.certificateSelection = {
 				hidden: { ageGroups: [...hidden.ageGroups], genders: [...hidden.genders], kinds: [...hidden.kinds] },
@@ -134,8 +134,8 @@ export class CompetitionStore {
 			logError("competition.resultsRestoreFailed");
 			return;
 		}
-		// An die wiederhergestellten Ergebnisse binden, damit die Urkunden-Seite nichts zurücksetzt.
-		this.#selection.attach(this.#session.results);
+		// An die wiederhergestellte Arbeitsmappe binden, damit die Urkunden-Seite nichts zurücksetzt.
+		this.#selection.attach(this.#session.results?.workbook ?? null);
 		if (selection) {
 			this.#selection.hidden = selection.hidden;
 			this.#selection.excluded = new Set(selection.excluded);

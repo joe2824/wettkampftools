@@ -17,7 +17,9 @@ const results: SessionResults = {
 	workbook: { sheets: [], properties: { created: null, modified: null } },
 	kind: "team",
 	rows: [],
-	yearWarning: null
+	yearWarning: null,
+	creationUnknown: false,
+	yearConfirmed: false
 };
 
 describe("SessionState", () => {

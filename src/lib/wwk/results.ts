@@ -142,10 +142,31 @@ function yearOf(value: string | null): number | null {
 	return Number.isNaN(time) ? null : new Date(time).getFullYear();
 }
 
-/** Frühestes Jahr aus Erstellt-/Geändert-Datum und Dateidatum. */
-export function workbookYear(properties: WorkbookProperties, fileLastModifiedMs: number): number {
-	const years = [yearOf(properties.created), yearOf(properties.modified)].filter(
-		(year): year is number => year !== null,
-	);
-	return Math.min(new Date(fileLastModifiedMs).getFullYear(), ...years);
+/** Zeiten aus dem Dateisystem; null, wenn unbekannt. */
+export interface FileDates {
+	createdMs: number | null;
+	modifiedMs: number | null;
+}
+
+export interface FileYear {
+	/** Frühestes bekanntes Jahr; null ohne jede Angabe. */
+	year: number | null;
+	/** Ist das Erstellungsdatum im Dateisystem bekannt? */
+	creationKnown: boolean;
+}
+
+const yearOfMs = (ms: number | null): number | null => (ms === null ? null : new Date(ms).getFullYear());
+
+/**
+ * Frühestes Jahr aus Erstellungs- und Änderungsdatum der Datei und den Dokumenteigenschaften.
+ * Kopieren setzt unter Windows das Erstellungsdatum neu, das Änderungsdatum bleibt – daher das Minimum.
+ */
+export function workbookYear(properties: WorkbookProperties, dates: FileDates): FileYear {
+	const years = [
+		yearOfMs(dates.createdMs),
+		yearOfMs(dates.modifiedMs),
+		yearOf(properties.created),
+		yearOf(properties.modified)
+	].filter((year): year is number => year !== null);
+	return { year: years.length > 0 ? Math.min(...years) : null, creationKnown: dates.createdMs !== null };
 }

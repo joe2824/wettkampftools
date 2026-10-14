@@ -9,6 +9,7 @@
 	import { Button } from "$lib/components/ui/button";
 	import { settingsStore } from "$lib/settings/settingsStore.svelte";
 	import { createCertificatesPdf, saveSerialLetter } from "$lib/workflows/certificates";
+	import { YEAR_CONFIRMATION_HINT } from "$lib/workflows/results";
 	import type { CompetitionKind } from "$lib/wwk/results";
 	import PrintHints from "./PrintHints.svelte";
 
@@ -16,15 +17,18 @@
 		entries: CertificateEntry[];
 		competition: CompetitionKind;
 		pageCount: number;
+		/** Gesperrt, solange die Ergebnisdatei nicht bestätigt ist. */
+		locked?: boolean;
 	}
 
-	let { entries, competition, pageCount }: Props = $props();
+	let { entries, competition, pageCount, locked = false }: Props = $props();
 
 	let busy = $state<"pdf" | "serialLetter" | null>(null);
 	let pdfPath = $state<string | null>(null);
 	let serialLetterPath = $state<string | null>(null);
 
 	const empty = $derived(entries.length === 0);
+	const blocked = $derived(empty || locked || busy !== null);
 	const entryLabel = $derived(entries.length === 1 ? "1 Eintrag" : `${entries.length} Einträge`);
 	const pageLabel = $derived(pageCount === 1 ? "1 Seite" : `${pageCount} Seiten`);
 
@@ -69,7 +73,7 @@
 <div class="flex flex-col gap-4">
 	<div class="flex flex-wrap items-center gap-4">
 		<p class="text-lg font-semibold tabular-nums" aria-live="polite">{entryLabel} → {pageLabel}</p>
-		<Button size="lg" disabled={empty || busy !== null} onclick={createPdf}>
+		<Button size="lg" disabled={blocked} onclick={createPdf}>
 			{#if busy === "pdf"}
 				<LoaderCircleIcon class="animate-spin" data-icon="inline-start" />
 				PDF wird erzeugt …
@@ -79,7 +83,9 @@
 			{/if}
 		</Button>
 	</div>
-	{#if empty}
+	{#if locked}
+		<p class="text-sm font-medium text-destructive">{YEAR_CONFIRMATION_HINT}</p>
+	{:else if empty}
 		<p class="text-sm text-muted-foreground">Mindestens einen Eintrag auswählen.</p>
 	{/if}
 
@@ -91,7 +97,7 @@
 		<p class="text-sm text-muted-foreground">
 			Notlösung: Tabelle für den Seriendruck mit der bisherigen Word-Vorlage, sortiert wie die Urkunden.
 		</p>
-		<Button variant="outline" class="self-start" disabled={empty || busy !== null} onclick={exportSerialLetter}>
+		<Button variant="outline" class="self-start" disabled={blocked} onclick={exportSerialLetter}>
 			{#if busy === "serialLetter"}
 				<LoaderCircleIcon class="animate-spin" data-icon="inline-start" />
 			{:else}

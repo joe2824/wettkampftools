@@ -1,11 +1,11 @@
 <script lang="ts">
-	import CalendarXIcon from "@lucide/svelte/icons/calendar-x";
 	import FileSpreadsheetIcon from "@lucide/svelte/icons/file-spreadsheet";
 	import { toast } from "svelte-sonner";
 	import * as Alert from "$lib/components/ui/alert";
 	import { Badge } from "$lib/components/ui/badge";
 	import { Button } from "$lib/components/ui/button";
 	import Dropzone from "$lib/components/Dropzone.svelte";
+	import YearCheckNotice from "$lib/components/YearCheckNotice.svelte";
 	import type { CheckedFile } from "$lib/components/fileCheck";
 	import type { SessionResults } from "$lib/session.svelte";
 	import { loadResultsFile } from "$lib/workflows/results";
@@ -66,11 +66,7 @@
 		</Alert.Root>
 	{/if}
 
-	{#if results && results.yearWarning !== null && !replacing}
-		<Alert.Root>
-			<CalendarXIcon />
-			<Alert.Title>Die Datei stammt aus {results.yearWarning} – richtige Datei?</Alert.Title>
-			<Alert.Description>Die Ergebnisdatei ist nicht aus diesem Jahr. Bitte kurz prüfen.</Alert.Description>
-		</Alert.Root>
+	{#if results && !replacing}
+		<YearCheckNotice {results} onreplace={() => (replacing = true)} />
 	{/if}
 </div>

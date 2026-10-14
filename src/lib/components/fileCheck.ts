@@ -12,7 +12,17 @@ export interface CheckedFile {
 	name: string;
 	bytes: Uint8Array;
 	lastModified: number;
+	/** Erstellungszeit im Dateisystem; null, wenn unbekannt (z. B. im Browser). */
+	createdMs: number | null;
 	kind: FileKind;
+}
+
+/** Datei aus der Desktop-Hülle: Bytes und Zeiten aus dem Dateisystem. */
+export interface NativeInputFile {
+	name: string;
+	bytes: Uint8Array;
+	createdMs: number | null;
+	modifiedMs: number | null;
 }
 
 export type FileCheckResult = { ok: true; kind: FileKind } | { ok: false; message: string };
@@ -65,6 +75,11 @@ export function acceptAttribute(kinds: FileKind[]): string {
 	return kinds.flatMap(extensionList).join(",");
 }
 
+/** Filter für den Öffnen-Dialog, je Art einer. */
+export function dialogFilters(kinds: FileKind[]): { name: string; extensions: string[] }[] {
+	return kinds.map((kind) => ({ name: KIND_RULES[kind].label, extensions: Object.keys(KIND_RULES[kind].extensions) }));
+}
+
 /** Prüft eine Datei gegen die erlaubten Arten. */
 export function checkFile(
 	{ name, bytes }: { name: string; bytes: Uint8Array },
@@ -97,5 +112,21 @@ export async function readCheckedFile(
 	}
 	const result = checkFile({ name: file.name, bytes }, kinds, maxBytes);
 	if (!result.ok) return result;
-	return { ok: true, file: { name: file.name, bytes, lastModified: file.lastModified, kind: result.kind } };
+	return {
+		ok: true,
+		file: { name: file.name, bytes, lastModified: file.lastModified, createdMs: null, kind: result.kind }
+	};
+}
+
+/** Prüft eine über die Desktop-Hülle gelesene Datei. */
+export function checkInputFile(
+	input: NativeInputFile,
+	kinds: FileKind[],
+	maxBytes: number = DEFAULT_MAX_BYTES,
+	now: number = Date.now()
+): ReadFileResult {
+	const result = checkFile(input, kinds, maxBytes);
+	if (!result.ok) return result;
+	const { name, bytes, createdMs, modifiedMs } = input;
+	return { ok: true, file: { name, bytes, lastModified: modifiedMs ?? now, createdMs, kind: result.kind } };
 }

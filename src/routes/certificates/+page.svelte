@@ -16,6 +16,7 @@
 	import * as Card from "$lib/components/ui/card";
 	import { session } from "$lib/session.svelte";
 	import { settingsStore } from "$lib/settings/settingsStore.svelte";
+	import { needsYearConfirmation } from "$lib/workflows/results";
 	import { buildAgeGroupOrder } from "$lib/wwk/ageGroups";
 
 	const settings = $derived(settingsStore.settings);
@@ -29,7 +30,8 @@
 		buildCertificatePages(selected, { competition, ...settings.certificates }, settings.event)
 	);
 
-	$effect.pre(() => selection.attach(results));
+	// An die Arbeitsmappe binden: das Bestätigen des Dateijahrs setzt die Auswahl nicht zurück.
+	$effect.pre(() => selection.attach(results?.workbook ?? null));
 </script>
 
 <div class="mx-auto flex max-w-5xl flex-col gap-6">
@@ -88,7 +90,12 @@
 			/>
 			{#if entries.length > 0}
 				<CertificateOptions {competition} namesShortfall={preview.namesShortfall} />
-				<CertificateActions entries={selected} {competition} pageCount={preview.pages.length} />
+				<CertificateActions
+					entries={selected}
+					{competition}
+					pageCount={preview.pages.length}
+					locked={needsYearConfirmation(results)}
+				/>
 			{:else}
 				<p class="text-sm text-muted-foreground">Zuerst Einträge auswählen.</p>
 			{/if}

@@ -39,7 +39,8 @@ Importe laufen nur nach unten: Oberfläche → Fachkern → `platform/`. Keine
 Fachlogik in Svelte-Komponenten oder Plattform-Adaptern.
 
 Rust bleibt schlank und kennt keine Fachlogik: `src-tauri/src/` mit `workbook`
-(Excel lesen/schreiben), `output` (Dateien schreiben), `legacy_settings`
+(Excel lesen/schreiben), `input` (gewählte oder abgelegte Dateien samt
+Erstellungsdatum lesen), `output` (Dateien schreiben), `legacy_settings`
 (Einstellungen der alten Version übernehmen) und `logging`.
 
 Der Test liegt **neben** seinem Modul (`foo.ts` → `foo.test.ts`), nicht in

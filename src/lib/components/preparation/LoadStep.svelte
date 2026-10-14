@@ -1,4 +1,5 @@
 <script lang="ts">
+	import CalendarXIcon from "@lucide/svelte/icons/calendar-x";
 	import CircleAlertIcon from "@lucide/svelte/icons/circle-alert";
 	import * as Alert from "$lib/components/ui/alert";
 	import { Badge } from "$lib/components/ui/badge";
@@ -10,10 +11,12 @@
 	interface Props {
 		registration: SessionRegistration | null;
 		error: string | null;
+		/** Jahr der Datei, wenn es nicht das laufende ist. */
+		yearWarning: number | null;
 		onfile: (file: CheckedFile) => void;
 	}
 
-	let { registration, error, onfile }: Props = $props();
+	let { registration, error, yearWarning, onfile }: Props = $props();
 
 	const summary = $derived(registration ? summarizeRegistration(registration) : null);
 </script>
@@ -31,6 +34,14 @@
 		<CircleAlertIcon />
 		<Alert.Title>Meldedatei nicht geladen</Alert.Title>
 		<Alert.Description>{error}</Alert.Description>
+	</Alert.Root>
+{/if}
+
+{#if registration && yearWarning !== null}
+	<Alert.Root>
+		<CalendarXIcon />
+		<Alert.Title>Die Meldedatei stammt aus {yearWarning}</Alert.Title>
+		<Alert.Description>Bitte prüfen, ob es der aktuelle Export aus dem Meldeportal ist.</Alert.Description>
 	</Alert.Root>
 {/if}
 

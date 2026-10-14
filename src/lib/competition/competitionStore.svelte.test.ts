@@ -43,7 +43,7 @@ function loadRegistration() {
 }
 
 function setResults() {
-	session.setResults({ fileName: "JAuswertung.xlsx", lastModified: 0, workbook: WORKBOOK, kind: "team", rows: [], yearWarning: 2025 });
+	session.setResults({ fileName: "JAuswertung.xlsx", lastModified: 0, workbook: WORKBOOK, kind: "team", rows: [], yearWarning: 2025, creationUnknown: false, yearConfirmed: true });
 }
 
 beforeEach(() => {
@@ -79,14 +79,21 @@ describe("restore", () => {
 	it("stellt Ergebnisse samt Jahreshinweis und Urkunden-Auswahl wieder her", async () => {
 		await saveCompetitionState({
 			savedAt: SAVED_AT,
-			results: { fileName: "JAuswertung.xlsx", lastModified: 5, workbook: WORKBOOK, yearWarning: 2025 },
+			results: {
+				fileName: "JAuswertung.xlsx",
+				lastModified: 5,
+				workbook: WORKBOOK,
+				yearWarning: 2025,
+				creationUnknown: true,
+				yearConfirmed: true
+			},
 			certificateSelection: { hidden: { ageGroups: ["AK 12"], genders: [], kinds: [] }, excluded: ["e1"] }
 		});
 		await store.restore(settings);
 		expect(session.results?.rows).toHaveLength(1);
 		expect(session.results?.kind).toBe("team");
-		expect(session.results?.yearWarning).toBe(2025);
-		selection.attach(session.results);
+		expect(session.results).toMatchObject({ yearWarning: 2025, creationUnknown: true, yearConfirmed: true });
+		selection.attach(session.results?.workbook ?? null);
 		expect(selection.hidden.ageGroups).toEqual(["AK 12"]);
 		expect([...selection.excluded]).toEqual(["e1"]);
 	});
@@ -118,7 +125,7 @@ describe("Autosave", () => {
 		flushSync();
 		setResults();
 		flushSync();
-		selection.attach(session.results);
+		selection.attach(session.results?.workbook ?? null);
 		selection.excluded = new Set(["e1"]);
 		flushSync();
 		await vi.advanceTimersByTimeAsync(AUTOSAVE_DELAY_MS - 1);
@@ -132,7 +139,7 @@ describe("Autosave", () => {
 		expect(saved?.savedAt).toBe(NOW.toISOString());
 		expect(saved?.registration?.waveSelection).toEqual(["r1"]);
 		expect(saved?.registration?.csvBase64).toBe(encodeBase64(csv));
-		expect(saved?.results?.yearWarning).toBe(2025);
+		expect(saved?.results).toMatchObject({ yearWarning: 2025, creationUnknown: false, yearConfirmed: true });
 		expect(saved?.certificateSelection).toEqual({ hidden: NO_HIDDEN, excluded: ["e1"] });
 		expect(store.savedAt).toBe(NOW.toISOString());
 	});
@@ -153,7 +160,7 @@ describe("newCompetition", () => {
 	it("leert Sitzung, Urkunden-Auswahl und gespeicherten Stand", async () => {
 		loadRegistration();
 		setResults();
-		selection.attach(session.results);
+		selection.attach(session.results?.workbook ?? null);
 		selection.excluded = new Set(["e1"]);
 		await store.saveNow();
 		expect(fs.files.has(COMPETITION_STATE_PATH)).toBe(true);

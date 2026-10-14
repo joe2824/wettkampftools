@@ -145,17 +145,40 @@ describe("readJAuswertungResults", () => {
 });
 
 describe("workbookYear", () => {
-	const fileDate = Date.UTC(2026, 5, 1);
+	const NO_PROPERTIES = { created: null, modified: null };
+	const ms = (year: number, month = 5) => Date.UTC(year, month, 1);
 
-	it("nimmt das früheste Jahr aus Eigenschaften und Dateidatum", () => {
-		expect(workbookYear({ created: "2025-06-01T10:00:00Z", modified: "2026-06-01T10:00:00Z" }, fileDate)).toBe(2025);
+	it("nimmt das Erstellungsjahr, wenn die Datei später geändert wurde", () => {
+		const dates = { createdMs: ms(2025), modifiedMs: ms(2026) };
+		expect(workbookYear(NO_PROPERTIES, dates)).toEqual({ year: 2025, creationKnown: true });
+	});
+
+	it("erkennt Kopien am älteren Änderungsdatum", () => {
+		const dates = { createdMs: ms(2026), modifiedMs: ms(2024) };
+		expect(workbookYear(NO_PROPERTIES, dates)).toEqual({ year: 2024, creationKnown: true });
+	});
+
+	it("berücksichtigt Dokumenteigenschaften, wenn vorhanden", () => {
+		const properties = { created: "2023-06-01T10:00:00Z", modified: "2026-06-01T10:00:00Z" };
+		expect(workbookYear(properties, { createdMs: ms(2026), modifiedMs: ms(2026) }).year).toBe(2023);
 	});
 
 	it("ignoriert fehlende und ungültige Angaben", () => {
-		expect(workbookYear({ created: null, modified: "kein Datum" }, fileDate)).toBe(2026);
+		const properties = { created: null, modified: "kein Datum" };
+		expect(workbookYear(properties, { createdMs: ms(2026), modifiedMs: null })).toEqual({ year: 2026, creationKnown: true });
 	});
 
-	it("nutzt das Dateidatum, wenn es früher ist", () => {
-		expect(workbookYear({ created: "2026-03-01", modified: null }, Date.UTC(2024, 0, 15))).toBe(2024);
+	it("meldet ein unbekanntes Erstellungsdatum", () => {
+		expect(workbookYear(NO_PROPERTIES, { createdMs: null, modifiedMs: ms(2026) })).toEqual({
+			year: 2026,
+			creationKnown: false
+		});
+	});
+
+	it("liefert kein Jahr ohne jede Angabe", () => {
+		expect(workbookYear(NO_PROPERTIES, { createdMs: null, modifiedMs: null })).toEqual({
+			year: null,
+			creationKnown: false
+		});
 	});
 });
