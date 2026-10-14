@@ -1,4 +1,5 @@
 <script lang="ts">
+	import CheckIcon from "@lucide/svelte/icons/check";
 	import { Button } from "$lib/components/ui/button";
 	import * as ToggleGroup from "$lib/components/ui/toggle-group";
 	import {
@@ -16,6 +17,11 @@
 	}
 
 	let { options, hidden, onchange }: Props = $props();
+
+	// Gewählte Filter deutlich absetzen; die Standardfarbe gleicht sonst dem Hover-Zustand.
+	const ITEM_CLASS =
+		"text-muted-foreground data-[state=on]:border-primary data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary/90 data-[state=on]:hover:text-primary-foreground";
+	const CHECK_CLASS = "hidden group-data-[state=on]/toggle:inline";
 
 	function setAgeGroups(values: string[]) {
 		onchange({ ...hidden, ageGroups: hiddenValuesFor(options.ageGroups, values) });
@@ -48,7 +54,10 @@
 			bind:value={() => shownValues(options.ageGroups, hidden.ageGroups), setAgeGroups}
 		>
 			{#each options.ageGroups as ageGroup (ageGroup)}
-				<ToggleGroup.Item value={ageGroup}>{ageGroup}</ToggleGroup.Item>
+				<ToggleGroup.Item value={ageGroup} class={ITEM_CLASS}>
+					<CheckIcon class={CHECK_CLASS} aria-hidden="true" />
+					{ageGroup}
+				</ToggleGroup.Item>
 			{/each}
 		</ToggleGroup.Root>
 	</div>
@@ -63,7 +72,10 @@
 				bind:value={() => shownValues(options.genders, hidden.genders), setGenders}
 			>
 				{#each options.genders as gender (gender)}
-					<ToggleGroup.Item value={gender}>{gender}</ToggleGroup.Item>
+					<ToggleGroup.Item value={gender} class={ITEM_CLASS}>
+						<CheckIcon class={CHECK_CLASS} aria-hidden="true" />
+						{gender}
+					</ToggleGroup.Item>
 				{/each}
 			</ToggleGroup.Root>
 		</div>
@@ -78,7 +90,10 @@
 					bind:value={() => shownValues(options.kinds, hidden.kinds), setKinds}
 				>
 					{#each options.kinds as kind (kind)}
-						<ToggleGroup.Item value={kind}>{KIND_FILTER_LABELS[kind]}</ToggleGroup.Item>
+						<ToggleGroup.Item value={kind} class={ITEM_CLASS}>
+							<CheckIcon class={CHECK_CLASS} aria-hidden="true" />
+							{KIND_FILTER_LABELS[kind]}
+						</ToggleGroup.Item>
 					{/each}
 				</ToggleGroup.Root>
 			</div>
