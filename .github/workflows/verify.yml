@@ -1,0 +1,55 @@
+name: Verify
+
+# Das gemeinsame Prüfwerk. Kein eigener Auslöser - CI und Release rufen es
+# über `workflow_call` auf.
+on:
+  workflow_call:
+
+jobs:
+  code:
+    name: Typen, Tests, Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npm run check
+
+      - name: Tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+  # Auf windows-latest, weil die Anwendung nur dort läuft und #[cfg(windows)]-Code
+  # auf Linux gar nicht kompiliert würde. Ohne Frontend-Build: ohne das Feature
+  # `custom-protocol` bettet Tauri `frontendDist` nicht ein.
+  rust:
+    name: Rust
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Clippy
+        working-directory: src-tauri
+        run: cargo clippy --all-targets -- -D warnings
+
+      # `clippy --all-targets` kompiliert die Tests, führt sie aber nicht aus.
+      - name: Tests
+        working-directory: src-tauri
+        run: cargo test
