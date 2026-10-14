@@ -1,3 +1,5 @@
+mod logging;
+
 /// Holt das Hauptfenster nach vorn (zweiter Programmstart).
 #[cfg(desktop)]
 fn focus_main(app: &tauri::AppHandle) {
@@ -30,6 +32,13 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_http::init())
         .plugin(tauri_plugin_opener::init())
+        .setup(|app| {
+            use tauri::Manager;
+            if let Ok(dir) = app.path().app_data_dir() {
+                logging::init(dir);
+            }
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("Fehler beim Starten von Wettkampftools");
 }
