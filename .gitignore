@@ -5,3 +5,7 @@ test
 *.xls
 .DS_Store
 *.csv
+*.docx
+*.rwm
+*.txt
+.claude/
