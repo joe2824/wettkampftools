@@ -4,7 +4,7 @@
 	import CertificateOptions from "$lib/components/certificates/CertificateOptions.svelte";
 	import EntryFilters from "$lib/components/certificates/EntryFilters.svelte";
 	import EntryTable from "$lib/components/certificates/EntryTable.svelte";
-	import ResultsSource from "$lib/components/certificates/ResultsSource.svelte";
+	import ResultsSource from "$lib/components/ResultsSource.svelte";
 	import {
 		filterOptions,
 		groupEntries,

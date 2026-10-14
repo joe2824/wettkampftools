@@ -71,10 +71,8 @@
 	{#if yearWarning !== null && results && !replacing}
 		<Alert.Root>
 			<CalendarXIcon />
-			<Alert.Title>Datei aus {yearWarning}</Alert.Title>
-			<Alert.Description>
-				Die Ergebnisdatei stammt nicht aus diesem Jahr. Bitte prüfen, ob es die richtige Datei ist.
-			</Alert.Description>
+			<Alert.Title>Die Datei stammt aus {yearWarning} – richtige Datei?</Alert.Title>
+			<Alert.Description>Die Ergebnisdatei ist nicht aus diesem Jahr. Bitte kurz prüfen.</Alert.Description>
 		</Alert.Root>
 	{/if}
 </div>

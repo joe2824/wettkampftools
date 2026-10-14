@@ -63,7 +63,8 @@ function cellText(cell: Cell | undefined): string {
 	return cell === null || cell === undefined ? "" : String(cell).trim();
 }
 
-function findSheet(workbook: Workbook): Sheet {
+/** Blatt „Daten“; wirft ResultsError, wenn es fehlt. */
+export function findSheet(workbook: Workbook): Sheet {
 	const wanted = RESULTS_SHEET.toLowerCase();
 	const sheet = workbook.sheets.find((s) => s.name.trim().toLowerCase() === wanted);
 	if (!sheet) {
