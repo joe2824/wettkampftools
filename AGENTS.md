@@ -121,7 +121,7 @@ Keine echten Personendaten in Tests und Fixtures: keine realen Namen, Vereine
 oder Adressen. Platzhalter: `Anna Meier`, `Max Mustermann`, `Musterstadt`.
 
 Meldedateien enthalten Daten von **Minderjährigen**. Dateien mit den Endungen
-`.csv`, `.xls`, `.xlsx`, `.docx`, `.rwm`, `.wwkprojekt` und `.txt` kommen **nie** ins Repo
+`.csv`, `.xls`, `.xlsx`, `.docx`, `.rwm`, `.wk`, `.def`, `.wwkprojekt` und `.txt` kommen **nie** ins Repo
 (Ausnahmen: `static/fonts/OFL.txt`, `LICENSE.txt`). Fixtures werden im Testcode erzeugt.
 
 ## Datenschutz

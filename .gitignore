@@ -5,6 +5,8 @@
 *.csv
 *.docx
 *.rwm
+*.wk
+*.def
 *.txt
 *.wwkprojekt
 !static/fonts/OFL.txt
@@ -24,3 +26,8 @@ coverage/
 # Python (frühere Version)
 .venv/
 __pycache__/
+
+# Schlüssel und Umgebungsdateien
+.env*
+*.key
+*.pem
