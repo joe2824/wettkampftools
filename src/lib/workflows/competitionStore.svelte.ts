@@ -50,6 +50,8 @@ const UNSYNCED = Symbol("unsynced");
 export class CompetitionStore {
 	/** ISO-Zeitpunkt der letzten Sicherung; null, wenn nichts gespeichert ist. */
 	savedAt = $state<string | null>(null);
+	/** Die letzte Sicherung ist gescheitert; gilt bis zur nächsten erfolgreichen. */
+	saveFailed = $state(false);
 	/** Beim Wiederherstellen beiseitegelegte, unlesbare Dateien. */
 	setAside: string[] = [];
 	#session: SessionState;
@@ -239,7 +241,15 @@ export class CompetitionStore {
 	/** Wie #enqueue, aber ein Fehler erreicht auch den Aufrufer. */
 	#enqueueReporting(task: () => Promise<void>): Promise<void> {
 		const run = this.#queue.then(task);
-		const queue = run.catch(() => logError("competition.saveFailed"));
+		const queue = run.then(
+			() => {
+				this.saveFailed = false;
+			},
+			() => {
+				this.saveFailed = true;
+				logError("competition.saveFailed");
+			}
+		);
 		this.#queue = queue;
 		void queue.then(() => {
 			// Erst abmelden, wenn nichts mehr wartet.

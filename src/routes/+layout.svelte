@@ -15,15 +15,31 @@
 	import { beforeWindowClose } from "$lib/platform/windowClose";
 	import { saveSettingsOnClose } from "$lib/settings/settingsCloseSave.svelte";
 	import { settingsStore } from "$lib/settings/settingsStore.svelte";
+	import { competitionStore } from "$lib/workflows/competitionStore.svelte";
 	import { saveSettings } from "$lib/workflows/settings";
 	import { defaultLaunchDeps, startProjectLaunch } from "$lib/workflows/projectLaunch";
 
 	const TOAST_BOTTOM_OFFSET = "5rem";
+	const SAVE_FAILED_TOAST = "competition-save-failed";
 
 	let { children } = $props();
 
 	// Ungespeicherte Einstellungen gehen beim Schließen des Fensters nicht verloren.
 	saveSettingsOnClose(settingsStore, () => saveSettings(settingsStore));
+
+	// Bleibt stehen, bis wieder erfolgreich gesichert wurde.
+	$effect(() => {
+		if (competitionStore.saveFailed) {
+			toast.error("Wettkampfstand konnte nicht gesichert werden", {
+				id: SAVE_FAILED_TOAST,
+				description:
+					"Bitte prüfen, ob auf dem Laufwerk genug Platz ist. Die App versucht es bei der nächsten Änderung erneut.",
+				duration: Infinity
+			});
+		} else {
+			toast.dismiss(SAVE_FAILED_TOAST);
+		}
+	});
 
 	onMount(async () => {
 		// Beim Schließen noch ausstehende Änderungen speichern.

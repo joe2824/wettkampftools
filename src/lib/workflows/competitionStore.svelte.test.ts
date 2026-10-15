@@ -402,3 +402,16 @@ describe("replace", () => {
 		await expect(store.saveNow()).resolves.toBeUndefined();
 	});
 });
+
+describe("saveFailed", () => {
+	it("zeigt ein gescheitertes Sichern an und nimmt es nach dem nächsten Erfolg zurück", async () => {
+		loadRegistration();
+		expect(store.saveFailed).toBe(false);
+		const write = vi.spyOn(fs, "writeText").mockRejectedValue(new Error("Platte voll"));
+		await store.saveNow();
+		expect(store.saveFailed).toBe(true);
+		write.mockRestore();
+		await store.saveNow();
+		expect(store.saveFailed).toBe(false);
+	});
+});
