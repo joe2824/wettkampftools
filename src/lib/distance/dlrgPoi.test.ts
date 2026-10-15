@@ -47,7 +47,12 @@ describe("parsePoiResponse", () => {
 	it("übernimmt nur Gliederungen mit gültigen Koordinaten", () => {
 		const json = {
 			locs: [
-				{ typ: "Gld", lat: "50.1", lon: "8.6", pois: [{ name: "Ortsgruppe Musterstadt e.V." }, { name: "Bezirk Musterstadt" }] },
+				{
+					typ: "Gld",
+					lat: "50.1",
+					lon: "8.6",
+					pois: [{ name: "Ortsgruppe Musterstadt e.V." }, { name: "Bezirk Musterstadt" }]
+				},
 				{ typ: "Gld", lat: 50.2, lon: 8.7, pois: [{ name: "Ortsgruppe Beispielhausen" }] },
 				{ typ: "Bad", lat: 50.3, lon: 8.8, pois: [{ name: "Hallenbad Musterstadt" }] },
 				{ typ: "Gld", lat: "abc", lon: 8.8, pois: [{ name: "Ortsgruppe Kaputt" }] },
@@ -79,9 +84,7 @@ describe("fetchOrganisations", () => {
 		const fetchFn = vi.fn().mockResolvedValue({
 			locs: [{ typ: "Gld", lat: 50, lon: 8, pois: [{ name: "Ortsgruppe Musterstadt" }] }]
 		});
-		await expect(fetchOrganisations(fetchFn)).resolves.toEqual([
-			{ name: "Ortsgruppe Musterstadt", lat: 50, lon: 8 }
-		]);
+		await expect(fetchOrganisations(fetchFn)).resolves.toEqual([{ name: "Ortsgruppe Musterstadt", lat: 50, lon: 8 }]);
 		expect(fetchFn).toHaveBeenCalledWith(POI_URL);
 		expect(POI_URL).toBe("https://services.dlrg.net/service.php?doc=poi&strict=1&limit=5000");
 	});

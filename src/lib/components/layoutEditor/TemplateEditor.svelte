@@ -16,7 +16,12 @@
 	let textarea = $state<HTMLTextAreaElement | null>(null);
 
 	async function insert(token: string) {
-		const { text, cursor } = insertAtCursor(template, token, textarea?.selectionStart ?? null, textarea?.selectionEnd ?? null);
+		const { text, cursor } = insertAtCursor(
+			template,
+			token,
+			textarea?.selectionStart ?? null,
+			textarea?.selectionEnd ?? null
+		);
 		onchange(text);
 		await tick();
 		textarea?.focus();

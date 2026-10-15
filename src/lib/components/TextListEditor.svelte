@@ -61,7 +61,9 @@
 		onblur={() => changed && apply()}
 		oninput={() => (hint = null)}
 	/>
-	<p class="text-xs text-muted-foreground">Ein Eintrag pro Zeile. Leere Zeilen und doppelte Einträge werden entfernt.</p>
+	<p class="text-xs text-muted-foreground">
+		Ein Eintrag pro Zeile. Leere Zeilen und doppelte Einträge werden entfernt.
+	</p>
 	<div class="flex flex-wrap items-center gap-2">
 		<Button variant="outline" size="sm" disabled={!changed} onclick={apply}>
 			<CheckIcon data-icon="inline-start" />

@@ -14,7 +14,7 @@ function team(organisation: string, originalName: string): Team {
 		gender: "weiblich",
 		qualification: "",
 		reportedPoints: "",
-		members: [],
+		members: []
 	};
 }
 
@@ -52,19 +52,25 @@ describe("teamNameRows", () => {
 			[
 				team("Musterstadt", "Musterstadt / Süd"),
 				team("Beispielhausen", "Beispielhausen"),
-				team("Musterstadt", "Musterstadt / Süd"),
+				team("Musterstadt", "Musterstadt / Süd")
 			],
-			{},
+			{}
 		);
 		expect(rows).toEqual([
-			{ organisation: "Beispielhausen", reportedNames: ["Beispielhausen"], override: "", differs: false, suggestion: null },
+			{
+				organisation: "Beispielhausen",
+				reportedNames: ["Beispielhausen"],
+				override: "",
+				differs: false,
+				suggestion: null
+			},
 			{
 				organisation: "Musterstadt",
 				reportedNames: ["Musterstadt / Süd"],
 				override: "",
 				differs: true,
-				suggestion: "Musterstadt / Süd",
-			},
+				suggestion: "Musterstadt / Süd"
+			}
 		]);
 	});
 

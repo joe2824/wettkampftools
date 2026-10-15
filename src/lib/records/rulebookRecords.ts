@@ -2,14 +2,7 @@
 // Je Altersklasse zwei Disziplinlisten: die erste gilt für weiblich, die zweite für männlich
 // (im offiziellen DLRG-Regelwerk sind die Rec-Werte der ersten Liste die langsameren).
 import { strFromU8, strToU8, unzipSync, zipSync, type Unzipped } from "fflate";
-import {
-	childText,
-	DATA_ENTRY,
-	directChild,
-	directChildren,
-	parseRulebookRoot,
-	RulebookError
-} from "$lib/io/rulebook";
+import { childText, DATA_ENTRY, directChild, directChildren, parseRulebookRoot, RulebookError } from "$lib/io/rulebook";
 
 export type RecordGender = "female" | "male";
 
@@ -133,7 +126,11 @@ function replaceDescription(xml: string, description: string): string {
  * Neues .rwm mit geänderten Rec-Werten und Beschreibung. Ersetzt wird im Text,
  * damit Aufbau und Formatierung für JAuswertung unverändert bleiben.
  */
-export function writeRulebookRecords(bytes: Uint8Array, updates: readonly RecUpdate[], description: string): Uint8Array {
+export function writeRulebookRecords(
+	bytes: Uint8Array,
+	updates: readonly RecUpdate[],
+	description: string
+): Uint8Array {
 	const entries = unzipRulebook(bytes);
 	const xml = strFromU8(entries[DATA_ENTRY]);
 	const values = newRecValues(parseRulebookRoot(xml), updates);

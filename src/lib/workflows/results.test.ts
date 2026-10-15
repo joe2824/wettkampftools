@@ -8,7 +8,16 @@ import { confirmResultsYear, loadResultsFile, needsYearConfirmation } from "./re
 
 const TODAY = new Date(2026, 10, 14);
 const MODIFIED_2026 = new Date(2026, 10, 14).getTime();
-const TEAM_HEADER: Cell[] = ["Platz", "Name", "Mitglied 1", "Mitglied 2", "Gliederung", "Altersklasse", "Geschlecht", "Punkte"];
+const TEAM_HEADER: Cell[] = [
+	"Platz",
+	"Name",
+	"Mitglied 1",
+	"Mitglied 2",
+	"Gliederung",
+	"Altersklasse",
+	"Geschlecht",
+	"Punkte"
+];
 
 function teamSheet(): Sheet {
 	return {

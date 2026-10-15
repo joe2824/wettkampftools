@@ -77,11 +77,7 @@ export function filterEntries(entries: readonly CertificateEntry[], filter: Entr
 	);
 }
 
-export function placeholderValues(
-	entry: CertificateEntry,
-	event: EventInfo,
-	memberName: string
-): PlaceholderValues {
+export function placeholderValues(entry: CertificateEntry, event: EventInfo, memberName: string): PlaceholderValues {
 	const [first, second] = event.signers;
 	return {
 		name: entry.row.name,

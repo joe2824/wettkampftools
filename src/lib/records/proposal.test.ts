@@ -1,10 +1,24 @@
 import { describe, expect, it } from "vitest";
 import type { BestTimes } from "./bestTimes";
 import type { RecMapping } from "./mapping";
-import { applyRecOverrides, buildRecProposal, difference, displayRows, formatProposalSummary, summarizeProposal, toRecUpdates } from "./proposal";
+import {
+	applyRecOverrides,
+	buildRecProposal,
+	difference,
+	displayRows,
+	formatProposalSummary,
+	summarizeProposal,
+	toRecUpdates
+} from "./proposal";
 import { recKey, type RulebookRecord } from "./rulebookRecords";
 
-const rec = (ageGroup: string, gender: "female" | "male", disciplineIndex: number, discipline: string, value: number): RulebookRecord => ({
+const rec = (
+	ageGroup: string,
+	gender: "female" | "male",
+	disciplineIndex: number,
+	discipline: string,
+	value: number
+): RulebookRecord => ({
 	ageGroup,
 	gender,
 	disciplineIndex,
@@ -39,7 +53,13 @@ const BEST: BestTimes = {
 };
 
 describe("buildRecProposal", () => {
-	const rows = buildRecProposal({ club: CLUB, official: OFFICIAL, officialName: "DLRG 2026", bestTimes: BEST, mapping: MAPPING });
+	const rows = buildRecProposal({
+		club: CLUB,
+		official: OFFICIAL,
+		officialName: "DLRG 2026",
+		bestTimes: BEST,
+		mapping: MAPPING
+	});
 	const find = (ageGroup: string, gender: string) => rows.find((r) => r.ageGroup === ageGroup && r.gender === gender)!;
 
 	it("übernimmt offizielle Werte über die zugeordnete AK", () => {
@@ -68,26 +88,60 @@ describe("buildRecProposal", () => {
 	});
 
 	it("markiert Rettungsdisziplinen ohne passende offizielle AK", () => {
-		expect(find("AK Senioren", "male")).toMatchObject({ newRec: 7500, source: "unchanged", note: expect.stringContaining("Zuordnung") });
+		expect(find("AK Senioren", "male")).toMatchObject({
+			newRec: 7500,
+			source: "unchanged",
+			note: expect.stringContaining("Zuordnung")
+		});
 	});
 
 	it("schlägt für die Welle Bestzeit plus Zuschlag vor", () => {
-		expect(find("AkW offen", "female")).toMatchObject({ newRec: 20500, source: "bestTime", note: "Bestzeit 2025: 3:20,00 + 5,00 s" });
+		expect(find("AkW offen", "female")).toMatchObject({
+			newRec: 20500,
+			source: "bestTime",
+			note: "Bestzeit 2025: 3:20,00 + 5,00 s"
+		});
 	});
 
 	it("markiert Wellendisziplinen ohne Bestzeit", () => {
-		expect(find("AkW offen", "male")).toMatchObject({ newRec: 16221, source: "unchanged", note: expect.stringContaining("Bestzeit") });
+		expect(find("AkW offen", "male")).toMatchObject({
+			newRec: 16221,
+			source: "unchanged",
+			note: expect.stringContaining("Bestzeit")
+		});
 	});
 
 	it("nutzt einen eigenen Zuschlag", () => {
-		const custom = buildRecProposal({ club: CLUB, official: OFFICIAL, officialName: "DLRG 2026", bestTimes: BEST, mapping: MAPPING, waveSurchargeS: 2.5 });
-		expect(custom.find((r) => r.source === "bestTime")).toMatchObject({ newRec: 20250, note: "Bestzeit 2025: 3:20,00 + 2,50 s" });
+		const custom = buildRecProposal({
+			club: CLUB,
+			official: OFFICIAL,
+			officialName: "DLRG 2026",
+			bestTimes: BEST,
+			mapping: MAPPING,
+			waveSurchargeS: 2.5
+		});
+		expect(custom.find((r) => r.source === "bestTime")).toMatchObject({
+			newRec: 20250,
+			note: "Bestzeit 2025: 3:20,00 + 2,50 s"
+		});
 	});
 
 	it("markiert fehlende Disziplinen und fehlende Quellen", () => {
-		const missingDiscipline = buildRecProposal({ club: CLUB, official: OFFICIAL, officialName: "DLRG 2026", bestTimes: null, mapping: { ageGroups: { "AK 10": "AK 12" }, disciplineAliases: {} } });
+		const missingDiscipline = buildRecProposal({
+			club: CLUB,
+			official: OFFICIAL,
+			officialName: "DLRG 2026",
+			bestTimes: null,
+			mapping: { ageGroups: { "AK 10": "AK 12" }, disciplineAliases: {} }
+		});
 		expect(missingDiscipline[1]).toMatchObject({ source: "unchanged", note: expect.stringContaining("4*25m RLB") });
-		const none = buildRecProposal({ club: CLUB, official: null, officialName: null, bestTimes: null, mapping: MAPPING });
+		const none = buildRecProposal({
+			club: CLUB,
+			official: null,
+			officialName: null,
+			bestTimes: null,
+			mapping: MAPPING
+		});
 		expect(none.every((r) => r.source === "unchanged" && r.newRec === r.oldRec)).toBe(true);
 		expect(none[0].note).toContain("offizielles Regelwerk");
 	});
@@ -95,7 +149,13 @@ describe("buildRecProposal", () => {
 
 describe("toRecUpdates", () => {
 	it("liefert nur geänderte Werte", () => {
-		const rows = buildRecProposal({ club: CLUB, official: OFFICIAL, officialName: "DLRG 2026", bestTimes: BEST, mapping: MAPPING });
+		const rows = buildRecProposal({
+			club: CLUB,
+			official: OFFICIAL,
+			officialName: "DLRG 2026",
+			bestTimes: BEST,
+			mapping: MAPPING
+		});
 		const updates = toRecUpdates(rows);
 		expect(updates).toContainEqual({ ageGroup: "AK 10", gender: "female", disciplineIndex: 0, rec: 5817 });
 		expect(updates.find((u) => u.ageGroup === "AK Senioren")).toBeUndefined();
@@ -104,7 +164,13 @@ describe("toRecUpdates", () => {
 
 describe("applyRecOverrides", () => {
 	it("setzt eigene Werte und lässt den Rest", () => {
-		const rows = buildRecProposal({ club: CLUB, official: OFFICIAL, officialName: "DLRG 2026", bestTimes: BEST, mapping: MAPPING });
+		const rows = buildRecProposal({
+			club: CLUB,
+			official: OFFICIAL,
+			officialName: "DLRG 2026",
+			bestTimes: BEST,
+			mapping: MAPPING
+		});
 		const edited = applyRecOverrides(rows, new Map([[recKey(rows[3]), 7400]]));
 		expect(edited[3]).toMatchObject({ newRec: 7400, edited: true });
 		expect(edited[0]).toMatchObject({ newRec: 5817, edited: false });
@@ -114,7 +180,13 @@ describe("applyRecOverrides", () => {
 
 describe("offizielle Quelle ohne Namen", () => {
 	it("nennt nur die AK", () => {
-		const rows = buildRecProposal({ club: CLUB, official: OFFICIAL, officialName: null, bestTimes: null, mapping: MAPPING });
+		const rows = buildRecProposal({
+			club: CLUB,
+			official: OFFICIAL,
+			officialName: null,
+			bestTimes: null,
+			mapping: MAPPING
+		});
 		expect(rows[0].note).toBe("Offizielles Regelwerk · AK 12");
 	});
 });
@@ -128,14 +200,26 @@ describe("difference", () => {
 
 describe("summarizeProposal", () => {
 	it("zählt geändert, unverändert, ohne Quelle und eigene Werte getrennt", () => {
-		const rows = buildRecProposal({ club: CLUB, official: OFFICIAL, officialName: "DLRG 2026", bestTimes: BEST, mapping: MAPPING });
+		const rows = buildRecProposal({
+			club: CLUB,
+			official: OFFICIAL,
+			officialName: "DLRG 2026",
+			bestTimes: BEST,
+			mapping: MAPPING
+		});
 		const same = { ...rows[0], newRec: rows[0].oldRec };
 		const edited = applyRecOverrides([...rows, same], new Map([[recKey(rows[3]), 7400]]));
 		expect(summarizeProposal(edited)).toEqual({ changed: 4, unchanged: 1, noSource: 1, edited: 1 });
 	});
 
 	it("kommt ohne Kennzeichen für eigene Werte aus", () => {
-		const rows = buildRecProposal({ club: CLUB, official: null, officialName: null, bestTimes: null, mapping: MAPPING });
+		const rows = buildRecProposal({
+			club: CLUB,
+			official: null,
+			officialName: null,
+			bestTimes: null,
+			mapping: MAPPING
+		});
 		expect(summarizeProposal(rows)).toEqual({ changed: 0, unchanged: 0, noSource: 6, edited: 0 });
 	});
 });
@@ -156,7 +240,11 @@ describe("displayRows", () => {
 			"4*50m Retten in der Welle",
 			"4*50m Retten in der Welle"
 		]);
-		expect(displayRows(rows, false).slice(2).map((r) => r.gender)).toEqual(["female", "male"]);
+		expect(
+			displayRows(rows, false)
+				.slice(2)
+				.map((r) => r.gender)
+		).toEqual(["female", "male"]);
 	});
 
 	it("blendet auf Wunsch unveränderte Werte aus", () => {

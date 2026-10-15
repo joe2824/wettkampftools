@@ -53,7 +53,7 @@ const MIN_POINTS = 0;
 
 const NOT_SCORED_MESSAGES: Record<NotScoredReason, string> = {
 	unknownAgeGroup: "Altersklasse unbekannt",
-	unplaced: "ohne Platz",
+	unplaced: "ohne Platz"
 };
 
 interface GroupedRow {
@@ -100,14 +100,18 @@ function scoreEntry(entry: GroupedRow, n: number): ScoredTeam {
 		place,
 		n,
 		trophyPoints: place === null ? MIN_POINTS : trophyPointsFor(place, n),
-		formula: trophyFormula(place, n),
+		formula: trophyFormula(place, n)
 	};
 	if (place !== null && place > n) team.warning = "placeAboveCount";
 	return team;
 }
 
 /** Bewertet alle Zeilen; nicht Gewertetes wird mit Grund gesammelt. */
-export function scoreTeams(rows: readonly ResultRow[], order: readonly string[], options: ScoringOptions): ScoringResult {
+export function scoreTeams(
+	rows: readonly ResultRow[],
+	order: readonly string[],
+	options: ScoringOptions
+): ScoringResult {
 	const result: ScoringResult = { scored: [], notScored: [] };
 	const counted: GroupedRow[] = [];
 	for (const row of rows) {
@@ -151,13 +155,13 @@ function assignDenseRanks(standings: Omit<Standing, "rank">[]): Standing[] {
 export function rankOrganisations(
 	scored: readonly ScoredTeam[],
 	kind: AgeGroupKind,
-	order: readonly string[] = [],
+	order: readonly string[] = []
 ): Ranking {
 	const byOrganisation = sumByOrganisation(scored.filter((team) => team.kind === kind));
 	const unranked = [...byOrganisation].map(([organisation, teams]) => ({
 		organisation,
 		trophyPoints: teams.reduce((sum, team) => sum + team.trophyPoints, 0),
-		teams: sortTeams(teams, order),
+		teams: sortTeams(teams, order)
 	}));
 	unranked.sort((a, b) => b.trophyPoints - a.trophyPoints || a.organisation.localeCompare(b.organisation, "de"));
 	const standings = assignDenseRanks(unranked);

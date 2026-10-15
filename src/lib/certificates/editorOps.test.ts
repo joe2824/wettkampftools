@@ -67,7 +67,10 @@ describe("moveObject", () => {
 
 	it("hält Texte vollständig auf der Seite", () => {
 		const object = text({ xMm: 25, widthMm: 160, sizePt: 18 });
-		expect(moveObject(object, { x: 100, y: 500 }, true)).toMatchObject({ xMm: PAGE_WIDTH_MM - 160, yMm: PAGE_HEIGHT_MM });
+		expect(moveObject(object, { x: 100, y: 500 }, true)).toMatchObject({
+			xMm: PAGE_WIDTH_MM - 160,
+			yMm: PAGE_HEIGHT_MM
+		});
 		const top = moveObject(object, { x: -100, y: -500 }, true);
 		expect(top.xMm).toBe(0);
 		expect(top.yMm).toBeCloseTo(ptToMm(18), 2);
@@ -129,7 +132,11 @@ describe("updateObject", () => {
 	});
 
 	it("kürzt zu lange Vorlagen und verwirft unbekannte Auswahlwerte", () => {
-		const updated = updateObject(text(), { template: "x".repeat(600), align: "justify" as never, font: "thin" as never });
+		const updated = updateObject(text(), {
+			template: "x".repeat(600),
+			align: "justify" as never,
+			font: "thin" as never
+		});
 		expect(updated.template).toHaveLength(500);
 		expect(updated).toMatchObject({ align: "center", font: "regular" });
 	});
@@ -196,7 +203,10 @@ describe("isShown", () => {
 });
 
 describe("objectAt", () => {
-	const objects = [text({ id: "a", xMm: 20, yMm: 100, widthMm: 100 }), image({ id: "b", xMm: 50, yMm: 90, widthMm: 20, heightMm: 20 })];
+	const objects = [
+		text({ id: "a", xMm: 20, yMm: 100, widthMm: 100 }),
+		image({ id: "b", xMm: 50, yMm: 90, widthMm: 20, heightMm: 20 })
+	];
 
 	it("findet das oberste Objekt unter dem Punkt", () => {
 		expect(objectAt(objects, { x: 55, y: 95 }, true)?.id).toBe("b");

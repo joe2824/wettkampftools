@@ -6,5 +6,6 @@
 <Alert.Root variant="destructive">
 	<CircleAlertIcon />
 	<Alert.Title>Vorschau nicht verfügbar</Alert.Title>
-	<Alert.Description>Die Schriftdateien konnten nicht geladen werden. Bitte das Programm neu starten.</Alert.Description>
+	<Alert.Description>Die Schriftdateien konnten nicht geladen werden. Bitte das Programm neu starten.</Alert.Description
+	>
 </Alert.Root>

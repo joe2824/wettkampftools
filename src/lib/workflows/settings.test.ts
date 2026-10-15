@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const filesMock = vi.hoisted(() => ({
 	saveFile: vi.fn(),
-	datedFileName: (name: string) => `20261014_${name}`,
+	datedFileName: (name: string) => `20261014_${name}`
 }));
 vi.mock("$lib/platform/files", () => filesMock);
 
@@ -16,7 +16,7 @@ import {
 	saveSettings,
 	storeSignature,
 	toCopies,
-	toOffsetMm,
+	toOffsetMm
 } from "./settings";
 
 const bytes = new Uint8Array([1, 2, 3]);
@@ -31,7 +31,7 @@ describe("exportSettings", () => {
 		expect(filesMock.saveFile).toHaveBeenCalledWith({
 			defaultName: "20261014_Wettkampftools_Einstellungen.json",
 			filters: [{ name: "Einstellungen", extensions: ["json"] }],
-			bytes,
+			bytes
 		});
 	});
 
@@ -46,7 +46,7 @@ describe("importSettings", () => {
 		const store = { importJson: vi.fn(() => ["ageGroups.invalid"]) };
 		expect(importSettings(store, bytes)).toEqual({
 			applied: true,
-			messages: ["Altersklassen waren ungültig und wurden zurückgesetzt."],
+			messages: ["Altersklassen waren ungültig und wurden zurückgesetzt."]
 		});
 		expect(store.importJson).toHaveBeenCalledWith(bytes);
 	});
@@ -80,14 +80,14 @@ describe("readRulebook", () => {
 		const outcome = readRulebook(zipSync({ "data.xml": strToU8(xml) }));
 		expect(outcome).toEqual({
 			ok: true,
-			rulebook: { name: "Beispiel", ageGroups: [{ name: "AK 12", minMembers: 4, maxMembers: 5 }] },
+			rulebook: { name: "Beispiel", ageGroups: [{ name: "AK 12", minMembers: 4, maxMembers: 5 }] }
 		});
 	});
 
 	it("meldet eine unpassende Datei verständlich", () => {
 		expect(readRulebook(zipSync({ "andere.xml": strToU8("<x/>") }))).toEqual({
 			ok: false,
-			message: "Die Datei ist kein JAuswertung-Regelwerk.",
+			message: "Die Datei ist kein JAuswertung-Regelwerk."
 		});
 	});
 });
@@ -100,14 +100,16 @@ describe("storeSignature", () => {
 	});
 
 	it("gibt die Meldung bei falschem Bildformat weiter", async () => {
-		const images = { setImage: vi.fn(async () => Promise.reject(new Error("Bitte ein Bild im Format PNG oder JPEG wählen."))) };
+		const images = {
+			setImage: vi.fn(async () => Promise.reject(new Error("Bitte ein Bild im Format PNG oder JPEG wählen.")))
+		};
 		expect(await storeSignature(images, "signature2", bytes)).toBe("Bitte ein Bild im Format PNG oder JPEG wählen.");
 	});
 
 	it("meldet Schreibfehler allgemein", async () => {
 		const images = { setImage: vi.fn(async () => Promise.reject(new Error("os error 28"))) };
 		expect(await storeSignature(images, "signature2", bytes)).toBe(
-			"Die Unterschrift konnte nicht gespeichert werden. Bitte erneut versuchen.",
+			"Die Unterschrift konnte nicht gespeichert werden. Bitte erneut versuchen."
 		);
 	});
 });

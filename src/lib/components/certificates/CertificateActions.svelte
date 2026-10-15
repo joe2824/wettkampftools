@@ -49,7 +49,9 @@
 			if (outcome.status === "failed") toast.error(outcome.message);
 			if (outcome.status !== "saved") return;
 			pdfPath = outcome.path;
-			const description = outcome.opened ? "Das PDF wird geöffnet." : "Das PDF konnte nicht automatisch geöffnet werden.";
+			const description = outcome.opened
+				? "Das PDF wird geöffnet."
+				: "Das PDF konnte nicht automatisch geöffnet werden.";
 			toast.success(`Urkunden gespeichert (${outcome.pageCount} Seiten)`, { description });
 		} finally {
 			busy = null;

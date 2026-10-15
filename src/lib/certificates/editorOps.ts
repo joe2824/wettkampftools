@@ -35,8 +35,7 @@ export interface BoxMm {
 	heightMm: number;
 }
 
-export type ObjectPatch = Partial<Omit<TextObject, "id" | "kind" | "label">> &
-	Partial<Pick<ImageObject, "heightMm">>;
+export type ObjectPatch = Partial<Omit<TextObject, "id" | "kind" | "label">> & Partial<Pick<ImageObject, "heightMm">>;
 
 const NUDGE_DIRECTIONS: Record<string, DeltaMm> = {
 	ArrowLeft: { x: -1, y: 0 },
@@ -161,6 +160,10 @@ const contains = (box: BoxMm, point: PointMm): boolean =>
 	point.x >= box.xMm && point.x <= box.xMm + box.widthMm && point.y >= box.yMm && point.y <= box.yMm + box.heightMm;
 
 /** Oberstes sichtbares Objekt unter dem Punkt (später gezeichnete liegen oben). */
-export function objectAt(objects: readonly LayoutObject[], point: PointMm, withMemberNames: boolean): LayoutObject | null {
+export function objectAt(
+	objects: readonly LayoutObject[],
+	point: PointMm,
+	withMemberNames: boolean
+): LayoutObject | null {
 	return objects.findLast((object) => isShown(object, withMemberNames) && contains(hitBox(object), point)) ?? null;
 }

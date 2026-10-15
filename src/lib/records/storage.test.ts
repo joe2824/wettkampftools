@@ -23,7 +23,10 @@ beforeEach(() => {
 afterEach(() => resetAppDataStore());
 
 describe("Bestzeiten", () => {
-	const best = { year: 2025, entries: [{ ageGroup: "AkW offen", gender: "male" as const, disciplineIndex: 0, time: 16510 }] };
+	const best = {
+		year: 2025,
+		entries: [{ ageGroup: "AkW offen", gender: "male" as const, disciplineIndex: 0, time: 16510 }]
+	};
 
 	it("speichert je Jahr und listet die Jahre absteigend", async () => {
 		await saveBestTimes(best);

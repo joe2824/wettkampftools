@@ -38,8 +38,8 @@ describe("parseRulebook", () => {
 			name: "Beispiel-Regelwerk",
 			ageGroups: [
 				{ name: "AK 12", minMembers: 4, maxMembers: 5 },
-				{ name: "AK Offen", minMembers: 3, maxMembers: 6 },
-			],
+				{ name: "AK Offen", minMembers: 3, maxMembers: 6 }
+			]
 		});
 	});
 
@@ -51,7 +51,7 @@ describe("parseRulebook", () => {
 	it("verwendet 'Regelwerk', wenn keine Beschreibung vorhanden ist", () => {
 		expect(parseRulebook(rwm(rulebookXml(ageGroupXml("AK 10", 4, 5), ""))).name).toBe("Regelwerk");
 		expect(parseRulebook(rwm(rulebookXml(ageGroupXml("AK 10", 4, 5), "<beschreibung> </beschreibung>"))).name).toBe(
-			"Regelwerk",
+			"Regelwerk"
 		);
 	});
 

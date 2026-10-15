@@ -31,7 +31,10 @@
 <div class="mx-auto flex max-w-4xl flex-col gap-6">
 	<header class="flex flex-col gap-1">
 		<h1 class="text-2xl font-bold">Einstellungen</h1>
-		<p class="text-muted-foreground">Altersklassen, Wertung und Urkunden einstellen. Die Veranstaltung wird in der Vorbereitung eingetragen. Änderungen gelten nach dem Speichern.</p>
+		<p class="text-muted-foreground">
+			Altersklassen, Wertung und Urkunden einstellen. Die Veranstaltung wird in der Vorbereitung eingetragen. Änderungen
+			gelten nach dem Speichern.
+		</p>
 	</header>
 
 	<Tabs.Root bind:value={active}>

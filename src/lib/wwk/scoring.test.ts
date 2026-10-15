@@ -17,7 +17,7 @@ function row(overrides: Partial<ResultRow>): ResultRow {
 		gender: "weiblich",
 		competitionPoints: 1234.5,
 		members: ["Anna Meier"],
-		...overrides,
+		...overrides
 	};
 }
 
@@ -64,7 +64,7 @@ describe("scoreTeams", () => {
 			kind: "rescue",
 			gender: "weiblich",
 			place: 1,
-			formula: "5 + 1 = 6",
+			formula: "5 + 1 = 6"
 		});
 		expect(scored[0].warning).toBeUndefined();
 	});
@@ -75,7 +75,7 @@ describe("scoreTeams", () => {
 			row({ place: 2, gender: "weiblich" }),
 			row({ place: 1, gender: "männlich" }),
 			row({ place: 1, ageGroupRaw: "AkW 13/14", gender: "weiblich" }),
-			row({ place: 1, ageGroupRaw: "AK 13/14", gender: "weiblich" }),
+			row({ place: 1, ageGroupRaw: "AK 13/14", gender: "weiblich" })
 		];
 		const { scored } = scoreTeams(rows, ORDER, { excludeUnplaced: true });
 		expect(scored.map((team) => [team.kind, team.n, team.trophyPoints])).toEqual([
@@ -83,7 +83,7 @@ describe("scoreTeams", () => {
 			["rescue", 2, 1],
 			["rescue", 1, 2],
 			["wave", 1, 2],
-			["rescue", 1, 2],
+			["rescue", 1, 2]
 		]);
 	});
 
@@ -144,7 +144,7 @@ describe("rankOrganisations", () => {
 			n: 1,
 			trophyPoints,
 			formula: "",
-			...overrides,
+			...overrides
 		};
 	}
 
@@ -154,14 +154,14 @@ describe("rankOrganisations", () => {
 			team("Musterstadt", 12),
 			team("Musterstadt", 8),
 			team("Adorf", 18),
-			team("Zedorf", 15),
+			team("Zedorf", 15)
 		];
 		const { standings, tieForFirst } = rankOrganisations(scored, "rescue");
 		expect(standings.map((s) => [s.rank, s.organisation, s.trophyPoints])).toEqual([
 			[1, "Musterstadt", 20],
 			[2, "Adorf", 18],
 			[2, "Beispielhausen", 18],
-			[3, "Zedorf", 15],
+			[3, "Zedorf", 15]
 		]);
 		expect(tieForFirst).toBe(false);
 	});
@@ -186,14 +186,14 @@ describe("rankOrganisations", () => {
 		const rows = [
 			row({ ageGroupRaw: "AK offen", gender: "weiblich" }),
 			row({ ageGroupRaw: "AK 12", gender: "weiblich" }),
-			row({ ageGroupRaw: "AK 12", gender: "männlich" }),
+			row({ ageGroupRaw: "AK 12", gender: "männlich" })
 		];
 		const { scored } = scoreTeams(rows, ORDER, { excludeUnplaced: true });
 		const { standings } = rankOrganisations(scored, "rescue", ORDER);
 		expect(standings[0].teams.map((t) => `${t.ageGroup} ${t.gender}`)).toEqual([
 			"AK 12 männlich",
 			"AK 12 weiblich",
-			"AK offen weiblich",
+			"AK offen weiblich"
 		]);
 	});
 

@@ -40,7 +40,13 @@
 		</div>
 
 		<div class="grid grid-cols-2 gap-3">
-			<NumberField id="prop-x" label="X" value={object.xMm} step={POSITION_STEP_MM} onvalue={(xMm) => onchange({ xMm })} />
+			<NumberField
+				id="prop-x"
+				label="X"
+				value={object.xMm}
+				step={POSITION_STEP_MM}
+				onvalue={(xMm) => onchange({ xMm })}
+			/>
 			<NumberField
 				id="prop-y"
 				label={object.kind === "text" ? "Y (Grundlinie)" : "Y (Oberkante)"}

@@ -62,7 +62,7 @@ function readAgeGroup(element: Element): RulebookAgeGroup {
 	return {
 		name,
 		minMembers: childInteger(element, "minMembers"),
-		maxMembers: childInteger(element, "maxMembers"),
+		maxMembers: childInteger(element, "maxMembers")
 	};
 }
 

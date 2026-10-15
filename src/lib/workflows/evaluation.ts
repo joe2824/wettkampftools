@@ -30,18 +30,13 @@ export interface Evaluation {
 }
 
 export type EvaluationState =
-	| { status: "individualOnly"; message: string }
-	| { status: "ready"; evaluation: Evaluation };
+	{ status: "individualOnly"; message: string } | { status: "ready"; evaluation: Evaluation };
 
 export type ExcelOutcome =
-	| { status: "cancelled" }
-	| { status: "saved"; path: string }
-	| { status: "failed"; message: string };
+	{ status: "cancelled" } | { status: "saved"; path: string } | { status: "failed"; message: string };
 
 export type NoticeOutcome =
-	| { status: "cancelled" }
-	| { status: "saved"; path: string; opened: boolean }
-	| { status: "failed"; message: string };
+	{ status: "cancelled" } | { status: "saved"; path: string; opened: boolean } | { status: "failed"; message: string };
 
 /** Rein rechnerisch; Einzelwettkämpfe haben keine Pokalwertung. */
 export function computeEvaluation(results: Pick<SessionResults, "kind" | "rows">, settings: Settings): EvaluationState {
@@ -74,7 +69,11 @@ export async function saveEvaluationExcel(
 			source: findSheet(results.workbook)
 		});
 		const bytes = await writeWorkbook(sheets);
-		const path = await saveFile({ defaultName: datedFileName(EVALUATION_FILE_NAME, now), filters: [EXCEL_FILTER], bytes });
+		const path = await saveFile({
+			defaultName: datedFileName(EVALUATION_FILE_NAME, now),
+			filters: [EXCEL_FILTER],
+			bytes
+		});
 		if (path === null) return { status: "cancelled" };
 		logInfo("evaluation.saved", { teams: evaluation.scored.length });
 		return { status: "saved", path };

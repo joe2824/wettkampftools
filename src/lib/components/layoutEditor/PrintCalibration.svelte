@@ -18,7 +18,10 @@
 	// Versatz sofort speichern, unabhängig vom Speichern des Layouts.
 	function setOffset(axis: "x" | "y", value: number) {
 		const certificates = settingsStore.settings.certificates;
-		const printOffsetMm = { ...certificates.printOffsetMm, [axis]: toOffsetMm(value, certificates.printOffsetMm[axis]) };
+		const printOffsetMm = {
+			...certificates.printOffsetMm,
+			[axis]: toOffsetMm(value, certificates.printOffsetMm[axis])
+		};
 		settingsStore.saveFields({ certificates: { ...certificates, printOffsetMm } });
 	}
 
@@ -67,8 +70,8 @@
 				/>
 			</div>
 			<p class="text-sm text-muted-foreground">
-				Gemessene Abweichung eintragen: druckt der Drucker 1,5 mm zu weit rechts, X = -1,5. Wird sofort gespeichert
-				und gilt für alle Urkunden, nicht für die Vorschau.
+				Gemessene Abweichung eintragen: druckt der Drucker 1,5 mm zu weit rechts, X = -1,5. Wird sofort gespeichert und
+				gilt für alle Urkunden, nicht für die Vorschau.
 			</p>
 		</div>
 	</Dialog.Content>

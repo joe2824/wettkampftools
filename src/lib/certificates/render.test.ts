@@ -150,7 +150,9 @@ describe("layoutPage – leere Platzhalter", () => {
 
 	it("behält Zeilen, wenn mindestens ein Platzhalter gefüllt ist", () => {
 		const signer = text({ template: "{unterzeichner1} ({funktion1})", align: "left" });
-		const ops = textOps(layoutPage(page([signer]), { unterzeichner1: "Max Mustermann", funktion1: "" }, OPTIONS, metrics));
+		const ops = textOps(
+			layoutPage(page([signer]), { unterzeichner1: "Max Mustermann", funktion1: "" }, OPTIONS, metrics)
+		);
 		expect(ops.map((op) => op.text)).toEqual(["Max Mustermann ()"]);
 	});
 

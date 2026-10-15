@@ -9,8 +9,8 @@ function loaded() {
 		buildRegistrationCsv([
 			{ gliederung: "Musterstadt", name: "Musterstadt / Süd", ak: "AK 12" },
 			{ gliederung: "Musterstadt", name: "Musterstadt / Süd", ak: "AK 12" },
-			{ gliederung: "Beispielhausen", name: "Beispielhausen", ak: "AK 12" },
-		]),
+			{ gliederung: "Beispielhausen", name: "Beispielhausen", ak: "AK 12" }
+		])
 	);
 	const outcome = loadRegistrations(csv, "meldungen.csv", defaultSettings());
 	if (!outcome.ok) throw new Error(outcome.message);
@@ -21,7 +21,11 @@ describe("refreshTeamNames", () => {
 	it("vergibt neue Namen und behält Wellenauswahl und IDs", () => {
 		const registration = loaded();
 		const next = refreshTeamNames(registration, { Musterstadt: "Musterstadt / Süd" });
-		expect(next?.teams.map((team) => team.name)).toEqual(["Musterstadt / Süd 1", "Musterstadt / Süd 2", "Beispielhausen"]);
+		expect(next?.teams.map((team) => team.name)).toEqual([
+			"Musterstadt / Süd 1",
+			"Musterstadt / Süd 2",
+			"Beispielhausen"
+		]);
 		expect(next?.teams.map((team) => team.id)).toEqual(registration.teams.map((team) => team.id));
 		expect(next?.renames.map((rename) => rename.to)).toEqual(["Musterstadt / Süd 1", "Musterstadt / Süd 2"]);
 		expect([...(next?.waveSelection ?? [])]).toEqual(["r2"]);

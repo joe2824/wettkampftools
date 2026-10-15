@@ -81,8 +81,8 @@
 				<InfoIcon />
 				<Alert.Title>Nicht alle Mitglieder erhalten eine Urkunde mit Namen</Alert.Title>
 				<Alert.Description>
-					{namesShortfall === 1 ? "Eine Mannschaft hat" : `${namesShortfall} Mannschaften haben`} mehr Mitglieder
-					als Urkunden je Mannschaft eingestellt sind.
+					{namesShortfall === 1 ? "Eine Mannschaft hat" : `${namesShortfall} Mannschaften haben`} mehr Mitglieder als Urkunden
+					je Mannschaft eingestellt sind.
 				</Alert.Description>
 			</Alert.Root>
 		{/if}

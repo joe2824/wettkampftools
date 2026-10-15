@@ -14,5 +14,8 @@
 			Neue offizielle Werte und die Bestzeiten des Vorjahres ins Regelwerk für JAuswertung übernehmen.
 		</span>
 	</span>
-	<ArrowRightIcon class="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+	<ArrowRightIcon
+		class="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5"
+		aria-hidden="true"
+	/>
 </a>

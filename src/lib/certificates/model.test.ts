@@ -90,16 +90,7 @@ describe("eligibleEntries", () => {
 			row({ name: "Welle", ageGroupRaw: "AkW 13/14", gender: "weiblich", place: 1 }),
 			row({ name: "Zwölf", ageGroupRaw: "AK 12", gender: "männlich", place: 1 })
 		];
-		expect(names(eligibleEntries(rows, ORDER))).toEqual([
-			"W10",
-			"W9",
-			"W2a",
-			"W2b",
-			"W1",
-			"M1",
-			"Zwölf",
-			"Welle"
-		]);
+		expect(names(eligibleEntries(rows, ORDER))).toEqual(["W10", "W9", "W2a", "W2b", "W1", "M1", "Zwölf", "Welle"]);
 	});
 });
 
@@ -120,10 +111,7 @@ describe("filterEntries", () => {
 	});
 
 	it("filtert nach Altersklassen, z. B. nur AK 10 und AK 12", () => {
-		expect(names(filterEntries(entries, { ageGroups: ["AK 10", "AK 12"] }))).toEqual([
-			"A10w",
-			"A12m"
-		]);
+		expect(names(filterEntries(entries, { ageGroups: ["AK 10", "AK 12"] }))).toEqual(["A10w", "A12m"]);
 	});
 
 	it("filtert nach Wertung und Geschlecht", () => {
@@ -220,20 +208,8 @@ describe("buildCertificatePages", () => {
 	it("ordnet Mitgliedernamen den Urkunden zu und meldet fehlende", () => {
 		const options = { ...TEAM_OPTIONS, withMemberNames: true };
 		const { pages, namesShortfall } = buildCertificatePages(team, options, EVENT);
-		expect(pages.slice(0, 5).map((page) => page.values.mitglied)).toEqual([
-			"M1",
-			"M2",
-			"M3",
-			"M4",
-			"M5"
-		]);
-		expect(pages.slice(5).map((page) => page.values.mitglied)).toEqual([
-			"Anna Meier",
-			"Max Mustermann",
-			"",
-			"",
-			""
-		]);
+		expect(pages.slice(0, 5).map((page) => page.values.mitglied)).toEqual(["M1", "M2", "M3", "M4", "M5"]);
+		expect(pages.slice(5).map((page) => page.values.mitglied)).toEqual(["Anna Meier", "Max Mustermann", "", "", ""]);
 		expect(namesShortfall).toBe(1);
 	});
 

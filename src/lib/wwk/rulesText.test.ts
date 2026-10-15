@@ -9,7 +9,9 @@ describe("trophyRulesText", () => {
 		expect(text).toContain("Pokalwertung: Ab 2026 werden keine Pokale mehr");
 		expect(text).toContain("in der jeweiligen Wettkampf-Wertung.");
 		expect(text).toContain("Punktesystem: Gewertet wird nach Altersklassen sowie männlich und weiblich getrennt.");
-		expect(text).toContain("5 Mannschaften: 1. Platz = 6 Punkte, 2. Platz = 4, 3. Platz = 3, 4. Platz = 2, 5. Platz = 1 Punkt.");
+		expect(text).toContain(
+			"5 Mannschaften: 1. Platz = 6 Punkte, 2. Platz = 4, 3. Platz = 3, 4. Platz = 2, 5. Platz = 1 Punkt."
+		);
 		expect(text).toContain("Maßgeblich ist der Platz aus JAuswertung, auch bei Platzgleichheit.");
 		expect(text).toContain("über den Pokal entscheidet bei Gleichstand die Wettkampfleitung.");
 	});

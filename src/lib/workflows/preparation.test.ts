@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const filesMock = vi.hoisted(() => ({
 	saveFile: vi.fn(),
-	datedFileName: (name: string) => `20261014_${name}`,
+	datedFileName: (name: string) => `20261014_${name}`
 }));
 vi.mock("$lib/platform/files", () => filesMock);
 
@@ -20,7 +20,7 @@ import {
 	registrationYearWarning,
 	setTeamsInWave,
 	summarizeRegistration,
-	uniqueIssueMessages,
+	uniqueIssueMessages
 } from "./preparation";
 
 const settings = defaultSettings();
@@ -37,7 +37,7 @@ describe("loadRegistrations", () => {
 		const registration = load([
 			{ gliederung: "Musterstadt", ak: "AK 12" },
 			{ gliederung: "Musterstadt", ak: "AK 13/14" },
-			{ gliederung: "Beispielhausen", ak: "AK 15/16" },
+			{ gliederung: "Beispielhausen", ak: "AK 15/16" }
 		]);
 		expect(registration.fileName).toBe("meldungen.csv");
 		expect(registration.teams).toHaveLength(3);
@@ -45,7 +45,7 @@ describe("loadRegistrations", () => {
 		expect(summarizeRegistration(registration)).toEqual({
 			teams: 3,
 			organisations: 2,
-			encodingLabel: "UTF-8",
+			encodingLabel: "UTF-8"
 		});
 	});
 
@@ -59,9 +59,7 @@ describe("loadRegistrations", () => {
 	it("zeigt ältere Exporte als Windows-Kodierung an", () => {
 		const bytes = encodeWindows1252(buildRegistrationCsv([{ gliederung: "Großstadt" }]));
 		const outcome = loadRegistrations(bytes, "alt.csv", settings);
-		expect(outcome.ok && summarizeRegistration(outcome.registration).encodingLabel).toBe(
-			"Windows (ältere Exporte)",
-		);
+		expect(outcome.ok && summarizeRegistration(outcome.registration).encodingLabel).toBe("Windows (ältere Exporte)");
 	});
 
 	it("meldet freundlich, wenn es kein Mannschaften-Export ist", () => {
@@ -83,7 +81,7 @@ describe("checkRegistration", () => {
 	it("prüft Meldungen samt Wellen-Kopien und trennt fehlerhafte Zeilen ab", () => {
 		const registration = load([
 			{ gliederung: "Musterstadt", ak: "AK 13/14" },
-			{ gliederung: "Beispielhausen", ak: "AK 12", geschlecht: "divers" },
+			{ gliederung: "Beispielhausen", ak: "AK 12", geschlecht: "divers" }
 		]);
 		const check = checkRegistration(registration, settings);
 		expect(check.rows).toHaveLength(3);
@@ -105,12 +103,12 @@ describe("Wellenauswahl", () => {
 		const registration = load([
 			{ gliederung: "Musterstadt", ak: "AK 12" },
 			{ gliederung: "Beispielhausen", ak: "AK 15/16" },
-			{ gliederung: "Musterstadt", ak: "AK 13/14" },
+			{ gliederung: "Musterstadt", ak: "AK 13/14" }
 		]);
 		const groups = groupByOrganisation(registration.teams, registration.waveSelection);
 		expect(groups.map((group) => [group.organisation, group.teams.length, group.selected])).toEqual([
 			["Beispielhausen", 1, 1],
-			["Musterstadt", 2, 1],
+			["Musterstadt", 2, 1]
 		]);
 	});
 
@@ -144,7 +142,7 @@ describe("exportRegistrations", () => {
 		filesMock.saveFile.mockResolvedValue("/tmp/20261014_WWK_Meldungen.xlsx");
 		const registration = load([
 			{ gliederung: "Musterstadt", ak: "AK 13/14" },
-			{ gliederung: "Beispielhausen", ak: "AK 12", geschlecht: "männlich" },
+			{ gliederung: "Beispielhausen", ak: "AK 12", geschlecht: "männlich" }
 		]);
 		const { exportableRows } = checkRegistration(registration, settings);
 		const outcome = await exportRegistrations(exportableRows);

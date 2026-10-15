@@ -9,7 +9,7 @@ import {
 	isRecord,
 	IssueCollector,
 	parseSection,
-	type Checked,
+	type Checked
 } from "./validate";
 
 export const SETTINGS_SCHEMA_VERSION = 1;
@@ -93,17 +93,17 @@ export function defaultSettings(): Settings {
 			venue: "Usa-Wellenbad Bad Nauheim",
 			signers: [
 				{ name: "", role: "Vorsitzende/r" },
-				{ name: "", role: "Wettkampforganisation" },
-			],
+				{ name: "", role: "Wettkampforganisation" }
+			]
 		},
 		certificates: {
 			withMemberNames: false,
 			copiesPerTeam: DEFAULT_COPIES_PER_TEAM,
 			copiesPerIndividual: DEFAULT_COPIES_PER_INDIVIDUAL,
-			printOffsetMm: { x: 0, y: 0 },
+			printOffsetMm: { x: 0, y: 0 }
 		},
 		teamNameOverrides: {},
-		legacyMigrated: false,
+		legacyMigrated: false
 	};
 }
 
@@ -137,10 +137,15 @@ function checkRulebook(input: unknown): Checked<RulebookSummary | null> {
 	return { value: { name: input.name, ageGroups } };
 }
 
-function parseSigner(input: Record<string, unknown>, fallback: Signer, field: string, collector: IssueCollector): Signer {
+function parseSigner(
+	input: Record<string, unknown>,
+	fallback: Signer,
+	field: string,
+	collector: IssueCollector
+): Signer {
 	return {
 		name: collector.take(input, "name", fallback.name, () => checkString(input.name, fallback.name, `${field}.name`)),
-		role: collector.take(input, "role", fallback.role, () => checkString(input.role, fallback.role, `${field}.role`)),
+		role: collector.take(input, "role", fallback.role, () => checkString(input.role, fallback.role, `${field}.role`))
 	};
 }
 
@@ -151,7 +156,7 @@ function parseSigners(input: unknown, fallback: EventInfo["signers"], collector:
 	}
 	return [
 		parseSigner(input[0], fallback[0], "event.signers.0", collector),
-		parseSigner(input[1], fallback[1], "event.signers.1", collector),
+		parseSigner(input[1], fallback[1], "event.signers.1", collector)
 	];
 }
 
@@ -169,7 +174,7 @@ function parseEvent(input: Record<string, unknown>, fallback: EventInfo, collect
 		host: text("host"),
 		date: collector.take(input, "date", fallback.date, () => checkIsoDate(input.date, fallback.date)),
 		venue: text("venue"),
-		signers: "signers" in input ? parseSigners(input.signers, fallback.signers, collector) : fallback.signers,
+		signers: "signers" in input ? parseSigners(input.signers, fallback.signers, collector) : fallback.signers
 	};
 }
 
@@ -180,7 +185,13 @@ function parseOffset(input: unknown, fallback: CertificateSettings["printOffsetM
 	}
 	const axis = (key: "x" | "y") =>
 		collector.take(input, key, fallback[key], () =>
-			checkNumberInRange(input[key], fallback[key], -MAX_PRINT_OFFSET_MM, MAX_PRINT_OFFSET_MM, `certificates.printOffsetMm.${key}`),
+			checkNumberInRange(
+				input[key],
+				fallback[key],
+				-MAX_PRINT_OFFSET_MM,
+				MAX_PRINT_OFFSET_MM,
+				`certificates.printOffsetMm.${key}`
+			)
 		);
 	return { x: axis("x"), y: axis("y") };
 }
@@ -188,20 +199,22 @@ function parseOffset(input: unknown, fallback: CertificateSettings["printOffsetM
 function parseCertificates(
 	input: Record<string, unknown>,
 	fallback: CertificateSettings,
-	collector: IssueCollector,
+	collector: IssueCollector
 ): CertificateSettings {
 	const copies = (key: "copiesPerTeam" | "copiesPerIndividual") =>
 		collector.take(input, key, fallback[key], () =>
-			checkIntegerInRange(input[key], fallback[key], MIN_COPIES, MAX_COPIES, `certificates.${key}`),
+			checkIntegerInRange(input[key], fallback[key], MIN_COPIES, MAX_COPIES, `certificates.${key}`)
 		);
 	return {
 		withMemberNames: collector.take(input, "withMemberNames", fallback.withMemberNames, () =>
-			checkBoolean(input.withMemberNames, fallback.withMemberNames, "certificates.withMemberNames"),
+			checkBoolean(input.withMemberNames, fallback.withMemberNames, "certificates.withMemberNames")
 		),
 		copiesPerTeam: copies("copiesPerTeam"),
 		copiesPerIndividual: copies("copiesPerIndividual"),
 		printOffsetMm:
-			"printOffsetMm" in input ? parseOffset(input.printOffsetMm, fallback.printOffsetMm, collector) : fallback.printOffsetMm,
+			"printOffsetMm" in input
+				? parseOffset(input.printOffsetMm, fallback.printOffsetMm, collector)
+				: fallback.printOffsetMm
 	};
 }
 
@@ -229,9 +242,9 @@ export function parseSettings(input: unknown): { settings: Settings; issues: str
 	settings.seniorIndividualAgeGroups = list("seniorIndividualAgeGroups");
 	const waveStart = resolveWaveStart(
 		collector.take(input, "waveStartAgeGroup", settings.waveStartAgeGroup, () =>
-			checkString(input.waveStartAgeGroup, settings.waveStartAgeGroup, "waveStartAgeGroup"),
+			checkString(input.waveStartAgeGroup, settings.waveStartAgeGroup, "waveStartAgeGroup")
 		),
-		settings.ageGroups,
+		settings.ageGroups
 	);
 	if (waveStart.issue) collector.report(waveStart.issue);
 	settings.waveStartAgeGroup = waveStart.value;
@@ -241,7 +254,7 @@ export function parseSettings(input: unknown): { settings: Settings; issues: str
 	settings.event = parseSection(input, "event", settings.event, collector, parseEvent);
 	settings.certificates = parseSection(input, "certificates", settings.certificates, collector, parseCertificates);
 	settings.teamNameOverrides = collector.take(input, "teamNameOverrides", settings.teamNameOverrides, () =>
-		checkStringMap(input.teamNameOverrides, MAX_TEAM_NAME_LENGTH, "teamNameOverrides"),
+		checkStringMap(input.teamNameOverrides, MAX_TEAM_NAME_LENGTH, "teamNameOverrides")
 	);
 	settings.legacyMigrated = flag("legacyMigrated");
 	return { settings, issues: collector.issues };
@@ -258,13 +271,13 @@ const LEGACY_FIELDS = [
 	"seniorTeamAgeGroups",
 	"seniorIndividualAgeGroups",
 	"simplifySeniorAgeGroups",
-	"excludeUnplacedTeams",
+	"excludeUnplacedTeams"
 ] as const;
 
 /** Übernimmt die alte Version feldweise; ungültige Felder fallen auf Standard. */
 export function mergeLegacySettings(
 	base: Settings,
-	legacy: LegacySettings,
+	legacy: LegacySettings
 ): { settings: Settings; applied: string[]; fellBack: string[] } {
 	const defaults = defaultSettings();
 	const settings: Settings = { ...structuredClone(base), legacyMigrated: true };

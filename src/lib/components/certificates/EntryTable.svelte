@@ -5,7 +5,13 @@
 	import * as Table from "$lib/components/ui/table";
 	import { formatCompetitionPoints } from "$lib/format/points";
 	import type { CompetitionKind } from "$lib/wwk/results";
-	import { KIND_FILTER_LABELS, groupState, selectedEntries, withIds, type EntryGroup } from "$lib/certificates/selection";
+	import {
+		KIND_FILTER_LABELS,
+		groupState,
+		selectedEntries,
+		withIds,
+		type EntryGroup
+	} from "$lib/certificates/selection";
 
 	interface Props {
 		groups: EntryGroup[];
@@ -79,7 +85,9 @@
 						<Table.Cell class="text-right tabular-nums">{entry.place}.</Table.Cell>
 						<Table.Cell class="font-medium">{entry.row.name}</Table.Cell>
 						<Table.Cell class="text-muted-foreground">{entry.row.organisation}</Table.Cell>
-						<Table.Cell class="text-right tabular-nums">{formatCompetitionPoints(entry.row.competitionPoints)}</Table.Cell>
+						<Table.Cell class="text-right tabular-nums"
+							>{formatCompetitionPoints(entry.row.competitionPoints)}</Table.Cell
+						>
 						{#if isTeam}
 							<Table.Cell class="text-right tabular-nums">{entry.row.members.length}</Table.Cell>
 						{/if}

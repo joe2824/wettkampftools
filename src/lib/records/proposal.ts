@@ -34,9 +34,17 @@ const normalize = (text: string): string => text.trim().toLowerCase();
 
 type Outcome = Pick<RecProposalRow, "newRec" | "source" | "note">;
 
-const unchanged = (record: RulebookRecord, note: string): Outcome => ({ newRec: record.rec, source: "unchanged", note });
+const unchanged = (record: RulebookRecord, note: string): Outcome => ({
+	newRec: record.rec,
+	source: "unchanged",
+	note
+});
 
-function officialAgeGroup(ageGroup: string, official: readonly RulebookRecord[], mapping: RecMapping): string | undefined {
+function officialAgeGroup(
+	ageGroup: string,
+	official: readonly RulebookRecord[],
+	mapping: RecMapping
+): string | undefined {
 	const target = normalize(mapping.ageGroups[ageGroup] ?? ageGroup);
 	return official.find((entry) => normalize(entry.ageGroup) === target)?.ageGroup;
 }
@@ -60,7 +68,8 @@ function officialOutcome(record: RulebookRecord, source: OfficialSource, mapping
 	const alias = mapping.disciplineAliases[record.discipline];
 	const discipline = normalize(alias ?? record.discipline);
 	const match = official.find(
-		(entry) => entry.ageGroup === ageGroup && entry.gender === record.gender && normalize(entry.discipline) === discipline
+		(entry) =>
+			entry.ageGroup === ageGroup && entry.gender === record.gender && normalize(entry.discipline) === discipline
 	);
 	if (!match) return unchanged(record, `„${record.discipline}“ fehlt in ${ageGroup}.`);
 	const usedAlias = alias === undefined ? undefined : match.discipline;
@@ -94,7 +103,10 @@ export interface EditedRecRow extends RecProposalRow {
 }
 
 /** Eigene Werte (Schlüssel aus recKey) über den Vorschlag legen. */
-export function applyRecOverrides(rows: readonly RecProposalRow[], overrides: ReadonlyMap<string, number>): EditedRecRow[] {
+export function applyRecOverrides(
+	rows: readonly RecProposalRow[],
+	overrides: ReadonlyMap<string, number>
+): EditedRecRow[] {
 	return rows.map((row) => {
 		const override = overrides.get(recKey(row));
 		return override === undefined ? { ...row, edited: false } : { ...row, newRec: override, edited: true };

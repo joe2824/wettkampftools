@@ -62,7 +62,7 @@ export function checkNumberInRange(
 	fallback: number,
 	min: number,
 	max: number,
-	field: string,
+	field: string
 ): Checked<number> {
 	if (typeof input !== "number" || !Number.isFinite(input)) return { value: fallback, issue: `${field}.invalid` };
 	const value = Math.min(max, Math.max(min, input));
@@ -74,7 +74,7 @@ export function checkIntegerInRange(
 	fallback: number,
 	min: number,
 	max: number,
-	field: string,
+	field: string
 ): Checked<number> {
 	const checked = checkNumberInRange(input, fallback, min, max, field);
 	if (checked.issue || Number.isInteger(checked.value)) return checked;
@@ -102,7 +102,7 @@ export function parseSection<T>(
 	key: string,
 	fallback: T,
 	collector: IssueCollector,
-	parse: (input: Record<string, unknown>, fallback: T, collector: IssueCollector) => T,
+	parse: (input: Record<string, unknown>, fallback: T, collector: IssueCollector) => T
 ): T {
 	if (!(key in source)) return fallback;
 	const input = source[key];

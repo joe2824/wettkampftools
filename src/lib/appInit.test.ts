@@ -98,8 +98,6 @@ describe("migrationMessage", () => {
 		expect(message.description).toBe(
 			"0 Einstellungen wurden übernommen. Einige Werte konnten nicht gelesen werden und stehen auf Standard."
 		);
-		expect(migrationMessage({ applied: ["a"], fellBack: [], warnings: ["x"] }).description).toContain(
-			"Standard"
-		);
+		expect(migrationMessage({ applied: ["a"], fellBack: [], warnings: ["x"] }).description).toContain("Standard");
 	});
 });

@@ -84,7 +84,7 @@ export function buildAgeGroupOrder(settings: Settings): string[] {
 		...settings.seniorIndividualAgeGroups,
 		...settings.seniorTeamAgeGroups,
 		SENIOR_AGE_GROUP,
-		...waveAgeGroups(settings),
+		...waveAgeGroups(settings)
 	]);
 }
 

@@ -64,8 +64,7 @@ function rowOps(cells: string[], topMm: number, weight: FontWeight, options: Tab
 		const text = fitText(cells[index] ?? "", column.widthMm - 2 * CELL_PADDING_MM, weight, options);
 		if (text === "") return [];
 		const textWidth = options.metrics.widthMm(text, weight, options.sizePt);
-		const xMm =
-			column.align === "left" ? left + CELL_PADDING_MM : left + column.widthMm - CELL_PADDING_MM - textWidth;
+		const xMm = column.align === "left" ? left + CELL_PADDING_MM : left + column.widthMm - CELL_PADDING_MM - textWidth;
 		return [{ kind: "text", text, font: weight, sizePt: options.sizePt, xMm, baselineMm }];
 	});
 }

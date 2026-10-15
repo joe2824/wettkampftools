@@ -97,7 +97,9 @@
 	function reset() {
 		layoutStore.resetVariant(variant);
 		selectedId = null;
-		toast.info(`Standard für „${VARIANT_NAMES[variant]}“ eingesetzt`, { description: "Zum Übernehmen bitte speichern." });
+		toast.info(`Standard für „${VARIANT_NAMES[variant]}“ eingesetzt`, {
+			description: "Zum Übernehmen bitte speichern."
+		});
 	}
 </script>
 
@@ -105,8 +107,8 @@
 	<header class="flex flex-col gap-1">
 		<h1 class="text-2xl font-bold">Urkunden-Layout</h1>
 		<p class="text-muted-foreground">
-			Texte und Unterschriften auf der Urkunde platzieren. Die Vorschau zeigt Beispieldaten genau so, wie sie
-			gedruckt werden.
+			Texte und Unterschriften auf der Urkunde platzieren. Die Vorschau zeigt Beispieldaten genau so, wie sie gedruckt
+			werden.
 		</p>
 	</header>
 

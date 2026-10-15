@@ -105,7 +105,6 @@
 		else next.set(key, rec);
 		overrides = next;
 	}
-
 </script>
 
 <div class="mx-auto flex max-w-5xl flex-col gap-6">
@@ -123,7 +122,12 @@
 
 	<Card.Root>
 		<Card.Header>
-			<StepHeader step={1} title="Vereins-Regelwerk" description="Das bisherige Regelwerk des Wellenwettkampfs." done={club !== null} />
+			<StepHeader
+				step={1}
+				title="Vereins-Regelwerk"
+				description="Das bisherige Regelwerk des Wellenwettkampfs."
+				done={club !== null}
+			/>
 		</Card.Header>
 		<Card.Content>
 			<RulebookSource

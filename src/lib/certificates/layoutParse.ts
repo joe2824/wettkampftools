@@ -190,9 +190,7 @@ function serializeLayout(layout: Layout): Fields {
 	return {
 		schemaVersion: LAYOUT_SCHEMA_VERSION,
 		variant: layout.variant,
-		objects: layout.objects.map((object) =>
-			pick(object, object.kind === "text" ? TEXT_OBJECT_KEYS : IMAGE_OBJECT_KEYS)
-		)
+		objects: layout.objects.map((object) => pick(object, object.kind === "text" ? TEXT_OBJECT_KEYS : IMAGE_OBJECT_KEYS))
 	};
 }
 

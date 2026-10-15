@@ -14,5 +14,5 @@ export interface LegacySettings {
 
 /** Liefert die alten Einstellungen; null, wenn es keine gibt oder nicht Windows. */
 export function readLegacySettings(): Promise<LegacySettings | null> {
-  return invoke<LegacySettings | null>("read_legacy_settings");
+	return invoke<LegacySettings | null>("read_legacy_settings");
 }

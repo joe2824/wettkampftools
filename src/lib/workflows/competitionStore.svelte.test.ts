@@ -3,7 +3,12 @@ import { flushSync } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NO_HIDDEN } from "$lib/certificates/selection";
 import { SelectionState } from "$lib/certificates/selectionState.svelte";
-import { COMPETITION_STATE_PATH, encodeBase64, loadCompetitionState, saveCompetitionState } from "$lib/competition/persistence";
+import {
+	COMPETITION_STATE_PATH,
+	encodeBase64,
+	loadCompetitionState,
+	saveCompetitionState
+} from "$lib/competition/persistence";
 import { resetAppDataStore, setAppDataStore } from "$lib/platform/fs";
 import type { Sheet } from "$lib/platform/workbook";
 import { SessionState } from "$lib/session.svelte";
@@ -45,7 +50,16 @@ function loadRegistration() {
 }
 
 function setResults() {
-	session.setResults({ fileName: "JAuswertung.xlsx", lastModified: 0, workbook: WORKBOOK, kind: "team", rows: [], yearWarning: 2025, creationUnknown: false, yearConfirmed: true });
+	session.setResults({
+		fileName: "JAuswertung.xlsx",
+		lastModified: 0,
+		workbook: WORKBOOK,
+		kind: "team",
+		rows: [],
+		yearWarning: 2025,
+		creationUnknown: false,
+		yearConfirmed: true
+	});
 }
 
 beforeEach(() => {
@@ -116,7 +130,11 @@ describe("restore", () => {
 	it("lässt eine unbrauchbare Meldedatei weg", async () => {
 		await saveCompetitionState({
 			savedAt: SAVED_AT,
-			registration: { fileName: "x.csv", csvBase64: encodeBase64(new TextEncoder().encode("a;b\n1;2\n")), waveSelection: [] }
+			registration: {
+				fileName: "x.csv",
+				csvBase64: encodeBase64(new TextEncoder().encode("a;b\n1;2\n")),
+				waveSelection: []
+			}
 		});
 		await store.restore(settings);
 		expect(session.registration).toBeNull();

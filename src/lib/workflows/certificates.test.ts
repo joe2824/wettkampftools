@@ -41,7 +41,11 @@ function row(sourceRow: number, place: number, name: string, overrides: Partial<
 	};
 }
 
-const ROWS = [row(1, 1, "Musterstadt"), row(2, 2, "Beispielhausen"), row(3, 1, "Musterdorf", { ageGroupRaw: "AkW 13/14" })];
+const ROWS = [
+	row(1, 1, "Musterstadt"),
+	row(2, 2, "Beispielhausen"),
+	row(3, 1, "Musterdorf", { ageGroupRaw: "AkW 13/14" })
+];
 
 function job(overrides: Partial<CertificateJob> = {}, settings: Settings = defaultSettings()): CertificateJob {
 	return {

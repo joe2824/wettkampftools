@@ -44,7 +44,12 @@
 </script>
 
 <div class="flex flex-col gap-4">
-	<RulebookSource rulebook={official} title="Offizielles Regelwerk (.rwm)" hint="Aus JAuswertung, z. B. „DLRG {year}.rwm“." onfile={handleFile}>
+	<RulebookSource
+		rulebook={official}
+		title="Offizielles Regelwerk (.rwm)"
+		hint="Aus JAuswertung, z. B. „DLRG {year}.rwm“."
+		onfile={handleFile}
+	>
 		{#snippet actions()}
 			<Button variant="outline" class="self-start" onclick={download} disabled={downloading}>
 				{#if downloading}
@@ -62,13 +67,13 @@
 		<Alert.Title>Woher kommen die Werte?</Alert.Title>
 		<Alert.Description>
 			<p>
-				Die Rettungsdisziplinen übernehmen die Rec-Werte aus dem offiziellen DLRG-Regelwerk. Die
-				Wellendisziplinen bekommen die Bestzeit des Vorjahres plus Zuschlag (üblich 5 Sekunden).
+				Die Rettungsdisziplinen übernehmen die Rec-Werte aus dem offiziellen DLRG-Regelwerk. Die Wellendisziplinen
+				bekommen die Bestzeit des Vorjahres plus Zuschlag (üblich 5 Sekunden).
 			</p>
 			<p>
 				Das Regelwerk für das Jahr {year} lädt die App direkt aus JAuswertung („DLRG {year}.rwm“), sobald es dort
-				veröffentlicht ist. Ist es noch nicht da, erscheint ein Hinweis – dann später erneut versuchen oder die
-				Datei aus dem JAuswertung-Programmordner wählen.
+				veröffentlicht ist. Ist es noch nicht da, erscheint ein Hinweis – dann später erneut versuchen oder die Datei
+				aus dem JAuswertung-Programmordner wählen.
 			</p>
 		</Alert.Description>
 	</Alert.Root>

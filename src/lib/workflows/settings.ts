@@ -7,7 +7,7 @@ import {
 	MAX_PRINT_OFFSET_MM,
 	MIN_COPIES,
 	type RulebookSummary,
-	type Settings,
+	type Settings
 } from "$lib/settings/settings";
 import { IMAGE_FORMAT_ERROR, type ImageSlot } from "$lib/certificates/layoutStore.svelte";
 
@@ -28,7 +28,7 @@ export function exportSettings(store: { exportJson(): Uint8Array }): Promise<str
 	return saveFile({
 		defaultName: datedFileName(SETTINGS_EXPORT_NAME),
 		filters: [{ name: "Einstellungen", extensions: ["json"] }],
-		bytes: store.exportJson(),
+		bytes: store.exportJson()
 	});
 }
 
@@ -59,7 +59,7 @@ export function readRulebook(bytes: Uint8Array): RulebookOutcome {
 export async function storeSignature(
 	images: { setImage(slot: ImageSlot, bytes: Uint8Array): Promise<void> },
 	slot: ImageSlot,
-	bytes: Uint8Array,
+	bytes: Uint8Array
 ): Promise<string | null> {
 	try {
 		await images.setImage(slot, bytes);

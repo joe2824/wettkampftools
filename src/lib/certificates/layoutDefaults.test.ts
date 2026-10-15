@@ -2,8 +2,7 @@ import { describe, expect, it } from "vitest";
 import { PAGE_HEIGHT_MM, PAGE_WIDTH_MM, type ImageObject, type Layout, type TextObject } from "./layout";
 import { defaultLayouts } from "./layoutDefaults";
 
-const textObjects = (layout: Layout): TextObject[] =>
-	layout.objects.filter((o): o is TextObject => o.kind === "text");
+const textObjects = (layout: Layout): TextObject[] => layout.objects.filter((o): o is TextObject => o.kind === "text");
 const imageObjects = (layout: Layout): ImageObject[] =>
 	layout.objects.filter((o): o is ImageObject => o.kind === "image");
 const byTemplate = (layout: Layout, template: string): TextObject => {

@@ -9,8 +9,7 @@ export const LAYOUT_FILE = "layout.json";
 const IMAGE_DIR = "images";
 
 export const IMAGE_SLOTS = ["signature1", "signature2", "background"] as const satisfies readonly (
-	| SignatureSlot
-	| "background"
+	SignatureSlot | "background"
 )[];
 export type ImageSlot = (typeof IMAGE_SLOTS)[number];
 export type ImageType = "png" | "jpg";

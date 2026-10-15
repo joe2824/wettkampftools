@@ -81,7 +81,12 @@
 						{/if}
 					</div>
 				</Table.Cell>
-				<Table.Cell class={cn("text-right whitespace-nowrap tabular-nums", change === 0 ? "text-muted-foreground" : "font-medium")}>
+				<Table.Cell
+					class={cn(
+						"text-right whitespace-nowrap tabular-nums",
+						change === 0 ? "text-muted-foreground" : "font-medium"
+					)}
+				>
 					{formatRecDifference(change)}
 				</Table.Cell>
 				<Table.Cell>

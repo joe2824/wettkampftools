@@ -31,7 +31,15 @@
 	}
 
 	function setAll(inWave: boolean) {
-		if (current) onchange(setTeamsInWave(selection, current.teams.map((team) => team.id), inWave, eligible));
+		if (current)
+			onchange(
+				setTeamsInWave(
+					selection,
+					current.teams.map((team) => team.id),
+					inWave,
+					eligible
+				)
+			);
 	}
 </script>
 
@@ -99,7 +107,8 @@
 				{/each}
 			</ul>
 			<p class="text-xs text-muted-foreground">
-				Häkchen = startet in der Welle. Startberechtigt sind die Altersklassen ab der Einstellung „Wellen-Starterlaubnis ab“.
+				Häkchen = startet in der Welle. Startberechtigt sind die Altersklassen ab der Einstellung „Wellen-Starterlaubnis
+				ab“.
 			</p>
 		</div>
 	{/if}

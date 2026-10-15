@@ -45,7 +45,12 @@
 
 	<Card.Root>
 		<Card.Header>
-			<StepHeader step={1} title="Gliederungen wählen" description="Aus der Vorbereitung übernehmen oder eine Meldedatei laden." done={names !== null} />
+			<StepHeader
+				step={1}
+				title="Gliederungen wählen"
+				description="Aus der Vorbereitung übernehmen oder eine Meldedatei laden."
+				done={names !== null}
+			/>
 		</Card.Header>
 		<Card.Content>
 			<SourceStep {sourceLabel} onnames={handleNames} />

@@ -10,55 +10,43 @@ const SERIAL_LETTER_SHEET = "Seriendruck";
 const WAVE_MARK = "x";
 
 function memberHeaders(count: number): string[] {
-  return Array.from({ length: count }, (_, index) => `Mitglied ${index + 1}`);
+	return Array.from({ length: count }, (_, index) => `Mitglied ${index + 1}`);
 }
 
-function entryRow(
-  entry: PlacedEntry,
-  memberCount: number,
-  order: readonly string[],
-): Cell[] {
-  const { row } = entry;
-  const members = memberHeaders(memberCount).map(
-    (_, index) => row.members[index] ?? "",
-  );
-  return [
-    String(entry.place),
-    row.name,
-    ...members,
-    row.organisation,
-    entry.ageGroup,
-    row.gender,
-    formatCompetitionPoints(row.competitionPoints),
-    classifyAgeGroup(entry.ageGroup, order) === "wave" ? WAVE_MARK : "",
-  ];
+function entryRow(entry: PlacedEntry, memberCount: number, order: readonly string[]): Cell[] {
+	const { row } = entry;
+	const members = memberHeaders(memberCount).map((_, index) => row.members[index] ?? "");
+	return [
+		String(entry.place),
+		row.name,
+		...members,
+		row.organisation,
+		entry.ageGroup,
+		row.gender,
+		formatCompetitionPoints(row.competitionPoints),
+		classifyAgeGroup(entry.ageGroup, order) === "wave" ? WAVE_MARK : ""
+	];
 }
 
 export function buildSerialLetterSheet(
-  rows: readonly ResultRow[],
-  order: readonly string[],
-  kind: CompetitionKind,
+	rows: readonly ResultRow[],
+	order: readonly string[],
+	kind: CompetitionKind
 ): Sheet {
-  const entries = placedEntries(rows, order);
-  const memberCount =
-    kind === "team"
-      ? Math.max(0, ...entries.map((entry) => entry.row.members.length))
-      : 0;
-  const header = [
-    "Platz",
-    "Name",
-    ...memberHeaders(memberCount),
-    "Gliederung",
-    "Altersklasse",
-    "Geschlecht",
-    "Punkte",
-    "WWK",
-  ];
-  return {
-    name: SERIAL_LETTER_SHEET,
-    rows: [
-      header,
-      ...entries.map((entry) => entryRow(entry, memberCount, order)),
-    ],
-  };
+	const entries = placedEntries(rows, order);
+	const memberCount = kind === "team" ? Math.max(0, ...entries.map((entry) => entry.row.members.length)) : 0;
+	const header = [
+		"Platz",
+		"Name",
+		...memberHeaders(memberCount),
+		"Gliederung",
+		"Altersklasse",
+		"Geschlecht",
+		"Punkte",
+		"WWK"
+	];
+	return {
+		name: SERIAL_LETTER_SHEET,
+		rows: [header, ...entries.map((entry) => entryRow(entry, memberCount, order))]
+	};
 }

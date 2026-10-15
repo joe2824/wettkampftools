@@ -20,9 +20,7 @@ describe("openOutputFile", () => {
 
 	it("reicht die Fehlermeldung weiter", async () => {
 		coreMock.invoke.mockRejectedValue("Die Datei darf nicht geöffnet werden.");
-		await expect(openOutputFile("/tmp/a.exe")).rejects.toBe(
-			"Die Datei darf nicht geöffnet werden."
-		);
+		await expect(openOutputFile("/tmp/a.exe")).rejects.toBe("Die Datei darf nicht geöffnet werden.");
 	});
 });
 

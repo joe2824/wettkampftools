@@ -34,7 +34,13 @@ describe("parseRulebookRecords", () => {
 			{ ageGroup: "AK 12", gender: "female", disciplineIndex: 1, discipline: "4*25m RLB", rec: 8219 },
 			{ ageGroup: "AK 12", gender: "male", disciplineIndex: 0, discipline: "4*25m Rettungsstaffel", rec: 5674 },
 			{ ageGroup: "AK 12", gender: "male", disciplineIndex: 1, discipline: "4*25m RLB", rec: 8026 },
-			{ ageGroup: "AkW offen", gender: "female", disciplineIndex: 0, discipline: "4*50m Retten in der Welle", rec: 20894 },
+			{
+				ageGroup: "AkW offen",
+				gender: "female",
+				disciplineIndex: 0,
+				discipline: "4*50m Retten in der Welle",
+				rec: 20894
+			},
 			{ ageGroup: "AkW offen", gender: "male", disciplineIndex: 0, discipline: "4*50m Retten in der Welle", rec: 16221 }
 		]);
 	});

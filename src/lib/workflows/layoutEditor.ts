@@ -36,11 +36,10 @@ const SAMPLE_EVENT: EventInfo = {
 	]
 };
 
-export type FileOutcome = { status: "cancelled" } | { status: "saved"; path: string } | { status: "failed"; message: string };
+export type FileOutcome =
+	{ status: "cancelled" } | { status: "saved"; path: string } | { status: "failed"; message: string };
 export type OpenedFileOutcome =
-	| { status: "cancelled" }
-	| { status: "saved"; path: string; opened: boolean }
-	| { status: "failed"; message: string };
+	{ status: "cancelled" } | { status: "saved"; path: string; opened: boolean } | { status: "failed"; message: string };
 
 export interface PreviewOptions {
 	withMemberNames: boolean;
@@ -87,11 +86,19 @@ export function sampleValues(variant: LayoutVariant, event: EventInfo): Placehol
 }
 
 /** Dieselben Zeichenbefehle wie im PDF, ohne Druckversatz. */
-export function previewOps(layout: Layout, values: PlaceholderValues, options: PreviewOptions, metrics: TextMetrics): DrawOp[] {
+export function previewOps(
+	layout: Layout,
+	values: PlaceholderValues,
+	options: PreviewOptions,
+	metrics: TextMetrics
+): DrawOp[] {
 	return layoutPage(layout, values, { ...options, offsetMm: NO_OFFSET }, metrics);
 }
 
-export async function exportLayout(store: { exportLayoutJson(): Uint8Array }, now: Date = new Date()): Promise<FileOutcome> {
+export async function exportLayout(
+	store: { exportLayoutJson(): Uint8Array },
+	now: Date = new Date()
+): Promise<FileOutcome> {
 	try {
 		const bytes = store.exportLayoutJson();
 		const path = await saveFile({ defaultName: datedFileName(LAYOUT_EXPORT_NAME, now), filters: [JSON_FILTER], bytes });
@@ -115,7 +122,11 @@ export function importLayout(store: { importLayoutJson(bytes: Uint8Array): strin
 export async function printCalibration(offsetMm: OffsetMm, now: Date = new Date()): Promise<OpenedFileOutcome> {
 	try {
 		const bytes = await buildCalibrationPdf(offsetMm, await loadAppFonts());
-		const path = await saveFile({ defaultName: datedFileName(CALIBRATION_FILE_NAME, now), filters: [PDF_FILTER], bytes });
+		const path = await saveFile({
+			defaultName: datedFileName(CALIBRATION_FILE_NAME, now),
+			filters: [PDF_FILTER],
+			bytes
+		});
 		if (path === null) return { status: "cancelled" };
 		logInfo("calibration.saved");
 		return { status: "saved", path, opened: await openAfterSave(path, "calibration.openFailed") };

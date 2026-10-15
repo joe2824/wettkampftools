@@ -37,7 +37,7 @@ export function teamBaseName(organisation: string, overrides: TeamNameOverrides)
 export function withTeamNameOverride(
 	overrides: TeamNameOverrides,
 	organisation: string,
-	name: string,
+	name: string
 ): Record<string, string> {
 	const key = keyOf(organisation);
 	const next = Object.fromEntries(Object.entries(overrides).filter(([candidate]) => keyOf(candidate) !== key));
@@ -51,7 +51,8 @@ function toRow(organisation: string, names: Set<string>, overrides: TeamNameOver
 	const override = findOverride(organisation, overrides) ?? "";
 	const differing = reportedNames.filter((name) => name !== organisation);
 	const differs = override === "" && differing.length > 0;
-	const suggestion = reportedNames.length === 1 && differing.length === 1 && override !== differing[0] ? differing[0] : null;
+	const suggestion =
+		reportedNames.length === 1 && differing.length === 1 && override !== differing[0] ? differing[0] : null;
 	return { organisation, reportedNames, override, differs, suggestion };
 }
 

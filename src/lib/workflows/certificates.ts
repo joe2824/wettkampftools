@@ -32,7 +32,8 @@ export type PdfOutcome =
 	| { status: "saved"; path: string; pageCount: number; opened: boolean }
 	| { status: "failed"; message: string };
 
-export type SaveOutcome = { status: "cancelled" } | { status: "saved"; path: string } | { status: "failed"; message: string };
+export type SaveOutcome =
+	{ status: "cancelled" } | { status: "saved"; path: string } | { status: "failed"; message: string };
 
 function signatureImages(images: CertificateJob["images"]): Partial<Record<SignatureSlot, Uint8Array>> {
 	return Object.fromEntries(SIGNATURE_SLOTS.flatMap((slot) => (images[slot] ? [[slot, images[slot]]] : [])));
@@ -57,7 +58,11 @@ async function renderCertificates(job: CertificateJob): Promise<{ bytes: Uint8Ar
 export async function createCertificatesPdf(job: CertificateJob, now: Date = new Date()): Promise<PdfOutcome> {
 	try {
 		const { bytes, pageCount } = await renderCertificates(job);
-		const path = await saveFile({ defaultName: datedFileName(CERTIFICATES_FILE_NAME, now), filters: [PDF_FILTER], bytes });
+		const path = await saveFile({
+			defaultName: datedFileName(CERTIFICATES_FILE_NAME, now),
+			filters: [PDF_FILTER],
+			bytes
+		});
 		if (path === null) return { status: "cancelled" };
 		logInfo("certificates.saved", { entries: job.entries.length, pages: pageCount });
 		return { status: "saved", path, pageCount, opened: await openAfterSave(path, "certificates.openFailed") };
@@ -76,7 +81,11 @@ export async function saveSerialLetter(
 		const rows = job.entries.map((entry) => entry.row);
 		const sheet = buildSerialLetterSheet(rows, buildAgeGroupOrder(job.settings), job.competition);
 		const bytes = await writeWorkbook([sheet]);
-		const path = await saveFile({ defaultName: datedFileName(SERIAL_LETTER_FILE_NAME, now), filters: [EXCEL_FILTER], bytes });
+		const path = await saveFile({
+			defaultName: datedFileName(SERIAL_LETTER_FILE_NAME, now),
+			filters: [EXCEL_FILTER],
+			bytes
+		});
 		if (path === null) return { status: "cancelled" };
 		logInfo("serialLetter.saved", { rows: rows.length });
 		return { status: "saved", path };

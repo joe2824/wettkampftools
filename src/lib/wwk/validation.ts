@@ -78,9 +78,9 @@ function checkYearsOfBirth(team: ValidatableTeam, label: string): Finding[] {
 					{
 						severity: "error" as const,
 						code: "member.yearOfBirth.invalid",
-						message: `${label}: Jahrgang von Mitglied ${index + 1} ist ungültig.`,
-					},
-				],
+						message: `${label}: Jahrgang von Mitglied ${index + 1} ist ungültig.`
+					}
+				]
 	);
 }
 
@@ -132,7 +132,7 @@ function validateTeam(team: ValidatableTeam, options: ValidationOptions): Issue[
 		...checkYearsOfBirth(team, label),
 		...checkMemberCount(team, label, entry),
 		...checkRequiredFields(team, label),
-		...checkAgeGroup(team, label, options, entry !== undefined),
+		...checkAgeGroup(team, label, options, entry !== undefined)
 	];
 	return findings.map((finding) => ({ ...finding, teamId: team.id }));
 }

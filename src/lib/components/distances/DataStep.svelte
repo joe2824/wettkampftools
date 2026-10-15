@@ -38,7 +38,9 @@
 		<Alert.Root>
 			<WifiOffIcon />
 			<Alert.Title>Keine Verbindung zum DLRG-Standortdienst</Alert.Title>
-			<Alert.Description>Es werden die gespeicherten Daten verwendet (Stand vom {formatDataDate(data.fetchedAt)}).</Alert.Description>
+			<Alert.Description
+				>Es werden die gespeicherten Daten verwendet (Stand vom {formatDataDate(data.fetchedAt)}).</Alert.Description
+			>
 		</Alert.Root>
 	{:else if status === "unavailable"}
 		<Alert.Root variant="destructive">

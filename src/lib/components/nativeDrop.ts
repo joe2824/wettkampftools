@@ -33,7 +33,9 @@ export function toLogicalPoint(position: Point, scale: number): Point {
 
 function contains(bounds: Bounds, point: Point): boolean {
 	const visible = bounds.width > 0 && bounds.height > 0;
-	return visible && point.x >= bounds.left && point.x <= bounds.right && point.y >= bounds.top && point.y <= bounds.bottom;
+	return (
+		visible && point.x >= bounds.left && point.x <= bounds.right && point.y >= bounds.top && point.y <= bounds.bottom
+	);
 }
 
 /** Fläche unter dem Zeiger; bei Überlagerung gewinnt die zuletzt angemeldete (z. B. im Dialog). */

@@ -14,7 +14,10 @@ describe("loadStaticAsset", () => {
 	});
 
 	it("scheitert, wenn die Datei fehlt", async () => {
-		vi.stubGlobal("fetch", vi.fn(async () => new Response(null, { status: 404 })));
+		vi.stubGlobal(
+			"fetch",
+			vi.fn(async () => new Response(null, { status: 404 }))
+		);
 		await expect(loadStaticAsset("/fonts/a.ttf")).rejects.toThrow("/fonts/a.ttf");
 	});
 });

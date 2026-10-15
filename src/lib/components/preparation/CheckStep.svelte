@@ -71,7 +71,8 @@
 		</Collapsible.Trigger>
 		<Collapsible.Content>
 			<p class="mb-2 text-sm text-muted-foreground">
-				Der Mannschaftsname ist die Gliederung oder der unten festgelegte Name; mehrere Mannschaften einer Gruppe werden durchnummeriert.
+				Der Mannschaftsname ist die Gliederung oder der unten festgelegte Name; mehrere Mannschaften einer Gruppe werden
+				durchnummeriert.
 			</p>
 			<Table.Root>
 				<Table.Header>

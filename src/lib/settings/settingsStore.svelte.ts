@@ -34,8 +34,7 @@ function parseJsonBytes(bytes: Uint8Array): unknown {
 	}
 }
 
-const isObject = (value: unknown): boolean =>
-	typeof value === "object" && value !== null && !Array.isArray(value);
+const isObject = (value: unknown): boolean => typeof value === "object" && value !== null && !Array.isArray(value);
 
 export class SettingsStore {
 	settings = $state<Settings>(defaultSettings());

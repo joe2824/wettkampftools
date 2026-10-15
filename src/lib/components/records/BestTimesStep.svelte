@@ -41,8 +41,8 @@
 		<Alert.Root>
 			<Alert.Title>Keine Bestzeiten aus {expectedYear}</Alert.Title>
 			<Alert.Description>
-				Bestzeiten werden gespeichert, sobald die Ergebnisdatei bei Auswertung oder Urkunden geladen wird. Eine
-				ältere Ergebnisdatei kann auch hier nachgetragen werden.
+				Bestzeiten werden gespeichert, sobald die Ergebnisdatei bei Auswertung oder Urkunden geladen wird. Eine ältere
+				Ergebnisdatei kann auch hier nachgetragen werden.
 			</Alert.Description>
 		</Alert.Root>
 	{/if}

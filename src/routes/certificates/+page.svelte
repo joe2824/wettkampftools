@@ -9,12 +9,7 @@
 	import EntryTable from "$lib/components/certificates/EntryTable.svelte";
 	import MissingDateAlert from "$lib/components/MissingDateAlert.svelte";
 	import ResultsSource from "$lib/components/ResultsSource.svelte";
-	import {
-		filterOptions,
-		groupEntries,
-		selectedEntries,
-		visibleEntries
-	} from "$lib/certificates/selection";
+	import { filterOptions, groupEntries, selectedEntries, visibleEntries } from "$lib/certificates/selection";
 	import { certificateSelection as selection } from "$lib/certificates/selectionState.svelte";
 	import Stepper from "$lib/components/stepper/Stepper.svelte";
 	import { session } from "$lib/session.svelte";
@@ -29,9 +24,7 @@
 	const options = $derived(filterOptions(entries));
 	const visible = $derived(visibleEntries(entries, selection.hidden));
 	const selected = $derived(selectedEntries(visible, selection.excluded));
-	const preview = $derived(
-		buildCertificatePages(selected, { competition, ...settings.certificates }, settings.event)
-	);
+	const preview = $derived(buildCertificatePages(selected, { competition, ...settings.certificates }, settings.event));
 
 	const steps = $derived(
 		certificateSteps({

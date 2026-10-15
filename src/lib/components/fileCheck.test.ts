@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { acceptAttribute, checkFile, checkInputFile, DEFAULT_MAX_BYTES, dialogFilters, readCheckedFile } from "./fileCheck";
+import {
+	acceptAttribute,
+	checkFile,
+	checkInputFile,
+	DEFAULT_MAX_BYTES,
+	dialogFilters,
+	readCheckedFile
+} from "./fileCheck";
 
 const ZIP = [0x50, 0x4b, 0x03, 0x04];
 const OLE = [0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1];
@@ -44,18 +51,27 @@ describe("checkFile", () => {
 	});
 
 	it("erkennt Wettkampfregelwerke (.rwm als ZIP)", () => {
-		expect(checkFile({ name: "Regelwerk.rwm", bytes: bytes(...ZIP) }, ["rulebook"])).toEqual({ ok: true, kind: "rulebook" });
+		expect(checkFile({ name: "Regelwerk.rwm", bytes: bytes(...ZIP) }, ["rulebook"])).toEqual({
+			ok: true,
+			kind: "rulebook"
+		});
 		expect(checkFile({ name: "Regelwerk.rwm", bytes: text("<xml/>") }, ["rulebook"]).ok).toBe(false);
 	});
 
 	it("nimmt CSV- und JSON-Text an", () => {
-		expect(checkFile({ name: "export.csv", bytes: text("gliederung;ak\nMusterstadt;AK 12") }, ["csv"])).toEqual({ ok: true, kind: "csv" });
+		expect(checkFile({ name: "export.csv", bytes: text("gliederung;ak\nMusterstadt;AK 12") }, ["csv"])).toEqual({
+			ok: true,
+			kind: "csv"
+		});
 		expect(checkFile({ name: "layout.json", bytes: text("{}") }, ["json"])).toEqual({ ok: true, kind: "json" });
 	});
 
 	it("lehnt CSV mit Binärinhalt (NUL-Bytes) ab", () => {
 		const result = checkFile({ name: "export.csv", bytes: bytes(...ZIP, 0x00, 0x00) }, ["csv"]);
-		expect(result).toEqual({ ok: false, message: "Der Inhalt passt nicht zur Dateiendung. Erwartet: CSV-Datei (.csv)." });
+		expect(result).toEqual({
+			ok: false,
+			message: "Der Inhalt passt nicht zur Dateiendung. Erwartet: CSV-Datei (.csv)."
+		});
 	});
 
 	it("prüft NUL-Bytes nur in den ersten 4 KB", () => {
@@ -65,12 +81,18 @@ describe("checkFile", () => {
 	});
 
 	it("lehnt leere Dateien ab", () => {
-		expect(checkFile({ name: "export.csv", bytes: new Uint8Array() }, ["csv"])).toEqual({ ok: false, message: "Die Datei ist leer." });
+		expect(checkFile({ name: "export.csv", bytes: new Uint8Array() }, ["csv"])).toEqual({
+			ok: false,
+			message: "Die Datei ist leer."
+		});
 	});
 
 	it("lehnt zu große Dateien ab", () => {
 		const big = new Uint8Array(DEFAULT_MAX_BYTES + 1).fill(0x41);
-		expect(checkFile({ name: "export.csv", bytes: big }, ["csv"])).toEqual({ ok: false, message: "Die Datei ist größer als 20 MB." });
+		expect(checkFile({ name: "export.csv", bytes: big }, ["csv"])).toEqual({
+			ok: false,
+			message: "Die Datei ist größer als 20 MB."
+		});
 		expect(checkFile({ name: "export.csv", bytes: text("abc") }, ["csv"], 2)).toEqual({
 			ok: false,
 			message: "Die Datei ist größer als 0 MB."
@@ -78,7 +100,10 @@ describe("checkFile", () => {
 	});
 
 	it("wählt bei mehreren erlaubten Arten die passende", () => {
-		expect(checkFile({ name: "Datei.xlsx", bytes: bytes(...ZIP) }, ["csv", "excel"])).toEqual({ ok: true, kind: "excel" });
+		expect(checkFile({ name: "Datei.xlsx", bytes: bytes(...ZIP) }, ["csv", "excel"])).toEqual({
+			ok: true,
+			kind: "excel"
+		});
 	});
 });
 
@@ -92,7 +117,10 @@ describe("readCheckedFile", () => {
 	it("liefert Bytes, Name, Änderungszeit und Art", async () => {
 		const file = new File(["a;b"], "export.csv", { lastModified: 1234 });
 		const result = await readCheckedFile(file, ["csv"]);
-		expect(result).toEqual({ ok: true, file: { name: "export.csv", bytes: text("a;b"), lastModified: 1234, createdMs: null, kind: "csv" } });
+		expect(result).toEqual({
+			ok: true,
+			file: { name: "export.csv", bytes: text("a;b"), lastModified: 1234, createdMs: null, kind: "csv" }
+		});
 	});
 
 	it("lehnt zu große Dateien ab, ohne sie zu lesen", async () => {

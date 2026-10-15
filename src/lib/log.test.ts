@@ -28,9 +28,7 @@ describe("formatLogLine", () => {
 	});
 
 	it("ersetzt ungültige Codes", () => {
-		expect(formatLogLine(at, "ERROR", "Anna Meier fehlt")).toBe(
-			"2026-10-14 09:05:07.042 web ERROR invalid_code"
-		);
+		expect(formatLogLine(at, "ERROR", "Anna Meier fehlt")).toBe("2026-10-14 09:05:07.042 web ERROR invalid_code");
 		expect(formatLogLine(at, "ERROR", "")).toContain(" invalid_code");
 	});
 

@@ -44,7 +44,7 @@ function readMembers(row: CsvRow): Member[] {
 		const member = {
 			lastName: cell(row, `Nachname ${n}`),
 			firstName: cell(row, `Vorname ${n}`),
-			yearOfBirth: cell(row, `Jahrgang ${n}`),
+			yearOfBirth: cell(row, `Jahrgang ${n}`)
 		};
 		if (member.lastName !== "" || member.firstName !== "") members.push(member);
 	}
@@ -71,12 +71,11 @@ function toTeam(row: CsvRow, index: number, order: readonly string[], settings: 
 		gender: cell(row, "geschlecht"),
 		qualification: cell(row, "qualifikation"),
 		reportedPoints: cell(row, "meldepunkte"),
-		members: readMembers(row),
+		members: readMembers(row)
 	};
 }
 
-const groupKey = (team: Team): string =>
-	JSON.stringify([team.organisation, team.ageGroup.toLowerCase(), team.gender]);
+const groupKey = (team: Team): string => JSON.stringify([team.organisation, team.ageGroup.toLowerCase(), team.gender]);
 
 /** Name = eigener Name oder Gliederung; mehrere Teams einer Gruppe werden in Dateireihenfolge nummeriert. */
 export function assignTeamNames(teams: readonly Team[], overrides: TeamNameOverrides = {}): Team[] {
@@ -104,7 +103,7 @@ export function parseRegistrations(rows: readonly CsvRow[], settings: Settings):
 	const order = buildAgeGroupOrder(settings);
 	const teams = assignTeamNames(
 		rows.map((row, index) => toTeam(row, index, order, settings)),
-		settings.teamNameOverrides,
+		settings.teamNameOverrides
 	);
 	return { teams, renames: collectRenames(teams) };
 }

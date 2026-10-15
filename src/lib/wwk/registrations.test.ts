@@ -46,7 +46,7 @@ describe("parseRegistrations", () => {
 		const { teams } = parse([
 			{ gliederung: "Musterstadt", name: "A" },
 			{ gliederung: "Beispielhausen", name: "Beispielhausen" },
-			{ gliederung: "Musterstadt", name: "B" },
+			{ gliederung: "Musterstadt", name: "B" }
 		]);
 		expect(names(teams)).toEqual(["Musterstadt 1", "Beispielhausen", "Musterstadt 2"]);
 	});
@@ -54,7 +54,7 @@ describe("parseRegistrations", () => {
 	it("nummeriert nicht bei unterschiedlichem Geschlecht", () => {
 		const { teams } = parse([
 			{ gliederung: "Musterstadt", geschlecht: "weiblich" },
-			{ gliederung: "Musterstadt", geschlecht: "männlich" },
+			{ gliederung: "Musterstadt", geschlecht: "männlich" }
 		]);
 		expect(names(teams)).toEqual(["Musterstadt", "Musterstadt"]);
 	});
@@ -62,7 +62,7 @@ describe("parseRegistrations", () => {
 	it("nummeriert nach der Senioren-Vereinfachung", () => {
 		const { teams } = parse([
 			{ gliederung: "Musterstadt", ak: "AK 100" },
-			{ gliederung: "Musterstadt", ak: "AK 140" },
+			{ gliederung: "Musterstadt", ak: "AK 140" }
 		]);
 		expect(teams.map((team) => team.ageGroup)).toEqual([SENIOR_AGE_GROUP, SENIOR_AGE_GROUP]);
 		expect(names(teams)).toEqual(["Musterstadt 1", "Musterstadt 2"]);
@@ -72,9 +72,9 @@ describe("parseRegistrations", () => {
 		const { teams } = parse(
 			[
 				{ gliederung: "Musterstadt", ak: "AK 100" },
-				{ gliederung: "Musterstadt", ak: "AK 140" },
+				{ gliederung: "Musterstadt", ak: "AK 140" }
 			],
-			settingsWith({ simplifySeniorAgeGroups: false }),
+			settingsWith({ simplifySeniorAgeGroups: false })
 		);
 		expect(teams.map((team) => team.ageGroup)).toEqual(["AK 100", "AK 140"]);
 		expect(names(teams)).toEqual(["Musterstadt", "Musterstadt"]);
@@ -83,7 +83,7 @@ describe("parseRegistrations", () => {
 	it("zählt unterschiedliche Schreibweisen als eine Gruppe", () => {
 		const { teams } = parse([
 			{ gliederung: "Musterstadt", ak: "AK offen" },
-			{ gliederung: "Musterstadt", ak: "ak  Offen" },
+			{ gliederung: "Musterstadt", ak: "ak  Offen" }
 		]);
 		expect(teams.map((team) => team.ageGroup)).toEqual(["AK Offen", "AK Offen"]);
 		expect(names(teams)).toEqual(["Musterstadt 1", "Musterstadt 2"]);
@@ -106,34 +106,34 @@ describe("parseRegistrations", () => {
 				members: [
 					{ lastName: "Meier", firstName: "Anna", birthYear: 2010 },
 					{ lastName: "", firstName: "", birthYear: "" },
-					{ lastName: "", firstName: "Max", birthYear: 2011 },
-				],
-			},
+					{ lastName: "", firstName: "Max", birthYear: 2011 }
+				]
+			}
 		]);
 		expect(teams[0].members).toEqual([
 			{ lastName: "Meier", firstName: "Anna", yearOfBirth: "2010" },
-			{ lastName: "", firstName: "Max", yearOfBirth: "2011" },
+			{ lastName: "", firstName: "Max", yearOfBirth: "2011" }
 		]);
 	});
 
 	it("übernimmt Grunddaten, Zeilennummer und stabile ID", () => {
 		const { teams } = parse([
 			{ gliederung: "Musterstadt" },
-			{ gliederung: "Beispielhausen", geschlecht: "männlich", qualifikation: "Q", meldepunkte: 12 },
+			{ gliederung: "Beispielhausen", geschlecht: "männlich", qualifikation: "Q", meldepunkte: 12 }
 		]);
 		expect(teams[1]).toMatchObject({
 			id: "r2",
 			sourceRow: 2,
 			gender: "männlich",
 			qualification: "Q",
-			reportedPoints: "12",
+			reportedPoints: "12"
 		});
 	});
 
 	it("listet nur geänderte Namen", () => {
 		const { renames } = parse([
 			{ gliederung: "Musterstadt", name: "Musterstadt" },
-			{ gliederung: "Beispielhausen", name: "Team B" },
+			{ gliederung: "Beispielhausen", name: "Team B" }
 		]);
 		expect(renames).toEqual([{ teamId: "r2", from: "Team B", to: "Beispielhausen" }]);
 	});
@@ -144,9 +144,9 @@ describe("parseRegistrations", () => {
 			[
 				{ gliederung: "Musterstadt", name: "A" },
 				{ gliederung: "Beispielhausen", name: "Beispielhausen" },
-				{ gliederung: "Musterstadt", name: "B" },
+				{ gliederung: "Musterstadt", name: "B" }
 			],
-			settings,
+			settings
 		);
 		expect(names(teams)).toEqual(["Musterstadt / Süd 1", "Beispielhausen", "Musterstadt / Süd 2"]);
 		expect(teams.map((team) => team.organisation)).toEqual(["Musterstadt", "Beispielhausen", "Musterstadt"]);
@@ -161,7 +161,10 @@ describe("parseRegistrations", () => {
 	});
 
 	it("verträgt fehlende Spalten", () => {
-		const { teams } = parseRegistrations([{ gliederung: "Musterstadt", ak: "AK 12", geschlecht: "weiblich" }], settingsWith());
+		const { teams } = parseRegistrations(
+			[{ gliederung: "Musterstadt", ak: "AK 12", geschlecht: "weiblich" }],
+			settingsWith()
+		);
 		expect(teams[0]).toMatchObject({ originalName: "", qualification: "", reportedPoints: "", members: [] });
 	});
 });
@@ -171,7 +174,7 @@ describe("assignTeamNames", () => {
 		const base = parse([{ gliederung: "Musterstadt" }]).teams[0];
 		const teams = assignTeamNames([
 			{ ...base, id: "a", ageGroup: "AK Offen" },
-			{ ...base, id: "b", ageGroup: "AK offen" },
+			{ ...base, id: "b", ageGroup: "AK offen" }
 		]);
 		expect(names(teams)).toEqual(["Musterstadt 1", "Musterstadt 2"]);
 	});

@@ -37,9 +37,7 @@ export const NAVIGATION_GROUPS: readonly NavigationGroup[] = [
 	}
 ];
 
-export const FOOTER_ITEMS: readonly NavigationItem[] = [
-	{ label: "Einstellungen", href: "/settings", icon: Settings }
-];
+export const FOOTER_ITEMS: readonly NavigationItem[] = [{ label: "Einstellungen", href: "/settings", icon: Settings }];
 
 function withoutTrailingSlash(path: string): string {
 	return path.length > 1 && path.endsWith("/") ? path.slice(0, -1) : path;

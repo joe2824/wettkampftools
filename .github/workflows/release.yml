@@ -4,7 +4,7 @@ name: Release
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - "v*.*.*"
   workflow_dispatch:
 
 permissions:
@@ -145,7 +145,7 @@ jobs:
       - name: Rust-Cache
         uses: swatinem/rust-cache@v2
         with:
-          workspaces: './src-tauri -> target'
+          workspaces: "./src-tauri -> target"
 
       - name: Abhängigkeiten installieren
         run: npm ci
@@ -158,14 +158,14 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: ${{ needs.target.outputs.tag }}
-          releaseName: 'Wettkampftools ${{ needs.target.outputs.tag }}'
+          releaseName: "Wettkampftools ${{ needs.target.outputs.tag }}"
           releaseBody: ${{ steps.changelog.outputs.body }}
           # Erst als Entwurf: sonst wäre das Release öffentlich, bevor
           # latest.json hochgeladen ist, und die Update-Prüfung bekäme 404.
           releaseDraft: true
           # Nur der NSIS-Installer. Das Update-Artefakt (.nsis.zip + Signatur)
           # entsteht über createUpdaterArtifacts.
-          args: '--bundles nsis'
+          args: "--bundles nsis"
 
       - name: Release veröffentlichen
         shell: bash

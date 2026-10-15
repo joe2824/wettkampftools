@@ -17,7 +17,7 @@ const TEAM_HEADER: Cell[] = [
 	"Differenz",
 	"Platz 1",
 	"Zeit 1",
-	"Punkte 1",
+	"Punkte 1"
 ];
 
 const INDIVIDUAL_HEADER: Cell[] = [
@@ -29,16 +29,16 @@ const INDIVIDUAL_HEADER: Cell[] = [
 	"Gliederung",
 	"Altersklasse",
 	"Geschlecht",
-	"Punkte",
+	"Punkte"
 ];
 
 function workbook(rows: Cell[][], sheetName = "Daten"): Workbook {
 	return {
 		sheets: [
 			{ name: "Andere", rows: [["x"]] },
-			{ name: sheetName, rows },
+			{ name: sheetName, rows }
 		],
-		properties: { created: null, modified: null },
+		properties: { created: null, modified: null }
 	};
 }
 
@@ -47,8 +47,24 @@ describe("readJAuswertungResults", () => {
 		const result = readJAuswertungResults(
 			workbook([
 				TEAM_HEADER,
-				[1, "Musterstadt 1", "Anna Meier", "Max Mustermann", "Musterstadt", "", "AK 12", "weiblich", "", 0, 1234.5, 0, 7, "1:00", 300],
-			]),
+				[
+					1,
+					"Musterstadt 1",
+					"Anna Meier",
+					"Max Mustermann",
+					"Musterstadt",
+					"",
+					"AK 12",
+					"weiblich",
+					"",
+					0,
+					1234.5,
+					0,
+					7,
+					"1:00",
+					300
+				]
+			])
 		);
 		expect(result.kind).toBe("team");
 		expect(result.rows).toEqual([
@@ -60,15 +76,25 @@ describe("readJAuswertungResults", () => {
 				ageGroupRaw: "AK 12",
 				gender: "weiblich",
 				competitionPoints: 1234.5,
-				members: ["Anna Meier", "Max Mustermann"],
-			},
+				members: ["Anna Meier", "Max Mustermann"]
+			}
 		]);
 	});
 
 	it("verwechselt „Platz 1“ nicht mit „Platz“, auch wenn sie davor steht", () => {
-		const header: Cell[] = ["Platz 1", " platz ", "Name", "Mitglied 1", "Gliederung", "Altersklasse", "Geschlecht", "Punkte 1", "Punkte"];
+		const header: Cell[] = [
+			"Platz 1",
+			" platz ",
+			"Name",
+			"Mitglied 1",
+			"Gliederung",
+			"Altersklasse",
+			"Geschlecht",
+			"Punkte 1",
+			"Punkte"
+		];
 		const result = readJAuswertungResults(
-			workbook([header, [9, 2, "Beispielhausen 1", "", "Beispielhausen", "AK 10", "männlich", 99, 50]]),
+			workbook([header, [9, 2, "Beispielhausen 1", "", "Beispielhausen", "AK 10", "männlich", 99, 50]])
 		);
 		expect(result.rows[0].place).toBe(2);
 		expect(result.rows[0].competitionPoints).toBe(50);
@@ -84,7 +110,7 @@ describe("readJAuswertungResults", () => {
 	it("unterscheidet leeren, textuellen und ungültigen Platz", () => {
 		const base: Cell[] = ["Team", "", "", "Org", "", "AK 12", "weiblich", "", 0, "", 0];
 		const result = readJAuswertungResults(
-			workbook([TEAM_HEADER, ["", ...base], [" 3 ", ...base], ["DQ", ...base], [2.5, ...base]]),
+			workbook([TEAM_HEADER, ["", ...base], [" 3 ", ...base], ["DQ", ...base], [2.5, ...base]])
 		);
 		expect(result.rows.map((r) => r.place)).toEqual([null, 3, null, null]);
 		expect(result.rows[0].competitionPoints).toBeNull();
@@ -93,14 +119,14 @@ describe("readJAuswertungResults", () => {
 	it("liest Punkte mit Komma oder Punkt als Dezimaltrennzeichen", () => {
 		const row = (points: Cell): Cell[] => [1, "Team", "", "", "Org", "", "AK 12", "weiblich", "", 0, points];
 		const result = readJAuswertungResults(
-			workbook([TEAM_HEADER, row("1234,56"), row("1234.56"), row("abc"), row(null)]),
+			workbook([TEAM_HEADER, row("1234,56"), row("1234.56"), row("abc"), row(null)])
 		);
 		expect(result.rows.map((r) => r.competitionPoints)).toEqual([1234.56, 1234.56, null, null]);
 	});
 
 	it("überspringt leere Zeilen und behält die Quellzeile", () => {
 		const result = readJAuswertungResults(
-			workbook([TEAM_HEADER, [null, "", "  "], [], [1, "Team", "", "", "Org", "", "AK 12", "weiblich"]]),
+			workbook([TEAM_HEADER, [null, "", "  "], [], [1, "Team", "", "", "Org", "", "AK 12", "weiblich"]])
 		);
 		expect(result.rows).toHaveLength(1);
 		expect(result.rows[0].sourceRow).toBe(3);
@@ -108,7 +134,10 @@ describe("readJAuswertungResults", () => {
 
 	it("erkennt Einzelwettkämpfe ohne Mitglied-Spalten", () => {
 		const result = readJAuswertungResults(
-			workbook([INDIVIDUAL_HEADER, [1, "Anna Meier", "Meier", "Anna", 12, "Musterstadt", "AK 12", "weiblich", "800,00"]]),
+			workbook([
+				INDIVIDUAL_HEADER,
+				[1, "Anna Meier", "Meier", "Anna", 12, "Musterstadt", "AK 12", "weiblich", "800,00"]
+			])
 		);
 		expect(result.kind).toBe("individual");
 		expect(result.rows[0].name).toBe("Anna Meier");
@@ -165,7 +194,10 @@ describe("workbookYear", () => {
 
 	it("ignoriert fehlende und ungültige Angaben", () => {
 		const properties = { created: null, modified: "kein Datum" };
-		expect(workbookYear(properties, { createdMs: ms(2026), modifiedMs: null })).toEqual({ year: 2026, creationKnown: true });
+		expect(workbookYear(properties, { createdMs: ms(2026), modifiedMs: null })).toEqual({
+			year: 2026,
+			creationKnown: true
+		});
 	});
 
 	it("meldet ein unbekanntes Erstellungsdatum", () => {

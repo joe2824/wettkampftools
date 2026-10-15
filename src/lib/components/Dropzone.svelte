@@ -146,7 +146,16 @@
 		<Button variant={compact ? "outline" : "default"} disabled={disabled || loading} onclick={choose}>
 			{loading ? "Wird gelesen …" : "Datei auswählen"}
 		</Button>
-		<input bind:this={input} type="file" class="hidden" {accept} {disabled} onchange={handleChange} tabindex="-1" aria-hidden="true" />
+		<input
+			bind:this={input}
+			type="file"
+			class="hidden"
+			{accept}
+			{disabled}
+			onchange={handleChange}
+			tabindex="-1"
+			aria-hidden="true"
+		/>
 	</div>
 
 	{#if error}

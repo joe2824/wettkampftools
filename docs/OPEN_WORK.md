@@ -52,8 +52,8 @@ Weiteres:
 
 ## Nächste Schritte
 
-1. **Updater-Schlüssel:** Schlüsselpaar erzeugen (`npm run tauri signer
-   generate`), den Public Key in `src-tauri/tauri.conf.json` eintragen
+1. **Updater-Schlüssel:** Schlüsselpaar erzeugen
+   (`npm run tauri signer generate`), den Public Key in `src-tauri/tauri.conf.json` eintragen
    (Platzhalter `REPLACE_WITH_MINISIGN_PUBKEY`) und im GitHub-Repo die Secrets
    `TAURI_SIGNING_PRIVATE_KEY` und `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`
    anlegen. Der private Schlüssel kommt nie ins Repo.

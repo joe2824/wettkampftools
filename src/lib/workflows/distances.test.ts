@@ -16,17 +16,17 @@ import {
 	GLD_CACHE_FILE,
 	loadOrganisations,
 	organisationsFromCsv,
-	organisationsFromTeams,
+	organisationsFromTeams
 } from "./distances";
 
 let fs: FakeStore;
 const now = new Date("2026-10-14T08:00:00.000Z");
 const cached: GldCache = {
 	fetchedAt: "2026-09-01T10:00:00.000Z",
-	organisations: [{ name: "Ortsgruppe Musterstadt", lat: 50.1, lon: 8.7 }],
+	organisations: [{ name: "Ortsgruppe Musterstadt", lat: 50.1, lon: 8.7 }]
 };
 const poiResponse = {
-	locs: [{ typ: "Gld", lat: "50.2", lon: "8.6", pois: [{ name: "Ortsgruppe Beispielhausen e.V." }] }],
+	locs: [{ typ: "Gld", lat: "50.2", lon: "8.6", pois: [{ name: "Ortsgruppe Beispielhausen e.V." }] }]
 };
 
 function writeCache(value: unknown) {
@@ -58,7 +58,7 @@ describe("loadOrganisations", () => {
 		const outcome = await loadOrganisations({ fetchJson, now });
 		const expected = {
 			fetchedAt: "2026-10-14T08:00:00.000Z",
-			organisations: [{ name: "Ortsgruppe Beispielhausen e.V.", lat: 50.2, lon: 8.6 }],
+			organisations: [{ name: "Ortsgruppe Beispielhausen e.V.", lat: 50.2, lon: 8.6 }]
 		};
 		expect(outcome).toEqual({ data: expected, status: "fresh" });
 		expect(fetchJson).toHaveBeenCalledWith(POI_URL);
@@ -110,11 +110,11 @@ describe("organisationsFromCsv", () => {
 		const csv = buildRegistrationCsv([
 			{ gliederung: "Musterstadt" },
 			{ gliederung: "Beispielhausen" },
-			{ gliederung: "Musterstadt" },
+			{ gliederung: "Musterstadt" }
 		]);
 		expect(organisationsFromCsv(new TextEncoder().encode(csv))).toEqual({
 			ok: true,
-			names: ["Musterstadt", "Beispielhausen"],
+			names: ["Musterstadt", "Beispielhausen"]
 		});
 	});
 
@@ -122,7 +122,7 @@ describe("organisationsFromCsv", () => {
 		const outcome = organisationsFromCsv(new TextEncoder().encode("vorname;nachname\nAnna;Meier\n"));
 		expect(outcome).toEqual({
 			ok: false,
-			message: expect.stringContaining("kein Mannschaften-Export"),
+			message: expect.stringContaining("kein Mannschaften-Export")
 		});
 	});
 });
@@ -156,9 +156,9 @@ describe("Formatierung", () => {
 		const text = distanceTableText({
 			matched: [
 				{ name: "Beispielhausen", km: 40.5 },
-				{ name: "Musterstadt", km: 12 },
+				{ name: "Musterstadt", km: 12 }
 			],
-			unmatched: [],
+			unmatched: []
 		});
 		expect(text).toBe("Platz\tGliederung\tEntfernung (km)\n1\tBeispielhausen\t40,50\n2\tMusterstadt\t12,00");
 	});

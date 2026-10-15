@@ -23,21 +23,21 @@ vier davon. Schlägt etwas fehl: Ergebnis melden, Aussage nicht abschwächen.
 
 Der Fachkern in `src/lib/` ist reines TypeScript und ohne Tauri testbar:
 
-| Ordner | Inhalt |
-|---|---|
-| `io/` | Einlesen und Schreiben von Meldungen und Ergebnisdateien |
-| `wwk/` | Wertung des Wellenwettkampfs (Pokalpunkte, Gesamtpokal) |
-| `certificates/` | Urkundenmodell und Layout |
-| `pdf/` | PDF-Erzeugung aus den Zeichenbefehlen |
-| `distance/` | Entfernungsberechnung |
-| `settings/` | Einstellungen laden, speichern, übernehmen |
-| `records/` | Rec-Werte und Regelwerk fürs neue Jahr |
-| `competition/` | Wettkampfstand speichern und laden |
-| `workflows/` | Abläufe der Oberfläche: Fachkern und Plattform zusammenführen |
-| `format/` | Formatierung von Zahlen, Zeiten, Namen |
-| `platform/` | Adapter zu Tauri (Dateien, Dialoge, HTTP, Workbook) |
-| `components/` | Svelte-Komponenten |
-| `testing/` | Fakes und Fixtures für Tests — keine Tests |
+| Ordner          | Inhalt                                                        |
+| --------------- | ------------------------------------------------------------- |
+| `io/`           | Einlesen und Schreiben von Meldungen und Ergebnisdateien      |
+| `wwk/`          | Wertung des Wellenwettkampfs (Pokalpunkte, Gesamtpokal)       |
+| `certificates/` | Urkundenmodell und Layout                                     |
+| `pdf/`          | PDF-Erzeugung aus den Zeichenbefehlen                         |
+| `distance/`     | Entfernungsberechnung                                         |
+| `settings/`     | Einstellungen laden, speichern, übernehmen                    |
+| `records/`      | Rec-Werte und Regelwerk fürs neue Jahr                        |
+| `competition/`  | Wettkampfstand speichern und laden                            |
+| `workflows/`    | Abläufe der Oberfläche: Fachkern und Plattform zusammenführen |
+| `format/`       | Formatierung von Zahlen, Zeiten, Namen                        |
+| `platform/`     | Adapter zu Tauri (Dateien, Dialoge, HTTP, Workbook)           |
+| `components/`   | Svelte-Komponenten                                            |
+| `testing/`      | Fakes und Fixtures für Tests — keine Tests                    |
 
 Importe laufen nur nach unten: Oberfläche → `workflows/` → Fachkern → `platform/`. Keine
 Fachlogik in Svelte-Komponenten oder Plattform-Adaptern.
@@ -102,10 +102,10 @@ Meldedateien enthalten Daten von **Minderjährigen**. Dateien mit den Endungen
 **Wettkampfpunkte** und **Pokalpunkte** sind zwei verschiedene Dinge und werden
 **nie vermischt** — weder im Typ noch im Namen:
 
-| Begriff | Herkunft | Verwendung | Im Code |
-|---|---|---|---|
-| Wettkampfpunkte | aus JAuswertung | stehen auf den Urkunden | `competitionPoints` |
-| Pokalpunkte | WWK-Formel n + 1 − Platz (Platz 1 = n + 1) | nur für den Gesamtpokal je Ortsgruppe | `trophyPoints` |
+| Begriff         | Herkunft                                   | Verwendung                            | Im Code             |
+| --------------- | ------------------------------------------ | ------------------------------------- | ------------------- |
+| Wettkampfpunkte | aus JAuswertung                            | stehen auf den Urkunden               | `competitionPoints` |
+| Pokalpunkte     | WWK-Formel n + 1 − Platz (Platz 1 = n + 1) | nur für den Gesamtpokal je Ortsgruppe | `trophyPoints`      |
 
 - **Rettungswertung** (Altersklasse, AK) und **Wellenwertung** (AkW) sind
   getrennte Wertungen.
@@ -164,11 +164,11 @@ bricht der Release ab — dann wurde er vergessen.
 Etablierte englische Fachbegriffe **nicht** ins Deutsche zwingen — in Commits,
 Release-Notes und Kommentaren gleichermaßen.
 
-| Verboten | Richtig |
-|---|---|
-| Bau / bauen (für Kompilieren) | Build / builden |
-| Flicken | Patch / Bugfix / Security-Update |
-| Auslieferung | Release / Deployment |
+| Verboten                      | Richtig                          |
+| ----------------------------- | -------------------------------- |
+| Bau / bauen (für Kompilieren) | Build / builden                  |
+| Flicken                       | Patch / Bugfix / Security-Update |
+| Auslieferung                  | Release / Deployment             |
 
 ## Kommentare
 

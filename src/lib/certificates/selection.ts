@@ -58,12 +58,21 @@ export function groupEntries(entries: readonly CertificateEntry[]): EntryGroup[]
 		const key = `${entry.ageGroup}|${entry.gender}`;
 		const last = groups.at(-1);
 		if (last?.key === key) last.entries.push(entry);
-		else groups.push({ key, label: `${displayAgeGroup(entry.ageGroup)} ${entry.gender}`, kind: entry.kind, entries: [entry] });
+		else
+			groups.push({
+				key,
+				label: `${displayAgeGroup(entry.ageGroup)} ${entry.gender}`,
+				kind: entry.kind,
+				entries: [entry]
+			});
 	}
 	return groups;
 }
 
-export function selectedEntries(entries: readonly CertificateEntry[], excluded: ReadonlySet<string>): CertificateEntry[] {
+export function selectedEntries(
+	entries: readonly CertificateEntry[],
+	excluded: ReadonlySet<string>
+): CertificateEntry[] {
 	return entries.filter((entry) => !excluded.has(entry.id));
 }
 

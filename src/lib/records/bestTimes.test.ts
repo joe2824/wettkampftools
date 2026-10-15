@@ -4,11 +4,49 @@ import { extractBestTimes, parseBestTimes } from "./bestTimes";
 
 const HUNDREDTHS_PER_DAY = 24 * 60 * 60 * 100;
 const excelTime = (hundredths: number): number => hundredths / HUNDREDTHS_PER_DAY;
-const HEADER: Cell[] = ["Platz", "Name", "Mitglied 1", "Gliederung", "Altersklasse", "Geschlecht", "Punkte",
-	"Platz 1", "Zeit 1", "Punkte 1", "Strafe 1", "Platz 2", "Zeit 2", "Punkte 2", "Strafe 2"];
+const HEADER: Cell[] = [
+	"Platz",
+	"Name",
+	"Mitglied 1",
+	"Gliederung",
+	"Altersklasse",
+	"Geschlecht",
+	"Punkte",
+	"Platz 1",
+	"Zeit 1",
+	"Punkte 1",
+	"Strafe 1",
+	"Platz 2",
+	"Zeit 2",
+	"Punkte 2",
+	"Strafe 2"
+];
 
-function row(ageGroup: string, gender: string, time1: Cell, penalty1: Cell, time2: Cell = "", penalty2: Cell = ""): Cell[] {
-	return [1, "Musterstadt", "Anna Meier", "Musterstadt", ageGroup, gender, 100, 1, time1, 50, penalty1, 1, time2, 50, penalty2];
+function row(
+	ageGroup: string,
+	gender: string,
+	time1: Cell,
+	penalty1: Cell,
+	time2: Cell = "",
+	penalty2: Cell = ""
+): Cell[] {
+	return [
+		1,
+		"Musterstadt",
+		"Anna Meier",
+		"Musterstadt",
+		ageGroup,
+		gender,
+		100,
+		1,
+		time1,
+		50,
+		penalty1,
+		1,
+		time2,
+		50,
+		penalty2
+	];
 }
 
 const workbookOf = (rows: Cell[][]): Workbook => ({
@@ -52,7 +90,10 @@ describe("extractBestTimes", () => {
 	});
 
 	it("übergeht unbekannte Geschlechter und Zeilen ohne Altersklasse", () => {
-		const best = extractBestTimes(workbookOf([row("AkW offen", "mixed", excelTime(100), ""), row("", "weiblich", excelTime(100), "")]), 2025);
+		const best = extractBestTimes(
+			workbookOf([row("AkW offen", "mixed", excelTime(100), ""), row("", "weiblich", excelTime(100), "")]),
+			2025
+		);
 		expect(best.entries).toEqual([]);
 	});
 
@@ -70,6 +111,8 @@ describe("parseBestTimes", () => {
 	it("verwirft Ungültiges", () => {
 		expect(parseBestTimes(null)).toBeNull();
 		expect(parseBestTimes({ year: "2025", entries: [] })).toBeNull();
-		expect(parseBestTimes({ year: 2025, entries: [{ ageGroup: "A", gender: "x", disciplineIndex: 0, time: 1 }] })).toBeNull();
+		expect(
+			parseBestTimes({ year: 2025, entries: [{ ageGroup: "A", gender: "x", disciplineIndex: 0, time: 1 }] })
+		).toBeNull();
 	});
 });

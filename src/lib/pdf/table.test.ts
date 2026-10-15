@@ -46,7 +46,11 @@ describe("layoutTable – Seitenumbruch", () => {
 			expect(page.filter((op) => op.kind === "line")).toHaveLength(1);
 			expect(pageTexts.every((op) => op.baselineMm <= 280)).toBe(true);
 		}
-		const body = pages.flatMap((page) => texts(page).slice(3).map((op) => op.text));
+		const body = pages.flatMap((page) =>
+			texts(page)
+				.slice(3)
+				.map((op) => op.text)
+		);
 		expect(body).toEqual(rows.flat());
 	});
 

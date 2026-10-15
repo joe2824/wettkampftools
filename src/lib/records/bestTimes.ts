@@ -56,7 +56,12 @@ function cellTime(cell: Cell | undefined): number | null {
 /** Gültig nur ohne jede Strafe. */
 const withoutPenalty = (cell: Cell | undefined): boolean => ["", "0"].includes(cellText(cell));
 
-function rowEntries(row: Cell[], ageGroupColumn: number, genderColumn: number, columns: DisciplineColumns[]): BestTimeEntry[] {
+function rowEntries(
+	row: Cell[],
+	ageGroupColumn: number,
+	genderColumn: number,
+	columns: DisciplineColumns[]
+): BestTimeEntry[] {
 	const ageGroup = cellText(row[ageGroupColumn]);
 	const gender = GENDER_TEXTS[cellText(row[genderColumn]).normalize("NFC").toLowerCase()];
 	if (!ageGroup || !gender) return [];

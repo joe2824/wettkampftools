@@ -26,7 +26,7 @@
 	title={registration ? "Andere Meldedatei laden" : "Meldedatei laden"}
 	hint="CSV-Datei hierher ziehen oder auswählen."
 	compact={registration !== null}
-	onfile={onfile}
+	{onfile}
 />
 
 {#if error}

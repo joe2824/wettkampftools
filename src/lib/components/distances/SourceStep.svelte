@@ -59,6 +59,8 @@
 		<p class="text-sm text-destructive" role="alert">{error}</p>
 	{/if}
 	{#if sourceLabel}
-		<p class="text-sm text-muted-foreground" role="status">Verwendet: <span class="font-medium text-foreground">{sourceLabel}</span></p>
+		<p class="text-sm text-muted-foreground" role="status">
+			Verwendet: <span class="font-medium text-foreground">{sourceLabel}</span>
+		</p>
 	{/if}
 </div>

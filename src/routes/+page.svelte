@@ -16,7 +16,8 @@
 
 	const STEP_DETAILS: Record<string, { description: string; loaded: () => boolean }> = {
 		"/preparation": {
-			description: "Veranstaltung eintragen, Meldedatei aus dem DLRG-Meldeportal aufbereiten und für JAuswertung speichern.",
+			description:
+				"Veranstaltung eintragen, Meldedatei aus dem DLRG-Meldeportal aufbereiten und für JAuswertung speichern.",
 			loaded: () => session.hasRegistration
 		},
 		"/evaluation": {
@@ -30,7 +31,11 @@
 	};
 
 	const showRecHint = $derived(
-		shouldShowRecUpdateHint({ hasResults: session.hasResults, eventDate: settingsStore.settings.event.date, today: new Date() })
+		shouldShowRecUpdateHint({
+			hasResults: session.hasResults,
+			eventDate: settingsStore.settings.event.date,
+			today: new Date()
+		})
 	);
 
 	const steps = $derived(
@@ -48,7 +53,9 @@
 		<img src="/logo.png" alt="" class="size-14 shrink-0" />
 		<div class="flex flex-col gap-1">
 			<h1 class="text-2xl font-bold">Willkommen bei den Wettkampftools</h1>
-			<p class="text-muted-foreground">Vorbereitung, Auswertung und Urkunden für den DLRG Wellenwettkampf – Schritt für Schritt.</p>
+			<p class="text-muted-foreground">
+				Vorbereitung, Auswertung und Urkunden für den DLRG Wellenwettkampf – Schritt für Schritt.
+			</p>
 		</div>
 	</header>
 

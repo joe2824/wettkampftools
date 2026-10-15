@@ -4,7 +4,7 @@ import {
 	fetchOrganisations,
 	parseGldCache,
 	type DistanceResult,
-	type GldCache,
+	type GldCache
 } from "$lib/distance/dlrgPoi";
 import { MissingColumnsError, parseRegistrationCsv } from "$lib/io/csv";
 import { logError, logInfo } from "$lib/log";
@@ -73,7 +73,10 @@ export function organisationsFromTeams(teams: readonly { organisation: string }[
 export function organisationsFromCsv(bytes: Uint8Array): NamesOutcome {
 	try {
 		const { rows } = parseRegistrationCsv(bytes);
-		return { ok: true, names: organisationsFromTeams(rows.map((row) => ({ organisation: row[ORGANISATION_COLUMN] ?? "" }))) };
+		return {
+			ok: true,
+			names: organisationsFromTeams(rows.map((row) => ({ organisation: row[ORGANISATION_COLUMN] ?? "" })))
+		};
 	} catch (error) {
 		if (error instanceof MissingColumnsError) return { ok: false, message: NOT_A_TEAM_EXPORT };
 		throw error;

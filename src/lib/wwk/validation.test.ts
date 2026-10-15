@@ -15,7 +15,7 @@ function team(overrides: Partial<ValidatableTeam> = {}): ValidatableTeam {
 		ageGroupKnown: true,
 		gender: "weiblich",
 		members: [member(), member(), member(), member()],
-		...overrides,
+		...overrides
 	};
 }
 
@@ -24,8 +24,8 @@ const rulebook: RulebookSummary = {
 	ageGroups: [
 		{ name: "AK 12", minMembers: 4, maxMembers: 5 },
 		{ name: "AK Offen", minMembers: 3, maxMembers: 6 },
-		{ name: "AkW 12", minMembers: 4, maxMembers: 5 },
-	],
+		{ name: "AkW 12", minMembers: 4, maxMembers: 5 }
+	]
 };
 
 function codes(issues: Issue[]): string[] {
@@ -112,7 +112,7 @@ describe("validateTeams", () => {
 		const six = Array.from({ length: 6 }, () => member());
 		expect(codes(check({ ageGroup: "AK 99", members: six }, rulebook))).toEqual([
 			"members.tooMany",
-			"ageGroup.notInRulebook",
+			"ageGroup.notInRulebook"
 		]);
 	});
 
@@ -131,7 +131,7 @@ describe("validateTeams", () => {
 
 	it("benennt Mannschaften ohne Namen über die Gliederung", () => {
 		expect(check({ name: "" })[0].message).toContain("Mannschaft aus Musterstadt");
-		expect(check({ organisation: "" })[0].message).toContain("„Musterstadt 1\"");
+		expect(check({ organisation: "" })[0].message).toContain('„Musterstadt 1"');
 		expect(check({ name: "", organisation: "" })[0].message).toContain("Mannschaft ohne Namen");
 	});
 
@@ -145,7 +145,7 @@ describe("errorTeamIds", () => {
 	it("enthält nur Mannschaften mit Fehlern, nicht mit Warnungen", () => {
 		const issues = validateTeams(
 			[team({ id: "ok" }), team({ id: "warn", ageGroupKnown: false }), team({ id: "err", name: "" })],
-			{ rulebook: null },
+			{ rulebook: null }
 		);
 		expect(errorTeamIds(issues)).toEqual(new Set(["err"]));
 	});

@@ -44,7 +44,7 @@ const HEADER = {
 	organisation: "Gliederung",
 	ageGroup: "Altersklasse",
 	gender: "Geschlecht",
-	points: "Punkte",
+	points: "Punkte"
 } as const;
 
 const REQUIRED_COLUMNS = ["place", "name", "organisation", "ageGroup", "gender"] as const;
@@ -75,7 +75,7 @@ export function findSheet(workbook: Workbook): Sheet {
 
 function mapColumns(headers: string[]): ColumnMap {
 	const entries = (Object.keys(HEADER) as ColumnKey[]).map(
-		(key) => [key, headers.indexOf(HEADER[key].toLowerCase())] as const,
+		(key) => [key, headers.indexOf(HEADER[key].toLowerCase())] as const
 	);
 	const columns = Object.fromEntries(entries) as ColumnMap;
 	const missing = REQUIRED_COLUMNS.filter((key) => columns[key] < 0).map((key) => HEADER[key]);
@@ -119,7 +119,7 @@ function toResultRow(row: Cell[], sourceRow: number, columns: ColumnMap, members
 		ageGroupRaw: cellText(row[columns.ageGroup]),
 		gender: cellText(row[columns.gender]),
 		competitionPoints: columns.points < 0 ? null : parsePoints(row[columns.points]),
-		members: members.map((index) => cellText(row[index])).filter((name) => name !== ""),
+		members: members.map((index) => cellText(row[index])).filter((name) => name !== "")
 	};
 }
 

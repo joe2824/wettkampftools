@@ -15,12 +15,13 @@
 	<Alert.Title>So wird gedruckt</Alert.Title>
 	<Alert.Description>
 		<p>
-			Im PDF-Programm mit ‚Tatsächliche Größe‘ drucken. Der Stapel beginnt mit dem letzten Platz – so kann von
-			hinten nach vorne vorgelesen werden.
+			Im PDF-Programm mit ‚Tatsächliche Größe‘ drucken. Der Stapel beginnt mit dem letzten Platz – so kann von hinten
+			nach vorne vorgelesen werden.
 		</p>
 		<p>
 			Sitzt der Druck nicht genau auf dem Vordruck: im
-			<a href="/certificates/layout" class="font-medium text-foreground underline underline-offset-4">Urkunden-Layout</a>
+			<a href="/certificates/layout" class="font-medium text-foreground underline underline-offset-4">Urkunden-Layout</a
+			>
 			eine Kalibrierungsseite drucken und den Versatz eintragen.
 		</p>
 	</Alert.Description>

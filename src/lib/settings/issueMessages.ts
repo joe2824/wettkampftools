@@ -9,13 +9,12 @@ const FULL_MESSAGES: Record<string, string> = {
 	"schemaVersion.unsupported": "Die Datei stammt aus einer anderen Version. Passende Werte wurden übernommen.",
 	"ageGroups.invalid": "Altersklassen waren ungültig und wurden zurückgesetzt.",
 	"ageGroups.empty": "Die Liste der Altersklassen war leer und wurde zurückgesetzt.",
-	"waveStartAgeGroup.invalid":
-		"Die Wellen-Starterlaubnis passte nicht zu den Altersklassen und wurde angepasst.",
+	"waveStartAgeGroup.invalid": "Die Wellen-Starterlaubnis passte nicht zu den Altersklassen und wurde angepasst.",
 	"rulebook.invalid": "Das Regelwerk war ungültig und wurde entfernt.",
 	"event.signers.invalid": "Die Unterzeichner waren ungültig und wurden zurückgesetzt.",
 	"event.date.invalid": "Das Datum war ungültig und wurde zurückgesetzt.",
 	"teamNameOverrides.invalid": "Die eigenen Mannschaftsnamen waren ungültig und wurden entfernt.",
-	"teamNameOverrides.invalidEntries": "Ungültige eigene Mannschaftsnamen wurden entfernt.",
+	"teamNameOverrides.invalidEntries": "Ungültige eigene Mannschaftsnamen wurden entfernt."
 };
 
 const FIELD_LABELS: Record<string, string> = {
@@ -41,7 +40,7 @@ const FIELD_LABELS: Record<string, string> = {
 	"certificates.copiesPerIndividual": "Urkunden je Einzelstarter",
 	"certificates.printOffsetMm": "Druckversatz",
 	"certificates.printOffsetMm.x": "Druckversatz waagerecht",
-	"certificates.printOffsetMm.y": "Druckversatz senkrecht",
+	"certificates.printOffsetMm.y": "Druckversatz senkrecht"
 };
 
 const KIND_MESSAGES: Record<string, string> = {
@@ -49,7 +48,7 @@ const KIND_MESSAGES: Record<string, string> = {
 	empty: "Die Liste war leer und wurde auf Standard zurückgesetzt.",
 	invalidEntries: "Ungültige Einträge wurden entfernt.",
 	clamped: "Der Wert lag außerhalb des erlaubten Bereichs und wurde angepasst.",
-	rounded: "Der Wert wurde auf eine ganze Zahl gerundet.",
+	rounded: "Der Wert wurde auf eine ganze Zahl gerundet."
 };
 
 /** Ein Hinweiscode als verständlicher Satz; Unbekanntes wird allgemein beschrieben. */

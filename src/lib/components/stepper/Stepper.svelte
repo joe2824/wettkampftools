@@ -50,7 +50,10 @@
 					<StepButton {step} number={index + 1} active={step.id === activeId} onselect={() => go(step)} />
 					{#if index < steps.length - 1}
 						<span
-							class={cn("h-px w-6 shrink-0 sm:w-auto sm:flex-1", step.status === "done" ? "bg-primary/60" : "bg-border")}
+							class={cn(
+								"h-px w-6 shrink-0 sm:w-auto sm:flex-1",
+								step.status === "done" ? "bg-primary/60" : "bg-border"
+							)}
 							aria-hidden="true"
 						></span>
 					{/if}

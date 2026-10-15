@@ -14,7 +14,7 @@ import {
 	toWaveAgeGroup,
 	WAVE_PREFIX,
 	waveAgeGroups,
-	waveEligibleAgeGroups,
+	waveEligibleAgeGroups
 } from "./ageGroups";
 
 function settingsWith(overrides: Partial<Settings>): Settings {
@@ -38,7 +38,7 @@ describe("normalizeAgeGroupSpelling", () => {
 		["akw 13/14", "AkW 13/14"],
 		["AkW 15/16", "AkW 15/16"],
 		["Senioren", "Senioren"],
-		["", ""],
+		["", ""]
 	])("%s → %s", (raw, expected) => {
 		expect(normalizeAgeGroupSpelling(raw)).toBe(expected);
 	});
@@ -91,7 +91,7 @@ describe("waveEligibleAgeGroups", () => {
 			"AK 15/16",
 			"AK 17/18",
 			"AK Offen",
-			SENIOR_AGE_GROUP,
+			SENIOR_AGE_GROUP
 		]);
 	});
 
@@ -108,7 +108,7 @@ describe("waveEligibleAgeGroups", () => {
 			"AK 170",
 			"AK 200",
 			"AK 240",
-			"AK 280+",
+			"AK 280+"
 		]);
 	});
 
@@ -141,7 +141,7 @@ describe("toWaveAgeGroup / waveAgeGroups", () => {
 			"AkW 15/16",
 			"AkW 17/18",
 			"AkW Offen",
-			"AkW Senioren",
+			"AkW Senioren"
 		]);
 	});
 });
@@ -158,7 +158,7 @@ describe("buildAgeGroupOrder", () => {
 			"AkW 15/16",
 			"AkW 17/18",
 			"AkW Offen",
-			"AkW Senioren",
+			"AkW Senioren"
 		]);
 	});
 
@@ -167,7 +167,7 @@ describe("buildAgeGroupOrder", () => {
 			ageGroups: ["AK 12", "ak 12", "AK Senioren"],
 			seniorIndividualAgeGroups: ["AK 12"],
 			seniorTeamAgeGroups: [],
-			waveStartAgeGroup: "AK 99",
+			waveStartAgeGroup: "AK 99"
 		});
 		expect(buildAgeGroupOrder(settings)).toEqual(["AK 12", "AK Senioren", "AkW Senioren"]);
 	});

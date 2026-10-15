@@ -21,7 +21,7 @@ function fakeUpdate(events: ProgressEvent[] = [], fail = false) {
 		downloadAndInstall: vi.fn(async (onEvent: (event: ProgressEvent) => void) => {
 			for (const event of events) onEvent(event);
 			if (fail) throw new Error("signature");
-		}),
+		})
 	};
 }
 
@@ -96,7 +96,7 @@ describe("install", () => {
 			for (const event of [
 				{ event: "Started", data: { contentLength: 200 } },
 				{ event: "Progress", data: { chunkLength: 50 } },
-				{ event: "Progress", data: { chunkLength: 50 } },
+				{ event: "Progress", data: { chunkLength: 50 } }
 			]) {
 				onEvent(event);
 				progress.push(updater.progress);
@@ -114,7 +114,15 @@ describe("install", () => {
 	});
 
 	it("kennt ohne Größenangabe keinen Prozentwert", async () => {
-		plugin.check.mockResolvedValue(fakeUpdate([{ event: "Started", data: {} }, { event: "Progress", data: { chunkLength: 10 } }], true));
+		plugin.check.mockResolvedValue(
+			fakeUpdate(
+				[
+					{ event: "Started", data: {} },
+					{ event: "Progress", data: { chunkLength: 10 } }
+				],
+				true
+			)
+		);
 		await updater.check();
 		const install = updater.install();
 		expect(updater.progress).toBe(UNKNOWN_PROGRESS);

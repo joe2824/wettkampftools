@@ -13,7 +13,7 @@ import {
 	verifyRegistrationSheet,
 	type ExpectedCounts,
 	type ExportRow,
-	type VerificationResult,
+	type VerificationResult
 } from "$lib/wwk/registrationExport";
 import { parseRegistrations, type Team } from "$lib/wwk/registrations";
 import { workbookYear } from "$lib/wwk/results";
@@ -26,7 +26,7 @@ const LOCALE = "de";
 
 const ENCODING_LABELS: Record<TextEncodingName, string> = {
 	"utf-8": "UTF-8",
-	"windows-1252": "Windows (ältere Exporte)",
+	"windows-1252": "Windows (ältere Exporte)"
 };
 
 export type LoadOutcome = { ok: true; registration: SessionRegistration } | { ok: false; message: string };
@@ -64,7 +64,7 @@ export function loadRegistrations(bytes: Uint8Array, fileName: string, settings:
 		const settingsKey = registrationSettingsKey(settings);
 		return {
 			ok: true,
-			registration: { fileName, sourceBytes: bytes, settingsKey, encoding, teams, renames, waveSelection },
+			registration: { fileName, sourceBytes: bytes, settingsKey, encoding, teams, renames, waveSelection }
 		};
 	} catch (error) {
 		if (error instanceof MissingColumnsError) return { ok: false, message: NOT_A_TEAM_EXPORT };
@@ -81,7 +81,7 @@ export function registrationSettingsKey(settings: Settings): string {
 		seniorTeamAgeGroups,
 		seniorIndividualAgeGroups,
 		waveStartAgeGroup,
-		simplifySeniorAgeGroups,
+		simplifySeniorAgeGroups
 	]);
 }
 
@@ -89,7 +89,7 @@ export function summarizeRegistration(registration: SessionRegistration): Regist
 	return {
 		teams: registration.teams.length,
 		organisations: new Set(registration.teams.map((team) => team.organisation)).size,
-		encodingLabel: ENCODING_LABELS[registration.encoding],
+		encodingLabel: ENCODING_LABELS[registration.encoding]
 	};
 }
 
@@ -103,7 +103,7 @@ export function checkRegistration(registration: SessionRegistration, settings: S
 		errors: issues.filter((issue) => issue.severity === "error"),
 		warnings: issues.filter((issue) => issue.severity === "warning"),
 		excludedRows: rows.filter((row) => blocked.has(row.id)),
-		exportableRows: rows.filter((row) => !blocked.has(row.id)),
+		exportableRows: rows.filter((row) => !blocked.has(row.id))
 	};
 }
 
@@ -119,7 +119,7 @@ export function groupByOrganisation(teams: readonly Team[], selection: ReadonlyS
 		.map(([organisation, members]) => ({
 			organisation,
 			teams: members,
-			selected: members.filter((team) => selection.has(team.id)).length,
+			selected: members.filter((team) => selection.has(team.id)).length
 		}))
 		.sort((a, b) => a.organisation.localeCompare(b.organisation, LOCALE));
 }
@@ -145,7 +145,7 @@ export async function exportRegistrations(rows: readonly ExportRow[]): Promise<E
 	const path = await saveFile({
 		defaultName: datedFileName(REGISTRATION_FILE_NAME),
 		filters: [EXCEL_FILTER],
-		bytes,
+		bytes
 	});
 	if (path === null) return { status: "cancelled" };
 	const expected = expectedCounts(rows);

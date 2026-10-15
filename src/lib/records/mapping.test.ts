@@ -32,10 +32,20 @@ describe("parseRecMapping", () => {
 	});
 });
 
-const record = (ageGroup: string, discipline: string): RulebookRecord => ({ ageGroup, gender: "female", disciplineIndex: 0, discipline, rec: 1 });
+const record = (ageGroup: string, discipline: string): RulebookRecord => ({
+	ageGroup,
+	gender: "female",
+	disciplineIndex: 0,
+	discipline,
+	rec: 1
+});
 
 describe("Hilfen für die Zuordnung", () => {
-	const club = [record("AK 10", "4*25m RLB"), record("AK 10", "4*25m RLB"), record("AkW offen", "4*50m Retten in der Welle mit Gurtretter")];
+	const club = [
+		record("AK 10", "4*25m RLB"),
+		record("AK 10", "4*25m RLB"),
+		record("AkW offen", "4*50m Retten in der Welle mit Gurtretter")
+	];
 
 	it("erkennt Wellendisziplinen am Namen", () => {
 		expect(isWaveDiscipline("4*50m Retten in der Welle")).toBe(true);
@@ -52,7 +62,9 @@ describe("Hilfen für die Zuordnung", () => {
 		const mapping = { ageGroups: { "AK 10": "AK 12" }, disciplineAliases: {} };
 		expect(setAgeGroupMapping(mapping, "AK 10", null).ageGroups).toEqual({});
 		expect(setAgeGroupMapping(mapping, "AK 12", "AK 12").ageGroups).toEqual({ "AK 10": "AK 12", "AK 12": "AK 12" });
-		expect(setDisciplineAlias(mapping, "4*25m RLB", "Rückenlage").disciplineAliases).toEqual({ "4*25m RLB": "Rückenlage" });
+		expect(setDisciplineAlias(mapping, "4*25m RLB", "Rückenlage").disciplineAliases).toEqual({
+			"4*25m RLB": "Rückenlage"
+		});
 		expect(setDisciplineAlias(mapping, "4*25m RLB", null).disciplineAliases).toEqual({});
 		expect(mapping.ageGroups).toEqual({ "AK 10": "AK 12" });
 	});

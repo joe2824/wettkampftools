@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ['windows-latest']
+        os: ["windows-latest"]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -30,13 +30,13 @@ jobs:
       - name: Set up Python 3.12
         uses: actions/setup-python@v4
         with:
-          python-version: '3.12'
+          python-version: "3.12"
       - run: pip install pyinstaller pyinstaller-versionfile
       - run: pip install -r requirements.txt
       - run: create-version-file metadata.yml --outfile file_version_info.txt --version ${{ steps.remove_prefix.outputs.tag_name }}
       #- run: pyinstaller --noconfirm --onefile --windowed --icon "images/icon.ico" --name "Wettkampftools" --add-data "images/;images/" --version-file="file_version_info.txt" --splash "images/splash.png"  "app.py"
       - run: pyinstaller --noconfirm --onefile --windowed --icon "images/icon.ico" --name "Wettkampftools" --add-data "images/;images/" --version-file="file_version_info.txt" "app.py"
-     
+
       - uses: actions/upload-artifact@v4
         with:
           name: Wettkampftools
@@ -44,23 +44,23 @@ jobs:
           if-no-files-found: error
 
   release:
-      if: startsWith(github.event.ref, 'refs/tags/v')
-      needs: build
-      name: Create release with assets
-      runs-on: ubuntu-latest
-      permissions:
-        contents: write
+    if: startsWith(github.event.ref, 'refs/tags/v')
+    needs: build
+    name: Create release with assets
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
-      steps:
-        - name: Artifact
-          uses: actions/download-artifact@v6
-          with:
-            name: "Wettkampftools"
-            path: dist
-        - run: zip -j Wettkampftools.zip dist/*
+    steps:
+      - name: Artifact
+        uses: actions/download-artifact@v6
+        with:
+          name: "Wettkampftools"
+          path: dist
+      - run: zip -j Wettkampftools.zip dist/*
 
-        - name: Create release
-          uses: ncipollo/release-action@v1
-          with:
-            generateReleaseNotes: true
-            artifacts: Wettkampftools.zip
+      - name: Create release
+        uses: ncipollo/release-action@v1
+        with:
+          generateReleaseNotes: true
+          artifacts: Wettkampftools.zip

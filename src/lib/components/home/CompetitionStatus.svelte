@@ -38,7 +38,7 @@
 		confirmLabel="Neuen Wettkampf beginnen"
 		onconfirm={startNew}
 	>
-		Alle geladenen Meldungen und Ergebnisse werden entfernt. {eventHint} Titel, Ausrichter, Ort, Unterzeichner,
-		Einstellungen und Layout bleiben erhalten.
+		Alle geladenen Meldungen und Ergebnisse werden entfernt. {eventHint} Titel, Ausrichter, Ort, Unterzeichner, Einstellungen
+		und Layout bleiben erhalten.
 	</ConfirmDialog>
 </section>

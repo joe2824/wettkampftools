@@ -42,8 +42,8 @@
 			confirmLabel="Zurücksetzen"
 			onconfirm={reset}
 		>
-			Altersklassen, Veranstaltung und Urkunden-Einstellungen bekommen wieder die Standardwerte. Unterschriften
-			bleiben erhalten. Übernommen wird erst beim Speichern.
+			Altersklassen, Veranstaltung und Urkunden-Einstellungen bekommen wieder die Standardwerte. Unterschriften bleiben
+			erhalten. Übernommen wird erst beim Speichern.
 		</ConfirmDialog>
 		<Button variant="outline" onclick={exportFile}>
 			<DownloadIcon data-icon="inline-start" />

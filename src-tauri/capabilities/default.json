@@ -1,28 +1,28 @@
 {
-  "$schema": "../gen/schemas/desktop-schema.json",
-  "identifier": "default",
-  "description": "Berechtigungen des Hauptfensters",
-  "windows": ["main"],
-  "permissions": [
-    "core:default",
-    "dialog:allow-open",
-    "dialog:allow-save",
-    "fs:allow-appdata-read-recursive",
-    "fs:allow-appdata-write-recursive",
-    "fs:allow-appdata-meta-recursive",
-    "fs:allow-write-file",
-    {
-      "identifier": "http:default",
-      "allow": [
-        { "url": "https://services.dlrg.net/*" },
-        { "url": "https://raw.githubusercontent.com/dennisfabri/JAuswertung/*" }
-      ]
-    },
-    {
-      "identifier": "opener:allow-open-url",
-      "allow": [{ "url": "https://github.com/joe2824/*" }]
-    },
-    "updater:default",
-    "process:allow-restart"
-  ]
+	"$schema": "../gen/schemas/desktop-schema.json",
+	"identifier": "default",
+	"description": "Berechtigungen des Hauptfensters",
+	"windows": ["main"],
+	"permissions": [
+		"core:default",
+		"dialog:allow-open",
+		"dialog:allow-save",
+		"fs:allow-appdata-read-recursive",
+		"fs:allow-appdata-write-recursive",
+		"fs:allow-appdata-meta-recursive",
+		"fs:allow-write-file",
+		{
+			"identifier": "http:default",
+			"allow": [
+				{ "url": "https://services.dlrg.net/*" },
+				{ "url": "https://raw.githubusercontent.com/dennisfabri/JAuswertung/*" }
+			]
+		},
+		{
+			"identifier": "opener:allow-open-url",
+			"allow": [{ "url": "https://github.com/joe2824/*" }]
+		},
+		"updater:default",
+		"process:allow-restart"
+	]
 }

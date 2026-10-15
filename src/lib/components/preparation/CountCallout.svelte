@@ -17,7 +17,8 @@
 >
 	<div class="flex flex-col gap-1">
 		<h3 id="import-count-title" class="text-xl font-semibold">
-			JAuswertung muss genau <span class="text-3xl font-bold text-primary tabular-nums">{expected.total}</span> Meldungen importieren
+			JAuswertung muss genau <span class="text-3xl font-bold text-primary tabular-nums">{expected.total}</span> Meldungen
+			importieren
 		</h3>
 		<p class="text-sm text-muted-foreground">
 			Nach dem Import in JAuswertung die Anzahl je Altersklasse und Geschlecht mit dieser Tabelle vergleichen.

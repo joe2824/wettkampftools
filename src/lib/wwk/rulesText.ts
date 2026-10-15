@@ -27,7 +27,7 @@ export function trophyRulesText(options: ScoringOptions): string[] {
 		POINTS_PARAGRAPH,
 		PLACE_PARAGRAPH,
 		options.excludeUnplaced ? COUNT_WITH_PLACE : COUNT_ALL,
-		TIE_PARAGRAPH,
+		TIE_PARAGRAPH
 	];
 }
 

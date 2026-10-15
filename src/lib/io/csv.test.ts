@@ -84,10 +84,7 @@ describe("parseCsv", () => {
 
 describe("checkRequiredColumns", () => {
 	it("meldet fehlende Pflichtspalten", () => {
-		expect(checkRequiredColumns(["gliederung", "name"], REQUIRED_REGISTRATION_COLUMNS)).toEqual([
-			"ak",
-			"geschlecht"
-		]);
+		expect(checkRequiredColumns(["gliederung", "name"], REQUIRED_REGISTRATION_COLUMNS)).toEqual(["ak", "geschlecht"]);
 	});
 
 	it("liefert eine leere Liste, wenn alles vorhanden ist", () => {

@@ -17,7 +17,9 @@
 
 	let saving = $state(false);
 	let confirmOpen = $state(false);
-	let result = $state.raw<{ check: PreparationCheck; outcome: Extract<ExportOutcome, { status: "saved" }> } | null>(null);
+	let result = $state.raw<{ check: PreparationCheck; outcome: Extract<ExportOutcome, { status: "saved" }> } | null>(
+		null
+	);
 
 	// Ergebnis gilt nur, solange sich Meldungen und Auswahl nicht geändert haben.
 	const saved = $derived(result?.check === check ? result.outcome : null);

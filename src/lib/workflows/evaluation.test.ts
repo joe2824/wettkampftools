@@ -43,7 +43,16 @@ function row(sourceRow: number, place: number | null, organisation: string, ageG
 	};
 }
 
-const DATA_SHEET: Sheet = { name: "Daten", rows: [["Platz", "Name"], [1, "x"], [2, "y"], [null, "z"], [1, "w"]] };
+const DATA_SHEET: Sheet = {
+	name: "Daten",
+	rows: [
+		["Platz", "Name"],
+		[1, "x"],
+		[2, "y"],
+		[null, "z"],
+		[1, "w"]
+	]
+};
 
 const ROWS = [
 	row(1, 1, "Musterstadt"),

@@ -101,7 +101,11 @@ export async function importBestTimesFile(file: ResultsFile, today: Date = new D
 }
 
 /** Schreibt das neue Regelwerk; gibt den Pfad zurück, bei Abbruch null. */
-export function saveNewRulebook(club: LoadedRulebook, rows: readonly RecChange[], year: number): Promise<string | null> {
+export function saveNewRulebook(
+	club: LoadedRulebook,
+	rows: readonly RecChange[],
+	year: number
+): Promise<string | null> {
 	const bytes = writeRulebookRecords(club.bytes, toRecUpdates(rows), newRulebookDescription(year));
 	return saveFile({ defaultName: newRulebookFileName(year), filters: RULEBOOK_FILTERS, bytes });
 }

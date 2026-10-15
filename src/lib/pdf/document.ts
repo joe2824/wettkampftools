@@ -2,7 +2,13 @@
 import fontkit from "@cantoo/fontkit";
 import { PDFDocument, PrintScaling, rgb, type PDFFont, type PDFImage, type PDFPage } from "@cantoo/pdf-lib";
 import type { FontBytes } from "$lib/certificates/fonts";
-import { MM_PER_PT, PAGE_HEIGHT_MM, PAGE_WIDTH_MM, type FontWeight, type SignatureSlot } from "$lib/certificates/layout";
+import {
+	MM_PER_PT,
+	PAGE_HEIGHT_MM,
+	PAGE_WIDTH_MM,
+	type FontWeight,
+	type SignatureSlot
+} from "$lib/certificates/layout";
 import type { DrawOp, ImageOp, LineOp, TextOp } from "$lib/certificates/render";
 
 export interface PdfAssets {

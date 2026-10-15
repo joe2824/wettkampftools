@@ -23,7 +23,16 @@ function fullState(): CompetitionState {
 			fileName: "JAuswertung.xlsx",
 			lastModified: 1_700_000_000_000,
 			workbook: {
-				sheets: [{ name: "Daten", rows: [["Platz", "Name"], [1, "Musterstadt"], [null, true]] }],
+				sheets: [
+					{
+						name: "Daten",
+						rows: [
+							["Platz", "Name"],
+							[1, "Musterstadt"],
+							[null, true]
+						]
+					}
+				],
 				properties: { created: "2026-10-01T10:00:00Z", modified: null }
 			},
 			yearWarning: 2025,
@@ -96,7 +105,11 @@ describe("parseCompetitionState", () => {
 	it("ergänzt fehlende Angaben zum Dateijahr mit Vorgaben", () => {
 		const { fileName, lastModified, workbook, yearWarning } = fullState().results!;
 		const older = { fileName, lastModified, workbook, yearWarning };
-		const parsed = parseCompetitionState({ schemaVersion: 1, ...fullState(), results: { ...older, yearConfirmed: "ja" } });
+		const parsed = parseCompetitionState({
+			schemaVersion: 1,
+			...fullState(),
+			results: { ...older, yearConfirmed: "ja" }
+		});
 		expect(parsed?.results).toEqual({ ...older, creationUnknown: false, yearConfirmed: false });
 	});
 

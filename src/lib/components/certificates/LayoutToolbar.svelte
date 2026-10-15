@@ -65,8 +65,8 @@
 			confirmLabel="Zurücksetzen"
 			onconfirm={onreset}
 		>
-			Alle Elemente bekommen wieder Position, Text und Schrift der Word-Vorlage. Das andere Layout bleibt
-			unverändert. Übernommen wird erst beim Speichern.
+			Alle Elemente bekommen wieder Position, Text und Schrift der Word-Vorlage. Das andere Layout bleibt unverändert.
+			Übernommen wird erst beim Speichern.
 		</ConfirmDialog>
 		<Button variant="outline" onclick={exportFile}>
 			<DownloadIcon data-icon="inline-start" />

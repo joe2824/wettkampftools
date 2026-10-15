@@ -2,7 +2,12 @@ import { readFile } from "node:fs/promises";
 import { PDFDocument } from "@cantoo/pdf-lib";
 import { describe, expect, it } from "vitest";
 import { pngBytes } from "$lib/testing/images";
-import { buildCalibrationPdf, buildCertificatesPdf, certificatePageOps, type CertificatePdfInput } from "./certificatePdf";
+import {
+	buildCalibrationPdf,
+	buildCertificatesPdf,
+	certificatePageOps,
+	type CertificatePdfInput
+} from "./certificatePdf";
 import { createMetrics, loadFontBytes } from "./fonts";
 import { defaultLayouts } from "./layoutDefaults";
 import type { CertificatePage } from "./model";

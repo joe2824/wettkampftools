@@ -8,7 +8,7 @@ import {
 	checkStringMap,
 	IssueCollector,
 	isRecord,
-	parseSection,
+	parseSection
 } from "./validate";
 
 describe("isRecord", () => {
@@ -31,7 +31,7 @@ describe("checkStringList", () => {
 	it("verwirft Nicht-Texte mit Hinweis", () => {
 		expect(checkStringList(["AK 12", 5], fallback, "list")).toEqual({
 			value: ["AK 12"],
-			issue: "list.invalidEntries",
+			issue: "list.invalidEntries"
 		});
 	});
 
@@ -121,7 +121,7 @@ describe("checkStringMap", () => {
 
 	it("kürzt Schlüssel und Werte", () => {
 		expect(checkStringMap({ " Musterstadt ": " Musterstadt / Süd " }, MAX * 2, "map")).toEqual({
-			value: { Musterstadt: "Musterstadt / Süd" },
+			value: { Musterstadt: "Musterstadt / Süd" }
 		});
 	});
 

@@ -6,7 +6,7 @@ import type { TeamNameOverrides } from "$lib/wwk/teamNames";
 /** Neue Namen für die geladenen Meldungen; null, wenn sich nichts ändert. */
 export function refreshTeamNames(
 	registration: SessionRegistration,
-	overrides: TeamNameOverrides,
+	overrides: TeamNameOverrides
 ): SessionRegistration | null {
 	const teams = assignTeamNames(registration.teams, overrides);
 	if (teams.every((team, index) => team.name === registration.teams[index].name)) return null;

@@ -19,7 +19,7 @@
 		loadRegistrations,
 		registrationSettingsKey,
 		registrationYearWarning,
-		type PreparationCheck,
+		type PreparationCheck
 	} from "$lib/workflows/preparation";
 	import { refreshTeamNames } from "$lib/workflows/teamNames";
 

@@ -70,15 +70,13 @@ describe("fillTemplate", () => {
 	});
 
 	it("wertet Sternchen in eingesetzten Werten nicht als Fettdruck", () => {
-		expect(fillTemplate("{name}", { name: "**Anna Meier**" })).toEqual([
-			{ text: "**Anna Meier**", bold: false }
-		]);
+		expect(fillTemplate("{name}", { name: "**Anna Meier**" })).toEqual([{ text: "**Anna Meier**", bold: false }]);
 	});
 
 	it("ersetzt mehrere Platzhalter in einem Abschnitt", () => {
-		expect(
-			fillTemplate("**{altersklasse} {geschlecht}**", { altersklasse: "AK 12", geschlecht: "weiblich" })
-		).toEqual([{ text: "AK 12 weiblich", bold: true }]);
+		expect(fillTemplate("**{altersklasse} {geschlecht}**", { altersklasse: "AK 12", geschlecht: "weiblich" })).toEqual([
+			{ text: "AK 12 weiblich", bold: true }
+		]);
 	});
 });
 

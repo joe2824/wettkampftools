@@ -69,7 +69,11 @@ function withEntry(entries: Record<string, string>, key: string, value: string |
 }
 
 /** null entfernt die Zuordnung. */
-export function setAgeGroupMapping(mapping: RecMapping, clubAgeGroup: string, officialAgeGroup: string | null): RecMapping {
+export function setAgeGroupMapping(
+	mapping: RecMapping,
+	clubAgeGroup: string,
+	officialAgeGroup: string | null
+): RecMapping {
 	return { ...mapping, ageGroups: withEntry(mapping.ageGroups, clubAgeGroup, officialAgeGroup) };
 }
 

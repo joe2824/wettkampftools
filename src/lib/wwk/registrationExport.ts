@@ -1,7 +1,13 @@
 // Meldungen für JAuswertung: alle Teams plus Wellen-Kopien als Blatt „Meldungen“.
 import type { Cell, Sheet, Workbook } from "$lib/platform/workbook";
 import type { Settings } from "../settings/settings";
-import { buildAgeGroupOrder, compareAgeGroups, equalsAgeGroup, toWaveAgeGroup, waveEligibleAgeGroups } from "./ageGroups";
+import {
+	buildAgeGroupOrder,
+	compareAgeGroups,
+	equalsAgeGroup,
+	toWaveAgeGroup,
+	waveEligibleAgeGroups
+} from "./ageGroups";
 import { MAX_MEMBERS, type Member, type Team } from "./registrations";
 
 export const REGISTRATION_SHEET = "Meldungen";
@@ -12,7 +18,7 @@ const BASE_HEADERS = ["gliederung", "name", "ak", "geschlecht", "qualifikation",
 const MEMBER_HEADERS = Array.from({ length: MAX_MEMBERS }, (_, i) => [
 	`Nachname ${i + 1}`,
 	`Vorname ${i + 1}`,
-	`Jahrgang ${i + 1}`,
+	`Jahrgang ${i + 1}`
 ]).flat();
 export const REGISTRATION_HEADERS: readonly string[] = [...BASE_HEADERS, ...MEMBER_HEADERS];
 
@@ -43,7 +49,7 @@ export interface VerificationResult {
 export function defaultWaveSelection(teams: readonly Team[], settings: Settings): Set<string> {
 	const eligible = waveEligibleAgeGroups(settings);
 	return new Set(
-		teams.filter((team) => eligible.some((name) => equalsAgeGroup(name, team.ageGroup))).map((team) => team.id),
+		teams.filter((team) => eligible.some((name) => equalsAgeGroup(name, team.ageGroup))).map((team) => team.id)
 	);
 }
 
@@ -55,7 +61,7 @@ function waveCopy(team: Team): ExportRow {
 export function buildRegistrationRows(
 	teams: readonly Team[],
 	waveSelection: ReadonlySet<string>,
-	settings: Settings,
+	settings: Settings
 ): ExportRow[] {
 	const originals: ExportRow[] = teams.map((team) => ({ ...team, isWaveCopy: false }));
 	const copies = teams.filter((team) => waveSelection.has(team.id)).map(waveCopy);
@@ -64,7 +70,7 @@ export function buildRegistrationRows(
 		(a, b) =>
 			byAgeGroup(a.ageGroup, b.ageGroup) ||
 			b.gender.localeCompare(a.gender, LOCALE) ||
-			b.organisation.localeCompare(a.organisation, LOCALE),
+			b.organisation.localeCompare(a.organisation, LOCALE)
 	);
 }
 
@@ -92,7 +98,7 @@ function toSheetRow(row: ExportRow): Cell[] {
 		textCell(row.gender),
 		textCell(row.qualification),
 		decimalCell(row.reportedPoints),
-		...members,
+		...members
 	];
 }
 
@@ -119,8 +125,7 @@ export function expectedCounts(rows: readonly ExportRow[]): ExpectedCounts {
 	return { total: rows.length, byGroup: [...countGroups(rows).values()] };
 }
 
-const cellText = (cell: Cell | undefined): string =>
-	cell === null || cell === undefined ? "" : String(cell).trim();
+const cellText = (cell: Cell | undefined): string => (cell === null || cell === undefined ? "" : String(cell).trim());
 
 function headerMatches(header: readonly Cell[] | undefined): boolean {
 	if (!header) return false;
@@ -185,7 +190,10 @@ export function verifyRegistrationSheet(workbook: Workbook, expected: ExpectedCo
 		problems.push(`Anzahl Meldungen: ${expected.total} erwartet, ${dataRows.length} gefunden.`);
 	}
 	const actual = countGroups(
-		dataRows.map(({ cells }) => ({ ageGroup: cellText(cells[COLUMN.ageGroup]), gender: cellText(cells[COLUMN.gender]) })),
+		dataRows.map(({ cells }) => ({
+			ageGroup: cellText(cells[COLUMN.ageGroup]),
+			gender: cellText(cells[COLUMN.gender])
+		}))
 	);
 	problems.push(...groupProblems(expected.byGroup, actual), ...incompleteRowProblems(dataRows));
 	return { ok: problems.length === 0, problems };
