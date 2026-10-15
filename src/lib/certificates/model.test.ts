@@ -53,6 +53,23 @@ function names(entries: readonly CertificateEntry[]): string[] {
 }
 
 describe("eligibleEntries", () => {
+	it("behält Wellen-AK nach geänderten Einstellungen", () => {
+		// Start-AK nach der Vorbereitung hochgesetzt, Senioren vereinfacht.
+		const settings = { ...defaultSettings(), waveStartAgeGroup: "AK Offen", simplifySeniorAgeGroups: true };
+		const order = buildAgeGroupOrder(settings);
+		const rows = [
+			row({ name: "Senioren", ageGroupRaw: "AkW Senioren" }),
+			row({ name: "Welle", ageGroupRaw: "AkW 13/14" }),
+			row({ name: "Rettung", ageGroupRaw: "AK 13/14" })
+		];
+		const entries = eligibleEntries(rows, order);
+		expect(entries.map((entry) => [entry.row.name, entry.kind])).toEqual([
+			["Rettung", "rescue"],
+			["Welle", "wave"],
+			["Senioren", "wave"]
+		]);
+	});
+
 	it("schließt Einträge ohne Platz und mit unbekannter AK aus", () => {
 		const rows = [
 			row({ name: "A" }),

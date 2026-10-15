@@ -1,6 +1,8 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import { defaultSettings } from "../settings/settings";
+import { buildAgeGroupOrder } from "./ageGroups";
 import type { ResultRow } from "./results";
 import { rankOrganisations, scoreTeams, trophyFormula, trophyPointsFor, type ScoredTeam } from "./scoring";
 
@@ -53,6 +55,18 @@ describe("trophyFormula", () => {
 });
 
 describe("scoreTeams", () => {
+	it("wertet Wellen-AK auch nach geänderter Start-AK und Senioren-Vereinfachung", () => {
+		const settings = { ...defaultSettings(), waveStartAgeGroup: "AK Offen", simplifySeniorAgeGroups: false };
+		const order = buildAgeGroupOrder(settings);
+		const rows = [row({ ageGroupRaw: "AkW 13/14" }), row({ ageGroupRaw: "AkW Senioren" })];
+		const { scored, notScored } = scoreTeams(rows, order, { excludeUnplaced: true });
+		expect(notScored).toEqual([]);
+		expect(scored.map((team) => [team.ageGroup, team.kind])).toEqual([
+			["AkW 13/14", "wave"],
+			["AkW Senioren", "wave"]
+		]);
+	});
+
 	it("wertet eine Gruppe mit 5 Mannschaften", () => {
 		const rows = [1, 2, 3, 4, 5].map((place) => row({ place }));
 		const { scored, notScored } = scoreTeams(rows, ORDER, { excludeUnplaced: true });

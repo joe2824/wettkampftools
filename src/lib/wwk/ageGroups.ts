@@ -37,10 +37,37 @@ function findIndex(name: string, list: readonly string[]): number {
 	return list.findIndex((entry) => key(entry) === wanted);
 }
 
+/** Rettungs-AK zu einer Wellen-AK; null bei allem anderen. */
+function rescueCounterpart(name: string): string | null {
+	const { token, rest } = splitLeadingToken(normalizeAgeGroupSpelling(name));
+	return token === WAVE_PREFIX ? RESCUE_PREFIX + rest : null;
+}
+
+interface OutsideWave {
+	name: string;
+	/** Position der Rettungs-AK; Senioren ohne Platz stehen hinter allem. */
+	rescueIndex: number;
+}
+
+/**
+ * Wellen-AK, die nicht (mehr) in der Reihenfolge steht, etwa nach geänderter Start-AK:
+ * bekannt, sobald ihre Rettungs-AK bekannt ist oder es die Senioren sind.
+ */
+function waveOutsideOrder(name: string, order: readonly string[]): OutsideWave | null {
+	const rescue = rescueCounterpart(name);
+	if (rescue === null) return null;
+	const rescueIndex = findIndex(rescue, order);
+	if (rescueIndex >= 0) return { name: toWaveAgeGroup(order[rescueIndex]), rescueIndex };
+	if (!equalsAgeGroup(rescue, SENIOR_AGE_GROUP)) return null;
+	return { name: toWaveAgeGroup(SENIOR_AGE_GROUP), rescueIndex: order.length };
+}
+
 /** Liefert die konfigurierte Schreibweise oder kennzeichnet die AK als unbekannt. */
 export function matchAgeGroup(raw: string, order: readonly string[]): AgeGroupMatch {
 	const index = findIndex(raw, order);
-	return index >= 0 ? { kind: "known", name: order[index] } : { kind: "unknown", raw };
+	if (index >= 0) return { kind: "known", name: order[index] };
+	const wave = waveOutsideOrder(raw, order);
+	return wave ? { kind: "known", name: wave.name } : { kind: "unknown", raw };
 }
 
 export function simplifySeniorAgeGroup(name: string, settings: Settings): string {
@@ -89,7 +116,7 @@ export function buildAgeGroupOrder(settings: Settings): string[] {
 }
 
 export function classifyAgeGroup(name: string, order: readonly string[]): AgeGroupKind | null {
-	if (findIndex(name, order) < 0) return null;
+	if (findIndex(name, order) < 0) return waveOutsideOrder(name, order) ? "wave" : null;
 	const { token } = splitLeadingToken(normalizeAgeGroupSpelling(name));
 	if (token === WAVE_PREFIX) return "wave";
 	if (token === RESCUE_PREFIX) return "rescue";
@@ -102,11 +129,24 @@ export function displayAgeGroup(name: string): string {
 	return token === WAVE_PREFIX ? RESCUE_PREFIX + rest : name;
 }
 
+/** Rang einer Wellen-AK ohne Platz: vor der ersten Wellen-AK mit späterer Rettungs-AK. */
+function rankOutsideOrder(wave: OutsideWave, order: readonly string[]): number {
+	const next = order.findIndex((entry) => {
+		const rescue = rescueCounterpart(entry);
+		return rescue !== null && findIndex(rescue, order) > wave.rescueIndex;
+	});
+	// Bruchteil zwischen zwei Plätzen, nach Rettungs-AK gestaffelt.
+	const offset = (wave.rescueIndex + 1) / (order.length + 2);
+	return (next >= 0 ? next : order.length) - 1 + offset;
+}
+
 /** Sortiert nach Position in der Reihenfolge; Unbekannte am Ende nach Namen. */
 export function compareAgeGroups(order: readonly string[]): (a: string, b: string) => number {
 	const rank = (name: string): number => {
 		const index = findIndex(name, order);
-		return index >= 0 ? index : order.length;
+		if (index >= 0) return index;
+		const wave = waveOutsideOrder(name, order);
+		return wave ? rankOutsideOrder(wave, order) : order.length;
 	};
 	return (a, b) => rank(a) - rank(b) || a.localeCompare(b, "de");
 }

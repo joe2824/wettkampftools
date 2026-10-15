@@ -184,7 +184,7 @@ describe("classifyAgeGroup", () => {
 	});
 
 	it("liefert null für unbekannte Altersklassen", () => {
-		expect(classifyAgeGroup("AkW 12", order)).toBeNull();
+		expect(classifyAgeGroup("AkW 99", order)).toBeNull();
 		expect(classifyAgeGroup("Senioren", order)).toBeNull();
 	});
 
@@ -206,5 +206,41 @@ describe("compareAgeGroups", () => {
 		const order = ["AK 12", "AK 10", "AkW 12"];
 		const sorted = ["Zeta", "AkW 12", "ak 10", "Alpha", "AK 12"].sort(compareAgeGroups(order));
 		expect(sorted).toEqual(["AK 12", "ak 10", "AkW 12", "Alpha", "Zeta"]);
+	});
+});
+
+describe("Wellen-AK außerhalb der aktuellen Wellen-Auswahl", () => {
+	// Vorbereitet mit Start „AK 10“, danach auf „AK 15/16“ umgestellt.
+	const changed = buildAgeGroupOrder(settingsWith({ waveStartAgeGroup: "AK 15/16" }));
+	const simplified = buildAgeGroupOrder(settingsWith({ simplifySeniorAgeGroups: true }));
+	const detailed = buildAgeGroupOrder(settingsWith({ simplifySeniorAgeGroups: false }));
+
+	it("erkennt eine Wellen-AK, wenn die Rettungs-AK bekannt ist", () => {
+		expect(changed).not.toContain("AkW 12");
+		expect(matchAgeGroup("akw 12", changed)).toEqual({ kind: "known", name: "AkW 12" });
+		expect(classifyAgeGroup("AkW 12", changed)).toBe("wave");
+	});
+
+	it("erkennt Wellen-Senioren mit und ohne Vereinfachung", () => {
+		expect(matchAgeGroup("AkW Senioren", simplified)).toEqual({ kind: "known", name: "AkW Senioren" });
+		expect(matchAgeGroup("AkW Senioren", detailed)).toEqual({ kind: "known", name: "AkW Senioren" });
+		expect(classifyAgeGroup("AkW Senioren", detailed)).toBe("wave");
+		expect(matchAgeGroup("AkW 120", simplified)).toEqual({ kind: "known", name: "AkW 120" });
+		expect(matchAgeGroup("AkW Senioren", ["AK 12"])).toEqual({ kind: "known", name: "AkW Senioren" });
+	});
+
+	it("bleibt bei unbekannter Rettungs-AK unbekannt", () => {
+		expect(matchAgeGroup("AkW 99", changed)).toEqual({ kind: "unknown", raw: "AkW 99" });
+		expect(classifyAgeGroup("AkW 99", changed)).toBeNull();
+	});
+
+	it("sortiert sie zwischen die übrigen Wellen-AK und vor Unbekannte", () => {
+		const sorted = ["Unbekannt", "AkW 15/16", "AkW 12", "AK 12", "AkW 10"].sort(compareAgeGroups(changed));
+		expect(sorted).toEqual(["AK 12", "AkW 10", "AkW 12", "AkW 15/16", "Unbekannt"]);
+	});
+
+	it("sortiert Wellen-Senioren ohne Platz in der Reihenfolge ans Ende der bekannten", () => {
+		const sorted = ["Unbekannt", "AkW Senioren", "AK 12"].sort(compareAgeGroups(["AK 12"]));
+		expect(sorted).toEqual(["AK 12", "AkW Senioren", "Unbekannt"]);
 	});
 });
