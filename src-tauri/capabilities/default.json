@@ -19,7 +19,14 @@
 		},
 		{
 			"identifier": "opener:allow-open-url",
-			"allow": [{ "url": "https://github.com/joe2824/*" }]
+			"allow": [
+				{ "url": "https://github.com/joe2824/*" },
+				{ "url": "https://github.com/dennisfabri/JAuswertung" },
+				{ "url": "https://fonts.google.com/specimen/Nunito" },
+				{ "url": "https://openfontlicense.org/" },
+				{ "url": "https://www.naturalearthdata.com/" },
+				{ "url": "https://shadcn-svelte.com/" }
+			]
 		},
 		"updater:default",
 		"process:allow-restart"

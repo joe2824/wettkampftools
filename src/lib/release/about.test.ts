@@ -6,13 +6,13 @@ vi.mock("@tauri-apps/plugin-opener", () => opener);
 const env = vi.hoisted(() => ({ isTauri: vi.fn(() => true) }));
 vi.mock("$lib/platform/env", () => env);
 
-import { isPrerelease, openProjectPage, PROJECT_URL } from "./about";
+import { isPrerelease, openExternalUrl, PROJECT_URL } from "./about";
 
 beforeEach(() => vi.clearAllMocks());
 
-describe("openProjectPage", () => {
+describe("openExternalUrl", () => {
 	it("öffnet die Projektseite im Standardbrowser", async () => {
-		await openProjectPage();
+		await openExternalUrl(PROJECT_URL);
 		expect(PROJECT_URL).toBe("https://github.com/joe2824/wettkampftools");
 		expect(opener.openUrl).toHaveBeenCalledWith(PROJECT_URL);
 	});
@@ -21,10 +21,16 @@ describe("openProjectPage", () => {
 		env.isTauri.mockReturnValue(false);
 		const open = vi.fn();
 		vi.stubGlobal("window", { open });
-		await openProjectPage();
+		await openExternalUrl(PROJECT_URL);
 		expect(open).toHaveBeenCalledWith(PROJECT_URL, "_blank", "noopener");
 		expect(opener.openUrl).not.toHaveBeenCalled();
 		vi.unstubAllGlobals();
+	});
+
+	it("öffnet eine beliebige Adresse im Standardbrowser", async () => {
+		env.isTauri.mockReturnValue(true);
+		await openExternalUrl("https://fonts.google.com/specimen/Nunito");
+		expect(opener.openUrl).toHaveBeenCalledWith("https://fonts.google.com/specimen/Nunito");
 	});
 });
 

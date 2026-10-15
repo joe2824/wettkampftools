@@ -1,17 +1,21 @@
 <script lang="ts">
-	import ExternalLinkIcon from "@lucide/svelte/icons/external-link";
+	import ScaleIcon from "@lucide/svelte/icons/scale";
 	import RefreshCwIcon from "@lucide/svelte/icons/refresh-cw";
 	import { toast } from "svelte-sonner";
+	import ExternalLink from "$lib/components/ExternalLink.svelte";
+	import LicensesDialog from "$lib/components/licenses/LicensesDialog.svelte";
 	import UpdateChannelSwitch from "$lib/components/UpdateChannelSwitch.svelte";
 	import { Badge } from "$lib/components/ui/badge";
 	import { Button } from "$lib/components/ui/button";
 	import * as Dialog from "$lib/components/ui/dialog";
-	import { APP_NAME, AUTHOR, isPrerelease, openProjectPage, PROJECT_URL } from "$lib/release/about";
+	import { APP_NAME, AUTHOR, isPrerelease, PROJECT_URL } from "$lib/release/about";
 	import { updater } from "$lib/release/updater.svelte";
 	import { cn } from "$lib/utils.js";
 	import { APP_VERSION } from "$lib/version";
 
 	let { open = $bindable(false) }: { open: boolean } = $props();
+
+	let licensesOpen = $state(false);
 
 	const checking = $derived(updater.phase === "checking");
 
@@ -20,14 +24,6 @@
 		if (phase === "upToDate") toast.success("Wettkampftools ist auf dem neuesten Stand.");
 		else if (phase === "error" && updater.error) toast.error(updater.error);
 		else if (phase === "available") open = false;
-	}
-
-	async function openLink() {
-		try {
-			await openProjectPage();
-		} catch {
-			toast.error("Die Seite konnte nicht geöffnet werden.");
-		}
 	}
 </script>
 
@@ -48,14 +44,15 @@
 			<dd>{AUTHOR}</dd>
 			<dt class="text-muted-foreground">Projektseite</dt>
 			<dd>
-				<button type="button" class="text-start underline underline-offset-2" onclick={openLink}>
-					{PROJECT_URL.replace("https://", "")}
-					<ExternalLinkIcon class="inline size-3.5" aria-hidden="true" />
-				</button>
+				<ExternalLink url={PROJECT_URL}>{PROJECT_URL.replace("https://", "")}</ExternalLink>
 			</dd>
 		</dl>
 		<UpdateChannelSwitch />
 		<Dialog.Footer>
+			<Button variant="ghost" onclick={() => (licensesOpen = true)}>
+				<ScaleIcon data-icon="inline-start" />
+				Lizenzen und Quellen
+			</Button>
 			<Button variant="outline" disabled={checking} onclick={searchUpdates}>
 				<RefreshCwIcon data-icon="inline-start" class={cn(checking && "animate-spin")} />
 				{checking ? "Wird gesucht …" : "Nach Updates suchen"}
@@ -63,3 +60,5 @@
 		</Dialog.Footer>
 	</Dialog.Content>
 </Dialog.Root>
+
+<LicensesDialog bind:open={licensesOpen} />

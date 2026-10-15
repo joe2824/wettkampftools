@@ -236,9 +236,33 @@ Benötigte Secrets im Repository: `TAURI_SIGNING_PRIVATE_KEY` und
 `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` (Signatur der Updates; der öffentliche
 Schlüssel steht in `tauri.conf.json`). `GITHUB_TOKEN` stellt GitHub selbst.
 
-## Lizenz
+## Lizenzen
 
-Veröffentlicht unter MIT-Lizenz. Siehe [`LICENSE.txt`](LICENSE.txt).
+Wettkampftools ist unter der MIT-Lizenz veröffentlicht, siehe
+[`LICENSE.txt`](LICENSE.txt).
 
-Kartendaten: [Natural Earth](https://www.naturalearthdata.com/) (gemeinfrei,
-public domain), vereinfacht.
+- **Schrift Nunito**: SIL Open Font License 1.1, siehe
+  [`static/fonts/OFL.txt`](static/fonts/OFL.txt). Sie steckt in der Anwendung
+  und in erzeugten PDFs, was die Lizenz erlaubt. Die Word-Vorlage für den
+  Seriendruck braucht sie auf dem Rechner;
+  [kostenlos bei Google Fonts](https://fonts.google.com/specimen/Nunito).
+- **Kartendaten**: [Natural Earth](https://www.naturalearthdata.com/)
+  (gemeinfrei), vereinfacht.
+- **Datenquellen** (zur Laufzeit geladen, nicht mitgeliefert):
+  DLRG-Standortdaten und die offiziellen Regelwerke aus
+  [JAuswertung](https://github.com/dennisfabri/JAuswertung).
+- **Bibliotheken**: Die Lizenzhinweise aller mitgelieferten npm-Pakete und
+  Rust-Crates entstehen bei jedem `npm run build` als
+  `build/third-party-licenses.json` (Vite-Plugin in
+  [`scripts/licenses-plugin.mjs`](scripts/licenses-plugin.mjs)): npm nur mit
+  Paketen, deren Code im Bundle landet, Rust aus `cargo metadata` für das
+  Windows-Ziel. Gleiche Lizenztexte stehen nur einmal darin. Ohne `cargo`
+  fehlen die Rust-Angaben; Release-Builds brechen dann ab
+  (`REQUIRE_RUST_LICENSES=1` in `release.yml`). Die Datei liegt nur im
+  Build-Ordner und wird nicht eingecheckt. In der Anwendung: **Info →
+  Lizenzen und Quellen**.
+
+Links aus der Anwendung öffnet nur, was in
+`src-tauri/capabilities/default.json` unter `opener:allow-open-url` steht –
+genau die Adressen aus `src/lib/release/credits.ts`; ein Test hält beides
+gleich.

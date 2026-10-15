@@ -69,3 +69,4 @@ schneller und mit allem, was die bisherige Version konnte.
 - Urkunden-Layout: optional eine Deutschlandkarte mit allen teilnehmenden Gliederungen auf der Urkunde.
 - Die Seiten nutzen breite Fenster besser aus.
 - Urkunden-Layout: Hilfslinien mit Einrasten (Kanten, Mitten, Grundlinien, gleiche Abstände mit Anzeige), Größe über Anfasser ändern, Elemente hinzufügen, entfernen und duplizieren, Mehrfachauswahl per Rahmen, Ausrichten, gleichmäßig Verteilen und Gruppieren.
+- Info → „Lizenzen und Quellen“ listet die Schrift Nunito, die Kartendaten, die Datenquellen und alle mitgelieferten Bibliotheken samt Lizenztexten.

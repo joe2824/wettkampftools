@@ -6,9 +6,11 @@
 	import type { CertificateMapData } from "$lib/certificates/mapRender";
 	import type { CertificateEntry } from "$lib/certificates/model";
 	import { layoutStore } from "$lib/certificates/layoutStore.svelte";
+	import ExternalLink from "$lib/components/ExternalLink.svelte";
 	import SaveResult from "$lib/components/SaveResult.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import { settingsStore } from "$lib/settings/settingsStore.svelte";
+	import { NUNITO_DOWNLOAD_URL } from "$lib/release/credits";
 	import { createCertificatesPdf, saveSerialLetter } from "$lib/workflows/certificates";
 	import { YEAR_CONFIRMATION_HINT } from "$lib/workflows/results";
 	import type { CompetitionKind } from "$lib/wwk/results";
@@ -112,5 +114,9 @@
 			Seriendruck-Tabelle für Word speichern
 		</Button>
 		<SaveResult path={serialLetterPath} label="Seriendruck-Tabelle gespeichert" />
+		<p class="text-xs text-muted-foreground">
+			Die Word-Vorlage nutzt die Schrift Nunito. Falls sie auf diesem Rechner fehlt: kostenlos bei
+			<ExternalLink url={NUNITO_DOWNLOAD_URL}>Google Fonts</ExternalLink> herunterladen.
+		</p>
 	</div>
 </div>

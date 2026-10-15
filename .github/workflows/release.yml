@@ -177,6 +177,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          # Der Frontend-Build bricht ab, wenn die Lizenzen der Rust-Crates fehlen.
+          REQUIRE_RUST_LICENSES: "1"
         with:
           tagName: ${{ needs.target.outputs.tag }}
           releaseName: "Wettkampftools ${{ needs.target.outputs.tag }}"
@@ -189,6 +191,22 @@ jobs:
           # wie "2.1.0-beta.1" an. Das Update-Artefakt (.nsis.zip + Signatur)
           # entsteht über createUpdaterArtifacts.
           args: "--bundles nsis"
+
+      # Doppelt hält besser: ohne vollständige Lizenzhinweise bleibt das Release Entwurf.
+      - name: Lizenzhinweise prüfen
+        shell: bash
+        run: |
+          set -euo pipefail
+          node -e '
+            const n = JSON.parse(require("fs").readFileSync("build/third-party-licenses.json", "utf-8"));
+            const cargo = n.packages.filter((p) => p.source === "cargo").length;
+            const npm = n.packages.filter((p) => p.source === "npm").length;
+            if (n.rust !== "ok" || cargo === 0 || npm === 0) {
+              console.error("::error::Lizenzhinweise unvollständig (npm: " + npm + ", Rust: " + cargo + ").");
+              process.exit(1);
+            }
+            console.log("Lizenzhinweise: " + npm + " npm-Pakete, " + cargo + " Rust-Crates.");
+          '
 
       - name: Release veröffentlichen
         shell: bash
