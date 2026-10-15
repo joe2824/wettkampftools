@@ -64,7 +64,11 @@ Weiteres:
      mit Bestätigung.
    - Entfernungen mit Karte, Export als PNG/PDF; Karte auf der Urkunde und
      Position auf dem vorgedruckten Papier.
-   - Rec-Werte: Regelwerk fürs neue Jahr erzeugen und in JAuswertung laden.
+   - Regelwerk fürs neue Jahr: Regelwerk + Strafenkatalog (`…m.def`) erzeugen,
+     neuen Wettkampf in JAuswertung anlegen → Fehlstart 100 Strafpunkte, RW1 vorhanden.
+   - Kopierte Vorjahres-`.wk` (Mannschaften/Ergebnisse vorher in JAuswertung
+     entfernt) aktualisieren und in JAuswertung öffnen: Bahn-Einstellungen,
+     Strafenkatalog und Rec-Werte stimmen.
    - Aktionsleiste unten, Schritt-Assistent, Urkunden-Vorschau.
 
 ## Nächste Schritte
