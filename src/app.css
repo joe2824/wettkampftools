@@ -177,19 +177,28 @@
 		cursor: pointer;
 	}
 
-	/* Dünner, dezenter Scrollbalken (WebView2/Chromium, theme-fähig). */
+	/*
+	 * Schlanker Scrollbalken (WebView2/WebKit): Die Spur bleibt 10 px breit reserviert,
+	 * sichtbar ist nur ein 4 px Balken (transparenter Rand), beim Überfahren 6 px.
+	 */
 	*::-webkit-scrollbar {
-		width: 6px;
-		height: 6px;
+		width: 10px;
+		height: 10px;
+		background: transparent;
 	}
-	*::-webkit-scrollbar-track {
+	*::-webkit-scrollbar-track,
+	*::-webkit-scrollbar-corner {
 		background: transparent;
 	}
 	*::-webkit-scrollbar-thumb {
-		background: color-mix(in oklab, var(--foreground) 20%, transparent);
+		min-height: 40px;
+		border: 3px solid transparent;
 		border-radius: 9999px;
+		background-color: color-mix(in oklab, var(--foreground) 18%, transparent);
+		background-clip: padding-box;
 	}
 	*::-webkit-scrollbar-thumb:hover {
-		background: color-mix(in oklab, var(--foreground) 35%, transparent);
+		border-width: 2px;
+		background-color: color-mix(in oklab, var(--foreground) 38%, transparent);
 	}
 }
