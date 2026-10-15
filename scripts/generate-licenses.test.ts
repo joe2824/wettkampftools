@@ -1,10 +1,15 @@
-import { describe, expect, it } from "vitest";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
 	buildNotices,
 	isLicenseFileName,
 	licenseFromText,
 	normalizeLicenseText,
+	npmAuthors,
 	packageDirFromModuleId,
+	readNpmPackage,
 	rustDependencyIds
 } from "./generate-licenses.mjs";
 
@@ -140,5 +145,38 @@ describe("buildNotices", () => {
 	it("ohne Lizenzangabe steht „unbekannt“", () => {
 		const notices = buildNotices({ npm: [{ name: "x", version: "1.0.0", license: "", text: null }], cargo: [] });
 		expect(notices.packages[0].license).toBe("unbekannt");
+	});
+});
+
+describe("npmAuthors", () => {
+	it.each([
+		[{ author: "Anna Meier <anna@example.org>" }, ["Anna Meier <anna@example.org>"]],
+		[{ author: { name: "Max Mustermann", email: "max@example.org" } }, ["Max Mustermann"]],
+		[{}, []]
+	])("%j → %j", (pkg, expected) => {
+		expect(npmAuthors(pkg)).toEqual(expected);
+	});
+});
+
+describe("readNpmPackage", () => {
+	let dir: string;
+
+	beforeEach(() => {
+		dir = mkdtempSync(join(tmpdir(), "licenses-"));
+	});
+
+	afterEach(() => rmSync(dir, { recursive: true, force: true }));
+
+	it("nimmt ohne Lizenzdatei den SPDX-Standardtext samt Urheber", () => {
+		const pkg = { name: "beispiel", version: "1.0.0", license: "MIT", author: "Anna Meier" };
+		writeFileSync(join(dir, "package.json"), JSON.stringify(pkg));
+		const result = readNpmPackage(dir);
+		expect(result.text).toMatch(/^Copyright \(c\) Anna Meier\n\nMIT License\n\nPermission is hereby granted/);
+	});
+
+	it("bevorzugt die mitgelieferte Lizenzdatei", () => {
+		writeFileSync(join(dir, "package.json"), JSON.stringify({ name: "b", version: "1.0.0", license: "MIT" }));
+		writeFileSync(join(dir, "LICENSE"), "Eigener Text");
+		expect(readNpmPackage(dir).text).toBe("Eigener Text");
 	});
 });

@@ -7,6 +7,7 @@ import {
 	bump,
 	isNewer,
 	nextBetaNumber,
+	notesHeadlineMatches,
 	parsePlanArgs,
 	planVersion,
 	readVersions,
@@ -82,6 +83,16 @@ describe("planVersion", () => {
 		expect(plan(false, "2.0.0", ["v1.0.0.4"])).toEqual({ ok: true, version: "2.0.0" });
 	});
 
+	it("beginnt vor dem ersten stabilen Release die Betas bei der Version aus package.json", () => {
+		expect(plan(true, "", ["v1.0.0.4"])).toEqual({ ok: true, version: "2.0.0-beta.1" });
+		expect(plan(true, "", [])).toEqual({ ok: true, version: "2.0.0-beta.1" });
+		expect(planVersion({ beta: true, request: "", tags: [], currentVersion: "2.0.0-beta.4" })).toEqual({
+			ok: true,
+			version: "2.0.0-beta.1"
+		});
+		expect(plan(true, "", ["v2.0.0-beta.1", "v2.0.0-beta.2"])).toEqual({ ok: true, version: "2.0.0-beta.3" });
+	});
+
 	it("übernimmt eine ausdrückliche Version", () => {
 		expect(plan(false, "2.2.0")).toEqual({ ok: true, version: "2.2.0" });
 		expect(plan(false, "2.2.0-beta.4")).toEqual({ ok: true, version: "2.2.0-beta.4" });
@@ -118,6 +129,25 @@ describe("planVersion", () => {
 		expect(plan(false, "2.0.0")).toMatchObject({ ok: false, error: expect.stringContaining("gibt es schon") });
 		expect(plan(false, "2.0.0-beta.9")).toMatchObject({ ok: false, error: expect.stringContaining("nicht neuer") });
 		expect(plan(false, "2.0.1-beta.2")).toMatchObject({ ok: false, error: expect.stringContaining("gibt es schon") });
+	});
+});
+
+describe("notesHeadlineMatches", () => {
+	it.each([
+		["# Wettkampftools v2.0.0", "v2.0.0", true],
+		["# Wettkampftools v2.0.0 ", "v2.0.0", true],
+		["v2.0.0", "v2.0.0", true],
+		["# Wettkampftools v2.0.0", "v2.0.0-beta.3", true],
+		["# Wettkampftools v2.0.0-beta.3", "v2.0.0-beta.3", true],
+		["# Wettkampftools v2.1.0-beta.3", "v2.1.0", false],
+		["# Wettkampftools v2.0.10", "v2.0.1", false],
+		["# Wettkampftools v2.0.1", "v2.0.10", false],
+		["# Wettkampftools v2.0.0-beta.2", "v2.0.0-beta.3", false],
+		["# Wettkampftools v2.0.0", "v2.0.1-beta.1", false],
+		["# Wettkampftools xv2.0.0", "v2.0.0", false],
+		["# Wettkampftools v2.0.0.1", "v2.0.0", false]
+	])("„%s“ passt zu %s: %s", (headline, tag, expected) => {
+		expect(notesHeadlineMatches(headline, tag)).toBe(expected);
 	});
 });
 

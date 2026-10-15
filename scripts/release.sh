@@ -72,10 +72,7 @@ if [[ "$(node scripts/version.mjs branch "$VERSION")" != "$EXPECTED_BRANCH" ]]; 
 fi
 
 # Dieselbe Regel wie im Release-Ablauf, nur früher: die Datei ersetzt die Notes.
-if [[ -f RELEASE_NOTES.md ]] && [[ "$(head -n1 RELEASE_NOTES.md)" != *"$TAG"* ]]; then
-	echo "Fehler: RELEASE_NOTES.md nennt in der ersten Zeile nicht ${TAG}. Anpassen oder löschen." >&2
-	exit 1
-fi
+node scripts/version.mjs notes "$TAG"
 
 if [[ "$BETA" == true ]]; then
 	CHANNEL="Beta (Vorabversion, nur NSIS-Installer)"

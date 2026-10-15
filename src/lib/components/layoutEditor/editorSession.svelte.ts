@@ -19,6 +19,8 @@ import { layoutSnapshot } from "$lib/workflows/layoutEditor";
 /** Was der Editor vom Layout-Speicher braucht */
 export interface LayoutSource {
 	layouts: LayoutSet;
+	/** Ändert sich, wenn das Layout von außen ersetzt wird. */
+	readonly generation: number;
 }
 
 export class LayoutEditorSession {
@@ -35,14 +37,22 @@ export class LayoutEditorSession {
 	#key = "other";
 	#applyingHistory = false;
 	#actions = 0;
+	#generation: number;
 
 	/** Muss beim Anlegen einer Komponente erzeugt werden (nutzt $effect). */
 	constructor(store: LayoutSource = layoutStore) {
 		this.#store = store;
 		this.#current = layoutSnapshot(store.layouts);
-		// Jede Layout-Änderung (Bearbeiten, Import, Zurücksetzen) wird für Rückgängig gemerkt.
+		this.#generation = store.generation;
+		// Jede Layout-Änderung (Bearbeiten, Import, Zurücksetzen) wird für Rückgängig gemerkt,
+		// außer das Layout wurde von außen ersetzt (z. B. Projekt geöffnet): dann beginnt der Verlauf neu.
 		$effect(() => {
+			const generation = this.#store.generation;
 			const snapshot = layoutSnapshot(this.#store.layouts);
+			if (generation !== this.#generation) {
+				this.#restart(generation, snapshot);
+				return;
+			}
 			if (snapshot === this.#current) return;
 			if (!this.#applyingHistory) this.history = record(this.history, this.#current, this.#key, Date.now());
 			this.#current = snapshot;
@@ -138,6 +148,15 @@ export class LayoutEditorSession {
 
 	redo(): void {
 		this.#applyStep(redo(this.history, this.#current));
+	}
+
+	#restart(generation: number, snapshot: string): void {
+		this.#generation = generation;
+		this.#current = snapshot;
+		this.history = emptyHistory();
+		this.selectedIds = [];
+		this.#applyingHistory = false;
+		this.#key = "other";
 	}
 
 	#applyStep(step: HistoryStep): void {

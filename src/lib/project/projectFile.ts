@@ -1,5 +1,7 @@
 // Projektdatei (.wwkprojekt): der komplette Wettkampfstand als ZIP für einen anderen Rechner.
 // Die Teile nutzen dieselben Formate wie der App-Datenordner. Enthält Personendaten.
+// Weitere Dateien des Datenordners (Entfernungen, Rec-Werte) liegen unverändert unter „appdata/“;
+// ältere Programme lassen sie beim Lesen einfach weg.
 import { strFromU8, strToU8, unzipSync, zipSync, type Unzipped, type Zippable } from "fflate";
 import { SIGNATURE_SLOTS, type LayoutSet, type SignatureSlot } from "$lib/certificates/layout";
 import { parseLayoutSet, serializeLayoutSet } from "$lib/certificates/layoutParse";
@@ -10,6 +12,7 @@ import { eventHeadline } from "$lib/settings/eventInfo";
 import { issueMessages } from "$lib/settings/issueMessages";
 import { parseSettings, serializeSettingsForExport, type Settings } from "$lib/settings/settings";
 import { isRecord } from "$lib/settings/validate";
+import { isProjectDataPath, isValidProjectData, projectDataLabel, type ProjectData } from "./projectData";
 
 export const PROJECT_EXTENSION = "wwkprojekt";
 export const PROJECT_FORMAT = "wettkampftools-projekt";
@@ -29,6 +32,7 @@ const LAYOUT = "layout.json";
 const STATE = "competition/state.json";
 const RESULTS = "competition/results.json";
 const IMAGE_DIR = "images";
+const DATA_PREFIX = "appdata/";
 const IMAGE_EXTENSIONS = ["png", "jpg"] as const;
 
 const signatureEntries = (slot: SignatureSlot): string[] =>
@@ -41,6 +45,10 @@ const KNOWN_ENTRIES = new Set([
 	RESULTS,
 	...SIGNATURE_SLOTS.flatMap(signatureEntries)
 ]);
+
+/** Bekannter Eintrag: fester Teil, Unterschrift oder Datei aus dem Datenordner. */
+const isKnownEntry = (name: string): boolean =>
+	KNOWN_ENTRIES.has(name) || (name.startsWith(DATA_PREFIX) && isProjectDataPath(name.slice(DATA_PREFIX.length)));
 
 const PART_NAMES: Record<string, string> = {
 	[SETTINGS]: "Einstellungen",
@@ -55,8 +63,8 @@ const NOT_A_PROJECT = "Die Datei ist keine Projektdatei der Wettkampftools.";
 const TOO_NEW =
 	"Die Projektdatei stammt aus einer neueren Version der Wettkampftools. Bitte zuerst das Programm aktualisieren.";
 const TOO_LARGE = "Die Projektdatei ist zu groß.";
-const brokenPart = (key: string): string =>
-	`Die Projektdatei ist beschädigt: ${PART_NAMES[key]} konnte nicht gelesen werden.`;
+const brokenNamed = (name: string): string => `Die Projektdatei ist beschädigt: ${name} konnte nicht gelesen werden.`;
+const brokenPart = (key: string): string => brokenNamed(PART_NAMES[key]);
 
 export type Signatures = Record<SignatureSlot, Uint8Array | null>;
 
@@ -67,6 +75,8 @@ export interface ProjectSnapshot {
 	signatures: Signatures;
 	competition: CompetitionState | null;
 	results: StoredResults | null;
+	/** Weitere Dateien aus dem Datenordner. */
+	data: ProjectData;
 }
 
 export interface ProjectManifest {
@@ -87,6 +97,8 @@ export interface Project {
 	signatures: Signatures | null;
 	competition: CompetitionState | null;
 	results: StoredResults | null;
+	/** Weitere Dateien aus dem Datenordner; leer bei älteren Projekten. */
+	data: ProjectData;
 	/** Hinweise zu einzelnen Werten, die auf Standard gesetzt wurden. */
 	warnings: string[];
 }
@@ -128,20 +140,33 @@ export function buildProjectFile(snapshot: ProjectSnapshot, options: BuildOption
 	if (snapshot.competition) files[STATE] = jsonEntry(serializeCompetitionState(snapshot.competition));
 	if (snapshot.results) files[RESULTS] = jsonEntry(serializeStoredResults(snapshot.results));
 	if (options.includeSignatures) Object.assign(files, signatureFiles(snapshot.signatures));
+	for (const [path, bytes] of Object.entries(snapshot.data)) files[`${DATA_PREFIX}${path}`] = bytes;
 	return zipSync(files);
 }
 
 class Rejected extends Error {}
 
-/** Nur bekannte Einträge; kaputte oder beim Entpacken zu große Dateien werden abgelehnt. */
-function unpack(bytes: Uint8Array): Unzipped {
+export interface ReadLimits {
+	maxUnpackedBytes: number;
+}
+
+const DEFAULT_LIMITS: ReadLimits = { maxUnpackedBytes: MAX_UNPACKED_BYTES };
+
+/**
+ * Nur bekannte Einträge; kaputte, doppelte oder beim Entpacken zu große Dateien werden abgelehnt.
+ * Die angegebene Größe kann gefälscht sein, darum zählt mindestens die gepackte.
+ */
+function unpack(bytes: Uint8Array, limits: ReadLimits): Unzipped {
 	let unpacked = 0;
+	const names = new Set<string>();
 	try {
 		return unzipSync(bytes, {
 			filter: (file) => {
-				if (!KNOWN_ENTRIES.has(file.name)) return false;
-				unpacked += file.originalSize;
-				if (unpacked > MAX_UNPACKED_BYTES) throw new Rejected(TOO_LARGE);
+				if (names.has(file.name)) throw new Rejected(NOT_A_PROJECT);
+				names.add(file.name);
+				if (!isKnownEntry(file.name)) return false;
+				unpacked += Math.max(file.size, file.originalSize);
+				if (unpacked > limits.maxUnpackedBytes) throw new Rejected(TOO_LARGE);
 				return true;
 			}
 		});
@@ -198,6 +223,17 @@ function readSignatures(entries: Unzipped): Signatures {
 	return signatures;
 }
 
+function readData(entries: Unzipped): ProjectData {
+	const data: ProjectData = {};
+	for (const [name, bytes] of Object.entries(entries)) {
+		if (!name.startsWith(DATA_PREFIX)) continue;
+		const path = name.slice(DATA_PREFIX.length);
+		if (!isValidProjectData(path, bytes)) throw new Rejected(brokenNamed(projectDataLabel(path)));
+		data[path] = bytes;
+	}
+	return data;
+}
+
 function readParts(entries: Unzipped, manifest: ProjectManifest): Project {
 	const settings = requiredPart(entries, SETTINGS, parseSettings);
 	const layouts = requiredPart(entries, LAYOUT, parseLayoutSet);
@@ -208,22 +244,23 @@ function readParts(entries: Unzipped, manifest: ProjectManifest): Project {
 		signatures: manifest.signatures ? readSignatures(entries) : null,
 		competition: optionalPart(entries, STATE, (raw) => parseCompetitionState(raw)?.state ?? null),
 		results: optionalPart(entries, RESULTS, parseStoredResults),
+		data: readData(entries),
 		warnings: [...issueMessages(settings.issues), ...layouts.issues]
 	};
 }
 
-function readProject(bytes: Uint8Array): Project {
+function readProject(bytes: Uint8Array, limits: ReadLimits): Project {
 	if (bytes.length > MAX_PROJECT_BYTES) throw new Rejected(TOO_LARGE);
-	const entries = unpack(bytes);
+	const entries = unpack(bytes, limits);
 	const manifest = parseManifest(parseJson(entries[MANIFEST]));
 	if (typeof manifest === "string") throw new Rejected(manifest);
 	return readParts(entries, manifest);
 }
 
 /** Prüft die Datei vollständig, bevor etwas übernommen wird. */
-export function readProjectFile(bytes: Uint8Array): ProjectReadResult {
+export function readProjectFile(bytes: Uint8Array, limits: ReadLimits = DEFAULT_LIMITS): ProjectReadResult {
 	try {
-		return { ok: true, project: readProject(bytes) };
+		return { ok: true, project: readProject(bytes, limits) };
 	} catch (error) {
 		if (error instanceof Rejected) return { ok: false, message: error.message };
 		throw error;

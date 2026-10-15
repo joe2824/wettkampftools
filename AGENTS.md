@@ -35,6 +35,11 @@ Skripten. Agenten führen die Skripte **nie** ohne `--dry-run` aus: sie
 committen, taggen und pushen.
 
 Tags `vX.Y.Z` sind stabil, `vX.Y.Z-beta.N` Betas (Vorabversion, nie „Latest“).
+Betas einer Version kommen vor ihrem stabilen Release; vor dem ersten stabilen
+Tag beginnt `--beta` bei der Version aus `package.json` (`2.0.0-beta.1`).
+`RELEASE_NOTES.md` muss in der ersten Zeile den Tag genau nennen; Betas dürfen
+ihre Basisversion nennen (`v2.0.0` für `v2.0.0-beta.N`). Die Prüfung steckt in
+`node scripts/version.mjs notes <tag>` und gilt in Skripten und Workflows.
 Jeder Build lädt sein `latest.json` auch an das feste Release `beta`. Der
 Rust-Teil (`update_channel`) liest beim Start `betaUpdates` aus `settings.json`
 und stellt den Updater dann auf das Beta-Manifest um, mit dem stabilen als

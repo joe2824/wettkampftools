@@ -385,4 +385,13 @@ describe("replace", () => {
 		expect(fs.files.has(COMPETITION_STATE_PATH)).toBe(false);
 		expect(fs.files.has(COMPETITION_RESULTS_PATH)).toBe(false);
 	});
+
+	it("übernimmt nicht die Speicherzeit aus dem Projekt, wenn das Sichern scheitert", async () => {
+		loadRegistration();
+		await store.saveNow();
+		expect(store.savedAt).toBe(NOW.toISOString());
+		vi.spyOn(fs, "writeText").mockRejectedValue(new Error("Platte voll"));
+		await store.replace({ state: projectState, results: null }, settings).catch(() => undefined);
+		expect(store.savedAt).toBeNull();
+	});
 });

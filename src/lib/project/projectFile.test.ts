@@ -39,7 +39,15 @@ function sampleSnapshot(): ProjectSnapshot {
 		layouts: defaultLayouts(),
 		signatures: { signature1: pngBytes(), signature2: jpegBytes() },
 		competition: sampleState(),
-		results: storedResults()
+		results: storedResults(),
+		data: sampleData()
+	};
+}
+
+function sampleData(): Record<string, Uint8Array> {
+	return {
+		"distances/choices.json": strToU8(JSON.stringify({ beispielhausen: "3" })),
+		"records/options.json": strToU8(JSON.stringify({ enabled: false, seconds: 5 }))
 	};
 }
 
@@ -53,6 +61,28 @@ function rebuild(bytes: Uint8Array, change: (entries: Zippable) => void): Uint8A
 	return zipSync(entries);
 }
 
+const LOCAL_HEADER = 0x04034b50;
+const CENTRAL_HEADER = 0x02014b50;
+/** Lage der Größe „entpackt“ im lokalen bzw. zentralen Eintrag. */
+const SIZE_OFFSETS = { [LOCAL_HEADER]: 22, [CENTRAL_HEADER]: 24 } as const;
+
+/** Trägt in alle Einträge eine falsche entpackte Größe ein. */
+function setUncompressedSize(bytes: Uint8Array, size: number): Uint8Array {
+	const copy = bytes.slice();
+	const view = new DataView(copy.buffer);
+	for (let offset = 0; offset + 4 <= copy.length; offset++) {
+		const signature = view.getUint32(offset, true) as keyof typeof SIZE_OFFSETS;
+		if (signature in SIZE_OFFSETS) view.setUint32(offset + SIZE_OFFSETS[signature], size, true);
+	}
+	return copy;
+}
+
+/** Benennt einen Eintrag gleicher Länge um, z. B. zu einem schon vorhandenen Namen. */
+function renameEntry(bytes: Uint8Array, from: string, to: string): Uint8Array {
+	const text = Array.from(bytes, (byte) => String.fromCharCode(byte)).join("");
+	return Uint8Array.from(text.replaceAll(from, to), (char) => char.charCodeAt(0));
+}
+
 function expectError(bytes: Uint8Array, message: string) {
 	const result = readProjectFile(bytes);
 	expect(result).toEqual({ ok: false, message });
@@ -62,6 +92,8 @@ describe("buildProjectFile", () => {
 	it("legt Manifest, Einstellungen, Layout, Bilder und Wettkampfstand an", () => {
 		const entries = unzipSync(build());
 		expect(Object.keys(entries).sort()).toEqual([
+			"appdata/distances/choices.json",
+			"appdata/records/options.json",
 			"competition/results.json",
 			"competition/state.json",
 			"images/signature1.png",
@@ -110,7 +142,21 @@ describe("readProjectFile", () => {
 		expect(project.signatures).toEqual({ signature1: pngBytes(), signature2: jpegBytes() });
 		expect(project.competition).toEqual(sampleState());
 		expect(project.results).toEqual(storedResults());
+		expect(project.data).toEqual(sampleData());
 		expect(project.warnings).toEqual([]);
+	});
+
+	it("liest ältere Projekte ohne weitere Daten", () => {
+		const result = readProjectFile(build({ ...sampleSnapshot(), data: {} }));
+		if (!result.ok) throw new Error(result.message);
+		expect(result.project.data).toEqual({});
+	});
+
+	it("ignoriert unbekannte Dateien unter appdata", () => {
+		const bytes = rebuild(build(), (entries) => (entries["appdata/competition/state.json"] = strToU8("{}")));
+		const result = readProjectFile(bytes);
+		if (!result.ok) throw new Error(result.message);
+		expect(Object.keys(result.project.data).sort()).toEqual(["distances/choices.json", "records/options.json"]);
 	});
 
 	it("kennzeichnet Projekte ohne Unterschriften", () => {
@@ -156,12 +202,29 @@ describe("readProjectFile", () => {
 		expectError(new Uint8Array(MAX_PROJECT_BYTES + 1), "Die Projektdatei ist zu groß.");
 	});
 
+	it("zählt beim Entpacken die gepackte Größe, wenn die angegebene zu klein ist", () => {
+		const content = strToU8("x".repeat(1000));
+		const bytes = setUncompressedSize(zipSync({ "settings.json": [content, { level: 0 }] }), 1);
+		expect(readProjectFile(bytes, { maxUnpackedBytes: 500 })).toEqual({
+			ok: false,
+			message: "Die Projektdatei ist zu groß."
+		});
+	});
+
+	it("lehnt doppelte Einträge ab", () => {
+		const withCopy = rebuild(build(), (entries) => (entries["settingsXjson"] = entries["settings.json"]));
+		expect(readProjectFile(withCopy).ok).toBe(true);
+		const bytes = renameEntry(withCopy, "settingsXjson", "settings.json");
+		expectError(bytes, "Die Datei ist keine Projektdatei der Wettkampftools.");
+	});
+
 	it.each([
 		["settings.json", "Einstellungen"],
 		["layout.json", "Urkunden-Layout"],
 		["competition/state.json", "Wettkampfstand"],
 		["competition/results.json", "Ergebnisse"],
-		["images/signature1.png", "Unterschrift 1"]
+		["images/signature1.png", "Unterschrift 1"],
+		["appdata/records/options.json", "Zuschlag für die Welle"]
 	])("nennt den beschädigten Teil %s", (entry, part) => {
 		const broken = rebuild(build(), (entries) => (entries[entry] = strToU8("{kaputt")));
 		expectError(broken, `Die Projektdatei ist beschädigt: ${part} konnte nicht gelesen werden.`);

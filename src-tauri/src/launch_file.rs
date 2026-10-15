@@ -1,5 +1,5 @@
 // Projektdatei, mit der die Anwendung per Doppelklick gestartet wurde.
-use crate::file_check::{canonical_existing, has_extension};
+use crate::file_check::{has_extension, user_path};
 use crate::input::{allow_dropped_paths, PROJECT_EXTENSION};
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
@@ -37,9 +37,10 @@ fn resolve(arg: &str, cwd: &Path) -> PathBuf {
     cwd.join(arg)
 }
 
-/// Normalisierter Pfad einer vorhandenen Projektdatei.
+/// Normalisierter Pfad einer vorhandenen Projektdatei, unter Windows ohne Präfix `\\?\`:
+/// er wird angezeigt und kommt beim Einlesen zurück, wo er erneut normalisiert wird.
 fn checked_project_file(path: &Path) -> Option<PathBuf> {
-    let canonical = canonical_existing(path).ok()?;
+    let canonical = dunce::canonicalize(path).ok()?;
     let is_project = canonical.is_file() && has_extension(&canonical, &[PROJECT_EXTENSION]);
     is_project.then_some(canonical)
 }
@@ -50,7 +51,7 @@ fn open_path(app: &AppHandle, path: &Path) {
         return;
     };
     allow_dropped_paths(app, std::slice::from_ref(&canonical));
-    let text = canonical.to_string_lossy().into_owned();
+    let text = user_path(&canonical);
     if let Some(pending) = app.try_state::<PendingProjectFile>() {
         pending.set(text.clone());
     }
@@ -132,8 +133,9 @@ mod tests {
     #[test]
     fn checked_project_file_accepts_existing_project_file() {
         let file = TempFile::with_bytes("launch", "Wettkampf Übung.wwkprojekt", b"x");
-        let canonical = std::fs::canonicalize(&file.0).unwrap();
-        assert_eq!(checked_project_file(&file.dotted()), Some(canonical));
+        // Ohne Präfix \\?\ unter Windows: der Pfad geht an die Oberfläche.
+        let simplified = dunce::canonicalize(&file.0).unwrap();
+        assert_eq!(checked_project_file(&file.dotted()), Some(simplified));
     }
 
     #[test]

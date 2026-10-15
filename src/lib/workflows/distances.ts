@@ -1,6 +1,7 @@
 // Entfernungen: Gliederungen sammeln, Standortdaten laden (mit Zwischenspeicher), Tabelle aufbereiten.
 import { fetchOrganisations, parseGldCache, type GldCache } from "$lib/distance/dlrgPoi";
 import {
+	CHOICES_FILE,
 	choiceKey,
 	distancesToBadNauheim,
 	parseChoiceMap,
@@ -18,8 +19,7 @@ import { teamBaseName, type TeamNameOverrides } from "$lib/wwk/teamNames";
 import { NOT_A_TEAM_EXPORT } from "./errors";
 
 export const GLD_CACHE_FILE = "gld-cache.json";
-/** Gewählte Gliederung bei gleichnamigen Einträgen; keine Personendaten. */
-export const CHOICES_FILE = "distances/choices.json";
+export { CHOICES_FILE };
 const ORGANISATION_COLUMN = "gliederung";
 const WHITESPACE = /\s+/g;
 const TEAM_NAME_COLUMN = "name";

@@ -12,7 +12,7 @@ import { LayoutStore } from "$lib/certificates/layoutStore.svelte";
 import { SelectionState } from "$lib/certificates/selectionState.svelte";
 import { COMPETITION_STATE_PATH } from "$lib/competition/persistence";
 import { COMPETITION_RESULTS_PATH } from "$lib/competition/resultsFile";
-import { resetAppDataStore, setAppDataStore } from "$lib/platform/fs";
+import { compactTimestamp, resetAppDataStore, setAppDataStore } from "$lib/platform/fs";
 import { buildProjectFile, readProjectFile } from "$lib/project/projectFile";
 import { SessionState } from "$lib/session.svelte";
 import { defaultSettings } from "$lib/settings/settings";
@@ -27,6 +27,9 @@ import { loadRegistrations } from "./preparation";
 
 const EVENT = defaultSettings().event;
 const NOW = new Date("2026-10-15T08:00:00.000Z");
+const BACKUP = `backups/vor-projekt-${compactTimestamp(NOW)}.wwkprojekt`;
+const CHOICES = strToU8(JSON.stringify({ beispielhausen: "3" }));
+const decode = (bytes: Uint8Array | undefined) => JSON.parse(new TextDecoder().decode(bytes));
 const csv = strToU8(
 	buildRegistrationCsv([
 		{ gliederung: "Musterstadt", ak: "AK 12" },
@@ -127,6 +130,15 @@ describe("saveProject", () => {
 		expect(result.project.manifest.createdAt).toBe(NOW.toISOString());
 	});
 
+	it("nimmt die weiteren Daten aus dem Datenordner mit", async () => {
+		await fillCurrentState();
+		fs.files.set("distances/choices.json", CHOICES);
+		await saveProject({ includeSignatures: false }, deps);
+		const result = readProjectFile(savedBytes());
+		if (!result.ok) throw new Error(result.message);
+		expect(result.project.data).toEqual({ "distances/choices.json": CHOICES });
+	});
+
 	it("sichert ausstehende Änderungen vorher", async () => {
 		await fillCurrentState();
 		await saveProject({ includeSignatures: false }, deps);
@@ -155,7 +167,8 @@ describe("openProject", () => {
 				layouts: source.layouts.layouts,
 				signatures: { signature1: pngBytes(), signature2: null },
 				competition: source.competition.stored().state,
-				results: RESULTS
+				results: RESULTS,
+				data: { "distances/choices.json": CHOICES }
 			},
 			{ includeSignatures, now: NOW, appVersion: "2.0.0" }
 		);
@@ -204,13 +217,72 @@ describe("openProject", () => {
 		expect(fs.files.has(SETTINGS_FILE)).toBe(false);
 	});
 
-	it("meldet Fehler beim Übernehmen verständlich", async () => {
+	it("übernimmt die weiteren Daten und beginnt den Layout-Verlauf neu", async () => {
+		await deps.settings.load();
+		const generation = deps.layouts.generation;
+		await openProject(await projectBytes(false), deps);
+		expect(fs.files.get("distances/choices.json")).toEqual(CHOICES);
+		expect(deps.layouts.generation).toBe(generation + 1);
+	});
+
+	it("sichert vorher den bisherigen Stand als Projektdatei im Datenordner", async () => {
+		await deps.settings.load();
+		deps.settings.settings.event.number = "38";
+		await deps.settings.save();
+		await openProject(await projectBytes(false), deps);
+		const backup = readProjectFile(fs.files.get(BACKUP) as Uint8Array);
+		if (!backup.ok) throw new Error(backup.message);
+		expect(backup.project.settings.event.number).toBe("38");
+	});
+
+	it("behält nur die letzten drei Sicherungen", async () => {
+		await deps.settings.load();
+		const older = ["20261001-080000", "20261002-080000", "20261003-080000"];
+		for (const stamp of older) fs.files.set(`backups/vor-projekt-${stamp}.wwkprojekt`, strToU8("alt"));
+		fs.files.set("backups/notiz.json", strToU8("{}"));
+		await openProject(await projectBytes(false), deps);
+		const backups = [...fs.files.keys()].filter((path) => path.startsWith("backups/")).sort();
+		expect(backups).toEqual([
+			"backups/notiz.json",
+			"backups/vor-projekt-20261002-080000.wwkprojekt",
+			"backups/vor-projekt-20261003-080000.wwkprojekt",
+			BACKUP
+		]);
+	});
+
+	it("öffnet nichts, wenn der bisherige Stand nicht gesichert werden kann", async () => {
+		await deps.settings.load();
+		const bytes = await projectBytes(false);
+		vi.spyOn(fs, "writeBytes").mockRejectedValue(new Error("Platte voll"));
+		const outcome = await openProject(bytes, deps);
+		expect(outcome).toEqual({
+			ok: false,
+			message: "Der bisherige Stand konnte nicht gesichert werden. Das Projekt wurde deshalb nicht geöffnet."
+		});
+		expect(deps.settings.settings.event.number).toBe(EVENT.number);
+	});
+
+	it("stellt nach einem Fehler den vorherigen Stand wieder her und nennt die Sicherung", async () => {
+		await deps.settings.load();
+		deps.settings.settings.event.number = "38";
+		await deps.settings.save();
+		vi.spyOn(deps.layouts, "save").mockRejectedValueOnce(new Error("Platte voll"));
+		const outcome = await openProject(await projectBytes(true), deps);
+		expect(outcome).toEqual({
+			ok: false,
+			message: `Das Projekt konnte nicht vollständig übernommen werden. Der vorherige Stand wurde im App-Datenordner gesichert als „${BACKUP}“ und wiederhergestellt.`
+		});
+		expect(deps.settings.settings.event.number).toBe("38");
+		expect(decode(fs.files.get(SETTINGS_FILE)).event.number).toBe("38");
+	});
+
+	it("nennt die Sicherung, wenn auch das Wiederherstellen scheitert", async () => {
 		await deps.settings.load();
 		vi.spyOn(deps.layouts, "save").mockRejectedValue(new Error("Platte voll"));
 		const outcome = await openProject(await projectBytes(true), deps);
 		expect(outcome).toEqual({
 			ok: false,
-			message: "Das Projekt konnte nicht vollständig übernommen werden. Bitte erneut versuchen."
+			message: `Das Projekt konnte nicht vollständig übernommen werden. Der vorherige Stand wurde im App-Datenordner gesichert als „${BACKUP}“; diese Datei lässt sich über „Projekt öffnen“ wieder laden.`
 		});
 	});
 });

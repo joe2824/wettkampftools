@@ -60,6 +60,7 @@ pub fn run() {
             launch_file::take_pending_project_file,
         ])
         .manage(launch_file::PendingProjectFile::default())
+        .manage(input::ReadGrants::default())
         .on_window_event(|window, event| {
             use tauri::{DragDropEvent, Manager, WindowEvent};
             if let WindowEvent::DragDrop(DragDropEvent::Drop { paths, .. }) = event {

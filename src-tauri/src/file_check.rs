@@ -6,9 +6,14 @@ pub fn canonical_existing(path: &Path) -> Result<PathBuf, String> {
     std::fs::canonicalize(path).map_err(|_| not_found(path))
 }
 
+/// Pfad für Meldungen und die Oberfläche: unter Windows ohne das Präfix `\\?\`.
+pub fn user_path(path: &Path) -> String {
+    dunce::simplified(path).display().to_string()
+}
+
 /// Fehlertext für eine nicht gefundene Datei.
 pub fn not_found(path: &Path) -> String {
-    format!("Die Datei {} wurde nicht gefunden.", path.display())
+    format!("Die Datei {} wurde nicht gefunden.", user_path(path))
 }
 
 /// Endung aus der Liste, ohne Rücksicht auf Groß- und Kleinschreibung.
@@ -80,6 +85,19 @@ mod tests {
         assert!(has_extension(Path::new("b.json"), &list));
         assert!(!has_extension(Path::new("c.pdf.exe"), &list));
         assert!(!has_extension(Path::new("ohne_endung"), &list));
+    }
+
+    #[test]
+    fn user_path_keeps_normal_paths() {
+        let path = std::env::temp_dir().join("Mein Ordner").join("Übung.csv");
+        assert_eq!(user_path(&path), path.display().to_string());
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn user_path_drops_verbatim_prefix() {
+        let path = Path::new(r"\\?\C:\Wettkampf\Übung Süd.wwkprojekt");
+        assert_eq!(user_path(path), r"C:\Wettkampf\Übung Süd.wwkprojekt");
     }
 
     #[test]

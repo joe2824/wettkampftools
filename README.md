@@ -201,7 +201,15 @@ unter Windows den NSIS-Installer samt Update-Manifest (`latest.json`) und
 veröffentlicht das GitHub-Release. Die Notes kommen aus den
 `Release-Note:`-Trailern der Commits (siehe [`AGENTS.md`](AGENTS.md)); liegt
 eine `RELEASE_NOTES.md` im Repo, ersetzt sie die Notes und muss in der ersten
-Zeile den Tag nennen – auch bei Betas.
+Zeile den Tag genau nennen (`v2.1.0` passt nicht zu `v2.1.0-beta.3`, `v2.0.1`
+nicht zu `v2.0.10`). Betas dürfen stattdessen ihre Basisversion nennen: „v2.1.0“
+gilt auch für `v2.1.0-beta.N`. Die Regel steht in `scripts/version.mjs`
+(`node scripts/version.mjs notes <tag>`).
+
+Reihenfolge: Betas einer Version kommen vor ihrem stabilen Release. Vor dem
+allerersten stabilen Tag beginnt `--beta` ohne Angabe bei der Version aus
+`package.json` (`2.0.0-beta.1`), danach setzt es eine offene Serie fort oder
+fragt nach der nächsten Version.
 
 **Stabil** (aus `main`):
 
@@ -257,9 +265,13 @@ Wettkampftools ist unter der MIT-Lizenz veröffentlicht, siehe
   `build/third-party-licenses.json` (Vite-Plugin in
   [`scripts/licenses-plugin.mjs`](scripts/licenses-plugin.mjs)): npm nur mit
   Paketen, deren Code im Bundle landet, Rust aus `cargo metadata` für das
-  Windows-Ziel. Gleiche Lizenztexte stehen nur einmal darin. Ohne `cargo`
-  fehlen die Rust-Angaben; Release-Builds brechen dann ab
-  (`REQUIRE_RUST_LICENSES=1` in `release.yml`). Die Datei liegt nur im
+  Windows-Ziel. Gleiche Lizenztexte stehen nur einmal darin. Liefert ein
+  Paket keinen eigenen Lizenztext mit, steht dort der SPDX-Standardtext seiner
+  Lizenz (aus [`scripts/spdx/`](scripts/spdx/), Quelle
+  [spdx/license-list-data](https://github.com/spdx/license-list-data)) samt
+  Urhebern aus den Paketangaben. Ohne `cargo` fehlen die Rust-Angaben;
+  Release-Builds brechen dann ab (`REQUIRE_RUST_LICENSES=1` in `release.yml`),
+  ebenso wenn ein Paket ganz ohne Text bleibt. Die Datei liegt nur im
   Build-Ordner und wird nicht eingecheckt. In der Anwendung: **Info →
   Lizenzen und Quellen**.
 

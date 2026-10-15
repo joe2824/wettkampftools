@@ -1,5 +1,5 @@
 // Ausgabedateien schreiben, öffnen oder im Ordner zeigen.
-use crate::file_check::{app_scope, canonical_existing, has_extension};
+use crate::file_check::{app_scope, canonical_existing, has_extension, user_path};
 use percent_encoding::percent_decode_str;
 use std::path::{Path, PathBuf};
 use tauri::ipc::{InvokeBody, Request};
@@ -86,13 +86,13 @@ fn check_output_target(
     if !has_extension(&canonical, &OUTPUT_EXTENSIONS) {
         return Err(format!(
             "Die Datei {} darf nicht geöffnet werden.",
-            canonical.display()
+            user_path(&canonical)
         ));
     }
     if !allowed_in_scope(&canonical) {
         return Err(format!(
             "Die Datei {} wurde nicht in dieser Sitzung gespeichert. Bitte erneut speichern.",
-            canonical.display()
+            user_path(&canonical)
         ));
     }
     Ok(canonical)

@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
     inputs:
       base:
-        description: "Basisversion der Beta-Serie, z. B. 2.1.0 (leer = laufende Serie fortsetzen bzw. Patch nach dem letzten stabilen Release)"
+        description: "Basisversion der Beta-Serie, z. B. 2.1.0 (leer = laufende Serie fortsetzen, vor dem ersten stabilen Release die Version aus package.json, sonst Patch nach dem letzten stabilen Release)"
         required: false
         default: ""
 
@@ -62,7 +62,8 @@ jobs:
           fi
           VERSION="$(node scripts/version.mjs "${ARGS[@]}" </dev/null)"
           # Vor dem Taggen prüfen, was release.yml sonst erst nach dem Push bemängelt.
-          if [ -f RELEASE_NOTES.md ] && ! head -n1 RELEASE_NOTES.md | grep -qF "v${VERSION}"; then
+          # Dieselbe Regel wie dort: genau der Tag, bei Betas auch die Basisversion.
+          if ! node scripts/version.mjs notes "v${VERSION}"; then
             echo "::error file=RELEASE_NOTES.md::Erste Zeile nennt v${VERSION} nicht. Auf dev anpassen oder löschen - dann übernimmt der Generator aus den Commits."
             exit 1
           fi

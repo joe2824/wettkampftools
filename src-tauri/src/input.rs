@@ -1,6 +1,8 @@
 // Vom Benutzer gewählte oder abgelegte Eingabedateien lesen.
-use crate::file_check::{app_scope, canonical_existing, has_extension, not_found};
+use crate::file_check::{app_scope, canonical_existing, has_extension, not_found, user_path};
+use std::collections::HashSet;
 use std::path::{Path, PathBuf};
+use std::sync::Mutex;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 /// Nur diese Endungen liest die Anwendung ein.
@@ -61,12 +63,12 @@ fn check_input_target(
     let canonical = canonical_existing(path)?;
     let metadata = std::fs::metadata(&canonical).map_err(|_| not_found(path))?;
     if !metadata.is_file() {
-        return Err(format!("{} ist keine Datei.", canonical.display()));
+        return Err(format!("{} ist keine Datei.", user_path(&canonical)));
     }
     if !has_extension(&canonical, &INPUT_EXTENSIONS) {
         return Err(format!(
             "Die Datei {} kann hier nicht geöffnet werden.",
-            canonical.display()
+            user_path(&canonical)
         ));
     }
     let max_mb = max_input_mb(&canonical);
@@ -94,9 +96,39 @@ fn file_times(path: &Path) -> std::io::Result<FileTimes> {
     })
 }
 
-/// Prüfung mit dem Datei-Scope der App: den füllen Öffnen-Dialog und Ablegen.
-fn check_in_app_scope(app: &tauri::AppHandle, path: &str) -> Result<PathBuf, String> {
-    check_input_target(Path::new(path), app_scope(app))
+/// Abgelegte oder per Doppelklick übergebene Dateien: nur lesbar.
+///
+/// Bewusst getrennt vom Datei-Scope der App, den `write_output_file` als
+/// Schreibfreigabe nutzt: eine abgelegte Datei darf nie überschrieben werden.
+#[derive(Default)]
+pub struct ReadGrants(Mutex<HashSet<PathBuf>>);
+
+impl ReadGrants {
+    /// Gibt einlesbare Dateien frei; gemerkt wird der normalisierte Pfad.
+    pub fn allow_paths(&self, paths: &[PathBuf]) {
+        let Ok(mut granted) = self.0.lock() else {
+            return;
+        };
+        let canonical = paths.iter().filter(|p| is_droppable(p));
+        granted.extend(canonical.filter_map(|p| std::fs::canonicalize(p).ok()));
+    }
+
+    /// Erwartet den normalisierten Pfad aus `check_input_target`.
+    fn is_allowed(&self, canonical: &Path) -> bool {
+        self.0
+            .lock()
+            .is_ok_and(|granted| granted.contains(canonical))
+    }
+}
+
+/// Lesen erlaubt: im Öffnen-Dialog gewählt (Datei-Scope) oder abgelegt bzw. übergeben.
+fn check_readable(app: &tauri::AppHandle, path: &str) -> Result<PathBuf, String> {
+    use tauri::Manager;
+    let in_scope = app_scope(app);
+    let grants = app.try_state::<ReadGrants>();
+    check_input_target(Path::new(path), |p| {
+        in_scope(p) || grants.as_ref().is_some_and(|g| g.is_allowed(p))
+    })
 }
 
 /// Liest eine gewählte oder abgelegte Datei als Bytes.
@@ -105,7 +137,7 @@ pub fn read_input_file(
     app: tauri::AppHandle,
     path: String,
 ) -> Result<tauri::ipc::Response, String> {
-    let checked = check_in_app_scope(&app, &path)?;
+    let checked = check_readable(&app, &path)?;
     let bytes = std::fs::read(checked).map_err(|_| {
         "Die Datei konnte nicht gelesen werden. Bitte erneut versuchen.".to_string()
     })?;
@@ -115,7 +147,7 @@ pub fn read_input_file(
 /// Name, Größe, Erstellungs- und Änderungszeit einer gewählten oder abgelegten Datei.
 #[tauri::command]
 pub fn input_file_info(app: tauri::AppHandle, path: String) -> Result<InputFileInfo, String> {
-    let checked = check_in_app_scope(&app, &path)?;
+    let checked = check_readable(&app, &path)?;
     let times = file_times(&checked).map_err(|_| {
         "Die Datei konnte nicht gelesen werden. Bitte erneut versuchen.".to_string()
     })?;
@@ -139,18 +171,11 @@ fn is_droppable(path: &Path) -> bool {
     path.is_file() && has_extension(path, &INPUT_EXTENSIONS)
 }
 
-/// Abgelegte Dateien für das Einlesen freigeben (Öffnen-Dialog macht das selbst).
+/// Abgelegte Dateien nur zum Einlesen freigeben (der Öffnen-Dialog nutzt den Datei-Scope).
 pub fn allow_dropped_paths(app: &tauri::AppHandle, paths: &[PathBuf]) {
-    use tauri_plugin_fs::FsExt;
-    let Some(scope) = app.try_fs_scope() else {
-        return;
-    };
-    for path in paths.iter().filter(|p| is_droppable(p)) {
-        let _ = scope.allow_file(path);
-        // Die Prüfung vergleicht den aufgelösten Pfad (z. B. hinter Verknüpfungen).
-        if let Ok(canonical) = std::fs::canonicalize(path) {
-            let _ = scope.allow_file(canonical);
-        }
+    use tauri::Manager;
+    if let Some(grants) = app.try_state::<ReadGrants>() {
+        grants.allow_paths(paths);
     }
 }
 
@@ -301,6 +326,39 @@ mod tests {
         assert!(!is_droppable(&std::env::temp_dir()));
         let missing = std::env::temp_dir().join("wettkampftools-input-fehlt.csv");
         assert!(!is_droppable(&missing));
+    }
+
+    #[test]
+    fn read_grants_allow_only_droppable_files() {
+        let csv = temp_file("meldungen.csv");
+        let exe = temp_file("programm.exe");
+        let grants = ReadGrants::default();
+        grants.allow_paths(&[csv.0.clone(), exe.0.clone()]);
+        let canonical = |file: &TempFile| std::fs::canonicalize(&file.0).unwrap();
+        assert!(grants.is_allowed(&canonical(&csv)));
+        assert!(!grants.is_allowed(&canonical(&exe)));
+    }
+
+    #[test]
+    fn read_grants_work_with_any_spelling_of_the_path() {
+        let file = temp_file("Übung Süd.wwkprojekt");
+        let grants = ReadGrants::default();
+        grants.allow_paths(std::slice::from_ref(&file.dotted()));
+        let allowed = |p: &Path| grants.is_allowed(p);
+        let simplified = dunce::canonicalize(&file.0).unwrap();
+        assert!(check_input_target(&file.0, allowed).is_ok());
+        assert!(check_input_target(&simplified, allowed).is_ok());
+        let other = temp_file("andere.csv");
+        assert!(check_input_target(&other.0, allowed).is_err());
+    }
+
+    #[test]
+    fn input_errors_show_path_without_prefix() {
+        let file = temp_file("programm.exe");
+        let err = check_input_target(&file.0, allow_all).unwrap_err();
+        let shown = crate::file_check::user_path(&std::fs::canonicalize(&file.0).unwrap());
+        assert!(err.contains(&shown), "{err}");
+        assert!(!err.contains(r"\\?\"), "{err}");
     }
 
     #[test]

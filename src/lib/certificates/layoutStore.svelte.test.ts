@@ -61,6 +61,15 @@ describe("LayoutStore Layouts", () => {
 		expect(reloaded.layouts.team.objects[0].xMm).toBe(33);
 	});
 
+	it("zählt das Ersetzen von außen und das Laden als neuen Stand", async () => {
+		const store = new LayoutStore();
+		const before = store.generation;
+		store.replaceLayouts(defaultLayouts());
+		expect(store.generation).toBe(before + 1);
+		await store.load();
+		expect(store.generation).toBe(before + 2);
+	});
+
 	it("setzt eine Variante zurück", () => {
 		const store = new LayoutStore();
 		store.layouts.team.objects[0].xMm = 33;

@@ -65,6 +65,12 @@ jobs:
         with:
           fetch-depth: 0 # volle History + Tags für das Changelog
 
+      - name: Node.js einrichten
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
       - name: Changelog erzeugen
         id: changelog
         shell: bash
@@ -77,16 +83,13 @@ jobs:
           if [ -f "RELEASE_NOTES.md" ]; then
             # Die Datei ersetzt die generierten Notes komplett. Damit kein
             # Release den Text der Vorversion trägt, muss die erste Zeile den
-            # Tag nennen.
-            head1="$(head -n1 RELEASE_NOTES.md)"
-            case "$head1" in
-              *"$TAG"*) ;;
-              *)
-                echo "::error file=RELEASE_NOTES.md::Erste Zeile nennt ${TAG} nicht: '${head1}'"
-                echo "::error::RELEASE_NOTES.md ersetzt die generierten Release-Notes. Entweder auf ${TAG} aktualisieren oder die Datei löschen - dann übernimmt der Generator aus den Commits."
-                exit 1
-                ;;
-            esac
+            # Tag genau nennen (Betas dürfen ihre Basisversion nennen). Regel
+            # in scripts/version.mjs.
+            if ! node scripts/version.mjs notes "$TAG"; then
+              echo "::error file=RELEASE_NOTES.md::Erste Zeile nennt ${TAG} nicht: '$(head -n1 RELEASE_NOTES.md)'"
+              echo "::error::RELEASE_NOTES.md ersetzt die generierten Release-Notes. Entweder auf ${TAG} aktualisieren oder die Datei löschen - dann übernimmt der Generator aus den Commits."
+              exit 1
+            fi
             body="$(cat RELEASE_NOTES.md)"$'\n\n'"Installer siehe Assets unten."
           else
             # Stabil: ab dem letzten stabilen Tag, sonst fehlte alles, was nur in
@@ -154,12 +157,6 @@ jobs:
             echo "CHANGELOG_EOF"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Node.js einrichten
-        uses: actions/setup-node@v5
-        with:
-          node-version: 22
-          cache: npm
-
       - name: Rust stable installieren
         uses: dtolnay/rust-toolchain@stable
 
@@ -197,15 +194,22 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          node -e '
-            const n = JSON.parse(require("fs").readFileSync("build/third-party-licenses.json", "utf-8"));
+          node --input-type=module -e '
+            import { readFileSync } from "node:fs";
+            import { missingLicenseTexts } from "./scripts/spdx-licenses.mjs";
+            const n = JSON.parse(readFileSync("build/third-party-licenses.json", "utf-8"));
             const cargo = n.packages.filter((p) => p.source === "cargo").length;
             const npm = n.packages.filter((p) => p.source === "npm").length;
             if (n.rust !== "ok" || cargo === 0 || npm === 0) {
               console.error("::error::Lizenzhinweise unvollständig (npm: " + npm + ", Rust: " + cargo + ").");
               process.exit(1);
             }
-            console.log("Lizenzhinweise: " + npm + " npm-Pakete, " + cargo + " Rust-Crates.");
+            const missing = missingLicenseTexts(n);
+            if (missing.length > 0) {
+              console.error("::error::Pakete ohne Lizenztext: " + missing.join(", ") + ". Text unter scripts/spdx/ ergänzen.");
+              process.exit(1);
+            }
+            console.log("Lizenzhinweise: " + npm + " npm-Pakete, " + cargo + " Rust-Crates, alle mit Text.");
           '
 
       - name: Release veröffentlichen

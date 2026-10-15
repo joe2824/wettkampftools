@@ -46,6 +46,8 @@ function parseJsonObject(bytes: Uint8Array): object | null {
 
 export class LayoutStore {
 	layouts = $state<LayoutSet>(defaultLayouts());
+	/** Zählt, wie oft das Layout von außen ersetzt wurde (Laden, Projekt öffnen); der Editor beginnt dann neu. */
+	generation = $state(0);
 	/** Rohe Bilddaten; die Oberfläche baut daraus Blob-Adressen. */
 	images = $state<ImageSet>(emptyImages());
 	/** Beim Laden beiseitegelegte, unlesbare Dateien. */
@@ -57,7 +59,13 @@ export class LayoutStore {
 		);
 		if (setAsideAs !== null) logError("layout.unreadable");
 		this.setAside = setAsideAs === null ? [] : [setAsideAs];
-		this.layouts = value ?? defaultLayouts();
+		this.replaceLayouts(value ?? defaultLayouts());
+	}
+
+	/** Ersetzt das ganze Layout von außerhalb des Editors; dessen Rückgängig-Verlauf endet. Nur im Speicher. */
+	replaceLayouts(layouts: LayoutSet): void {
+		this.layouts = layouts;
+		this.generation += 1;
 	}
 
 	save(): Promise<void> {

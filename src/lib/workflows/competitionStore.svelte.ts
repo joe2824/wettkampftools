@@ -73,6 +73,7 @@ export class CompetitionStore {
 	async restore(settings: Settings): Promise<void> {
 		const { state, results, needsMigration, setAside } = await loadCompetition(this.#now());
 		this.setAside = setAside;
+		if (state) this.savedAt = state.savedAt;
 		this.#apply({ state, results }, settings);
 		// Nicht wiederherstellbare Ergebnisse beim nächsten Sichern entfernen.
 		const restored = results === null || this.#session.results !== null;
@@ -82,6 +83,8 @@ export class CompetitionStore {
 
 	/** Ersetzt den ganzen Stand, z. B. aus einer Projektdatei, und sichert ihn sofort. */
 	async replace(stored: StoredCompetition, settings: Settings): Promise<void> {
+		// Die Speicherzeit des Projekts gilt hier nicht; gesetzt wird sie erst beim eigenen Sichern.
+		this.savedAt = null;
 		this.#cancel();
 		this.#session.clear();
 		this.#selection.attach(null);
@@ -161,7 +164,6 @@ export class CompetitionStore {
 	}
 
 	#apply({ state, results }: StoredCompetition, settings: Settings): void {
-		if (state) this.savedAt = state.savedAt;
 		if (state?.registration) this.#restoreRegistration(state.registration, settings);
 		if (results) this.#restoreResults(results, state?.certificateSelection);
 	}

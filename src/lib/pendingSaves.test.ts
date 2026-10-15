@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { logError } from "$lib/log";
+import { flushLog, logError } from "$lib/log";
 import {
 	FLUSH_TIMEOUT_MS,
 	flushPendingSaves,
@@ -8,7 +8,11 @@ import {
 	unregisterPendingSave
 } from "./pendingSaves";
 
-vi.mock("$lib/log", async (original) => ({ ...(await original<typeof import("$lib/log")>()), logError: vi.fn() }));
+vi.mock("$lib/log", async (original) => ({
+	...(await original<typeof import("$lib/log")>()),
+	logError: vi.fn(),
+	flushLog: vi.fn(async () => undefined)
+}));
 
 const unregisterAll: (() => void)[] = [];
 function register(flush: () => Promise<void>): void {
@@ -66,5 +70,25 @@ describe("pendingSaves", () => {
 
 	it("ist ohne Ausstehendes sofort fertig", async () => {
 		await expect(flushPendingSaves()).resolves.toBe(true);
+	});
+
+	it("wartet nach den Speicherungen auch auf das Protokoll", async () => {
+		let releaseLog = (): void => {};
+		vi.mocked(flushLog).mockImplementationOnce(() => new Promise<void>((resolve) => (releaseLog = resolve)));
+		const save = vi.fn(async () => undefined);
+		register(save);
+		let finished: boolean | null = null;
+		void flushPendingSaves().then((done) => (finished = done));
+		await vi.advanceTimersByTimeAsync(0);
+		expect(save).toHaveBeenCalledTimes(1);
+		expect(finished).toBeNull();
+		releaseLog();
+		await vi.advanceTimersByTimeAsync(0);
+		expect(finished).toBe(true);
+	});
+
+	it("schreibt das Protokoll auch ohne ausstehende Speicherungen", async () => {
+		await flushPendingSaves();
+		expect(flushLog).toHaveBeenCalled();
 	});
 });

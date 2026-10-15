@@ -1,5 +1,5 @@
 // Ausstehende, verzögerte Speicherungen, die beim Schließen des Fensters sofort geschrieben werden.
-import { logError } from "$lib/log";
+import { flushLog, logError } from "$lib/log";
 
 export type PendingFlush = () => Promise<void>;
 
@@ -21,10 +21,11 @@ export function pendingSaveCount(): number {
 	return pending.size;
 }
 
-/** Schreibt alles Ausstehende; true, wenn alles vor Ablauf der Obergrenze fertig war. */
+/** Schreibt alles Ausstehende, danach das Protokoll; true, wenn alles vor Ablauf der Obergrenze fertig war. */
 export async function flushPendingSaves(timeoutMs = FLUSH_TIMEOUT_MS): Promise<boolean> {
-	if (pending.size === 0) return true;
-	const all = Promise.allSettled([...pending].map((flush) => flush())).then(() => true);
+	const all = Promise.allSettled([...pending].map((flush) => flush()))
+		.then(() => flushLog())
+		.then(() => true);
 	let timer: ReturnType<typeof setTimeout> | undefined;
 	const timeout = new Promise<boolean>((resolve) => {
 		timer = setTimeout(() => resolve(false), timeoutMs);

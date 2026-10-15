@@ -3,6 +3,7 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { fallbackLicenseText } from "./spdx-licenses.mjs";
 
 /**
  * @typedef {{ name: string, version: string, license: string, text: string | null }} PackageLicense
@@ -136,15 +137,27 @@ function npmLicense(/** @type {any} */ pkg) {
 	return value?.type ?? "";
 }
 
-/** Name, Version, Lizenz und Text eines npm-Pakets aus seinem Ordner. */
+/** Urheber aus package.json: `author` als Text oder Objekt. */
+export function npmAuthors(/** @type {any} */ pkg) {
+	const author = typeof pkg.author === "string" ? pkg.author : pkg.author?.name;
+	return author ? [author] : [];
+}
+
+/**
+ * Name, Version, Lizenz und Text eines npm-Pakets aus seinem Ordner.
+ * Ohne Lizenzdatei: SPDX-Standardtext der angegebenen Lizenz samt Urheber.
+ */
 export function readNpmPackage(/** @type {string} */ dir) {
 	const pkg = JSON.parse(readFileSync(join(dir, "package.json"), "utf-8"));
-	const text = readLicenseFiles(dir);
-	return { name: pkg.name, version: pkg.version, license: npmLicense(pkg) || licenseFromText(text), text };
+	const ownText = readLicenseFiles(dir);
+	const license = npmLicense(pkg) || licenseFromText(ownText);
+	const text = ownText ?? fallbackLicenseText(license, npmAuthors(pkg));
+	return { name: pkg.name, version: pkg.version, license, text };
 }
 
 /**
  * Crates des Programms samt Lizenztext aus ~/.cargo/registry; null, wenn cargo fehlt.
+ * Ohne Lizenzdatei: SPDX-Standardtext samt Urhebern aus `authors`.
  * `cargo metadata` lädt fehlende Quellen selbst nach.
  */
 export function readCargoPackages(/** @type {string} */ manifestDir) {
@@ -165,6 +178,8 @@ export function readCargoPackages(/** @type {string} */ manifestDir) {
 		.map((/** @type {any} */ pkg) => {
 			const dir = dirname(pkg.manifest_path);
 			const extra = pkg.license_file ? [join(dir, pkg.license_file)] : [];
-			return { name: pkg.name, version: pkg.version, license: pkg.license ?? "", text: readLicenseFiles(dir, extra) };
+			const license = pkg.license ?? "";
+			const text = readLicenseFiles(dir, extra) ?? fallbackLicenseText(license, pkg.authors ?? []);
+			return { name: pkg.name, version: pkg.version, license, text };
 		});
 }

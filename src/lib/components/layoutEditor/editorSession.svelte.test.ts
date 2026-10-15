@@ -75,4 +75,33 @@ describe("LayoutEditorSession", () => {
 		expect(store.layouts.team).toEqual(defaultLayouts().team);
 		expect(session.canRedo).toBe(true);
 	});
+
+	it("beginnt einen neuen Verlauf, wenn das Layout von außen ersetzt wird", () => {
+		session.select(ids().slice(0, 1));
+		session.remove();
+		flushSync();
+		expect(session.canUndo).toBe(true);
+		const replacement = defaultLayouts();
+		replacement.team.objects = [];
+		store.replaceLayouts(replacement);
+		flushSync();
+		expect(session.canUndo).toBe(false);
+		expect(session.canRedo).toBe(false);
+		expect(session.selectedIds).toEqual([]);
+		session.undo();
+		flushSync();
+		expect(store.layouts.team.objects).toEqual([]);
+	});
+
+	it("merkt Änderungen nach dem Ersetzen wieder für Rückgängig", () => {
+		store.replaceLayouts(defaultLayouts());
+		flushSync();
+		const before = ids();
+		session.select([before[0]]);
+		session.remove();
+		flushSync();
+		session.undo();
+		flushSync();
+		expect(ids()).toEqual(before);
+	});
 });

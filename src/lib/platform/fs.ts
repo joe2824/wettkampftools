@@ -113,7 +113,7 @@ export interface StoredJson<T> {
 const pad2 = (n: number): string => String(n).padStart(2, "0");
 
 /** „20261015-070509“ in Ortszeit. */
-function compactTimestamp(date: Date): string {
+export function compactTimestamp(date: Date): string {
 	const day = `${date.getFullYear()}${pad2(date.getMonth() + 1)}${pad2(date.getDate())}`;
 	return `${day}-${pad2(date.getHours())}${pad2(date.getMinutes())}${pad2(date.getSeconds())}`;
 }

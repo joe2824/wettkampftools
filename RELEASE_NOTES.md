@@ -109,3 +109,5 @@ schneller und mit allem, was die bisherige Version konnte.
 - **Info → Lizenzen und Quellen** nennt die Schrift, die Kartendaten, die
   Datenquellen und alle mitgelieferten Bibliotheken samt Lizenztexten.
 - Die Seiten nutzen breite Fenster besser aus.
+- Beim Öffnen einer Projektdatei wird der bisherige Stand vorher gesichert; schlägt das Übernehmen fehl, wird er automatisch wiederhergestellt.
+- Projektdateien nehmen auch die Gliederungswahl der Entfernungen sowie Zuordnung, Wellen-Zuschlag, Vereins-Regelwerk und Bestzeiten der Rec-Werte mit.

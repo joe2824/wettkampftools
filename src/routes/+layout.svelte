@@ -13,11 +13,17 @@
 	import { initApp, migrationMessage, setAsideMessage } from "$lib/appInit";
 	import { flushPendingSaves } from "$lib/pendingSaves";
 	import { beforeWindowClose } from "$lib/platform/windowClose";
+	import { saveSettingsOnClose } from "$lib/settings/settingsCloseSave.svelte";
+	import { settingsStore } from "$lib/settings/settingsStore.svelte";
+	import { saveSettings } from "$lib/workflows/settings";
 	import { defaultLaunchDeps, startProjectLaunch } from "$lib/workflows/projectLaunch";
 
 	const TOAST_BOTTOM_OFFSET = "5rem";
 
 	let { children } = $props();
+
+	// Ungespeicherte Einstellungen gehen beim Schließen des Fensters nicht verloren.
+	saveSettingsOnClose(settingsStore, () => saveSettings(settingsStore));
 
 	onMount(async () => {
 		// Beim Schließen noch ausstehende Änderungen speichern.

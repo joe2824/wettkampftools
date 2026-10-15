@@ -26,7 +26,7 @@
 	let active = $state("wave");
 	const guard = new LeaveGuard();
 
-	// Schließen des Fensters ist ausgenommen: dort gibt es keine eigene Rückfrage.
+	// Schließen des Fensters ist ausgenommen: dort wird ohne Rückfrage gespeichert (siehe +layout.svelte).
 	beforeNavigate(({ cancel, type, to }) => {
 		if (type === "leave") return;
 		if (guard.intercept(to?.url ?? null, settingsStore.dirty)) cancel();

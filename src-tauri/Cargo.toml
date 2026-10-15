@@ -31,6 +31,8 @@ zip = { version = "8.6", default-features = false, features = ["deflate"] }
 chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
 # Zielpfad beim Schreiben von Ausgabedateien (ohnehin über tauri im Baum).
 percent-encoding = "2"
+# Pfade ohne Windows-Präfix \\?\ für Anzeige und Oberfläche (ohnehin über tauri im Baum).
+dunce = "1"
 
 [target.'cfg(windows)'.dependencies]
 # Nur lesend: Einstellungen der alten Version übernehmen.

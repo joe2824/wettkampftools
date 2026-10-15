@@ -52,7 +52,13 @@ Weiteres:
 
 5. **Neue Funktionen unter Windows:**
    - Projektdatei speichern, auf einem zweiten Rechner per Doppelklick öffnen
-     (App geschlossen und offen; Pfad mit Leerzeichen und Umlauten).
+     (App geschlossen und offen; Pfad mit Leerzeichen und Umlauten, z. B.
+     `C:\Wettkampf Süd\Übung.wwkprojekt`). Gliederungswahl der Entfernungen
+     und Rec-Werte-Einstellungen kommen mit.
+   - Fehlermeldungen mit Dateipfad (z. B. falsche Endung per Drag & Drop)
+     zeigen den Pfad ohne das Präfix `\\?\`.
+   - Fenster mit ungespeicherten Einstellungen schließen → beim nächsten Start
+     sind die Änderungen gespeichert.
    - Menü „Datei“ und Strg+N/O/S.
    - Jahresprüfung: alte Ergebnisdatei am Originalort und als Kopie → Warnung
      mit Bestätigung.
@@ -67,10 +73,16 @@ Weiteres:
    `TAURI_SIGNING_PRIVATE_KEY` und `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`
    anlegen. Der private Schlüssel kommt nie ins Repo.
 2. **Manuelle Abnahme** unter Windows (Liste oben).
-3. **Erstes Release:** `dev` nach `main` mergen, dann Tag `v2.0.0` setzen und
-   pushen. Der Release-Ablauf nimmt die Notes aus `RELEASE_NOTES.md` (erste
-   Zeile muss den Tag nennen). Für spätere Releases die Datei löschen oder auf
-   den neuen Tag ändern; ohne Datei entstehen die Notes aus den
+3. **Betas vor dem ersten Release:** aus `dev` mit
+   `./scripts/release.sh --beta` (oder Actions → „Beta aus dev“). Ohne
+   stabilen Tag beginnt die Serie bei der Version aus `package.json`, also
+   `v2.0.0-beta.1`, `v2.0.0-beta.2`, … `RELEASE_NOTES.md` mit erster Zeile
+   „# Wettkampftools v2.0.0“ gilt dabei auch für diese Betas.
+4. **Erstes Release:** `dev` nach `main` mergen, dann
+   `./scripts/release.sh 2.0.0` (Tag `v2.0.0`). Der Release-Ablauf nimmt die
+   Notes aus `RELEASE_NOTES.md`; die erste Zeile muss den Tag genau nennen
+   (`v2.0.0`, nicht `v2.0.0-beta.3`). Für spätere Releases die Datei löschen
+   oder auf den neuen Tag ändern; ohne Datei entstehen die Notes aus den
    `Release-Note:`-Trailern der Commits.
 
 Echte Meldungen und Ergebnisdateien für die Abnahme bleiben außerhalb des Repos.

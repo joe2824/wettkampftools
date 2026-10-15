@@ -38,6 +38,9 @@ export interface DistanceResult {
 /** Gewählte Gliederung (Kennung) je Name; Schlüssel siehe choiceKey. */
 export type ChoiceMap = Readonly<Record<string, string>>;
 
+/** Ablage der gewählten Gliederungen im Datenordner; keine Personendaten. */
+export const CHOICES_FILE = "distances/choices.json";
+
 export interface MatchOptions {
 	choices?: ChoiceMap;
 	/** Mannschaftsnamen je Gliederungsname, für die automatische Wahl. */

@@ -3,10 +3,11 @@
 //   node scripts/version.mjs plan [--beta] [--out <datei>] [--otherwise <patch|minor|major>] [patch|minor|major|X.Y.Z|X.Y.Z-beta.N]
 //   node scripts/version.mjs apply [--dry-run] <version>
 //   node scripts/version.mjs branch <version>
+//   node scripts/version.mjs notes <tag> [datei]
 //
 // Ergebnisse auf stdout (bzw. in --out), Rückfragen und Meldungen auf stderr.
 import { execFileSync } from "node:child_process";
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { createInterface } from "node:readline/promises";
 import { fileURLToPath } from "node:url";
@@ -17,6 +18,7 @@ const BETA_PATTERN = /^([0-9]+\.[0-9]+\.[0-9]+)-beta\.([0-9]+)$/;
 const BUMPS = ["patch", "minor", "major"];
 const STABLE_BRANCH = "main";
 const BETA_BRANCH = "dev";
+const NOTES_FILE = "RELEASE_NOTES.md";
 
 /** Datei → Muster mit der Version in Gruppe 2; nur der erste Treffer zählt. */
 const VERSION_PATTERNS = {
@@ -99,8 +101,25 @@ export function planVersion({ beta, request, tags, currentVersion }) {
 	}
 	const series = beta ? openBetaSeries(versions, lastStable) : null;
 	if (series !== null) return check(asBeta(series), versions, lastStable);
+	// Vor dem ersten stabilen Release beginnen die Betas bei der geplanten Version selbst.
+	if (beta && lastStable === null) return check(asBeta(currentVersion.split("-")[0]), versions, lastStable);
 	const choices = Object.fromEntries(BUMPS.map((kind) => [kind, target(bump(base, kind))]));
 	return { ok: false, ask: true, base, choices };
+}
+
+const escapeRegExp = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/** Tags, die die erste Zeile der Notes nennen darf: genau der Tag, bei Betas auch ihre Basisversion. */
+function acceptedNotesTags(tag) {
+	const beta = BETA_PATTERN.exec(tag.replace(/^v/, ""));
+	return beta ? [tag, `v${beta[1]}`] : [tag];
+}
+
+/** Nennt die Zeile den Tag als eigenes Wort? v2.1.0 passt nicht zu v2.1.0-beta.3, v2.0.1 nicht zu v2.0.10. */
+export function notesHeadlineMatches(headline, tag) {
+	return acceptedNotesTags(tag).some((accepted) =>
+		new RegExp(`(?:^|[^\\w.-])${escapeRegExp(accepted)}(?=\\s|$)`).test(headline)
+	);
 }
 
 export function readVersions(root) {
@@ -192,16 +211,29 @@ function applyCommand(args) {
 	for (const file of VERSION_FILES) process.stderr.write(`  ${file}: ${before[file]} → ${version}\n`);
 }
 
+/** Prüft RELEASE_NOTES.md (falls vorhanden): die erste Zeile muss den Tag nennen. */
+function notesCommand(args) {
+	const [tag, file = join(ROOT, NOTES_FILE)] = args;
+	if (!tag) throw new Error("Kein Tag angegeben.");
+	if (!existsSync(file)) return;
+	const headline = readFileSync(file, "utf8").split(/\r?\n/)[0];
+	if (!notesHeadlineMatches(headline, tag)) {
+		throw new Error(`${NOTES_FILE} nennt in der ersten Zeile nicht ${tag}: „${headline}“. Anpassen oder löschen.`);
+	}
+}
+
 const COMMANDS = {
 	plan: planCommand,
 	apply: applyCommand,
-	branch: (args) => process.stdout.write(`${releaseBranch(args[0] ?? "")}\n`)
+	branch: (args) => process.stdout.write(`${releaseBranch(args[0] ?? "")}\n`),
+	notes: notesCommand
 };
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
 	const [command, ...args] = process.argv.slice(2);
 	try {
-		if (!COMMANDS[command]) throw new Error(`Unbekannter Befehl „${command ?? ""}“. Erlaubt: plan, apply, branch.`);
+		if (!COMMANDS[command])
+			throw new Error(`Unbekannter Befehl „${command ?? ""}“. Erlaubt: plan, apply, branch, notes.`);
 		await COMMANDS[command](args);
 	} catch (error) {
 		process.stderr.write(`Fehler: ${error.message}\n`);

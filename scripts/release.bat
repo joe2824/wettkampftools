@@ -69,13 +69,7 @@ if not "%VERSION_BRANCH%"=="%EXPECTED_BRANCH%" (
 )
 
 REM Dieselbe Regel wie im Release-Ablauf, nur frueher: die Datei ersetzt die Notes.
-if exist RELEASE_NOTES.md (
-  set /p FIRST_LINE=<RELEASE_NOTES.md
-  echo !FIRST_LINE!| findstr /L /C:"%TAG%" >nul || (
-    echo Fehler: RELEASE_NOTES.md nennt in der ersten Zeile nicht %TAG%. Anpassen oder loeschen.
-    exit /b 1
-  )
-)
+call node scripts\version.mjs notes %TAG% || exit /b 1
 
 if "%BETA%"=="1" (
   set "CHANNEL=Beta (Vorabversion, nur NSIS-Installer)"

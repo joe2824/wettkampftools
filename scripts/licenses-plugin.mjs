@@ -1,6 +1,7 @@
 // Vite-Plugin: schreibt beim Build die Lizenzhinweise aller Fremdpakete neben die Anwendung.
 // npm: nur Pakete, deren Code im Client-Bundle landet. Rust: Crates aus `cargo metadata`.
 import { buildNotices, packageDirFromModuleId, readCargoPackages, readNpmPackage } from "./generate-licenses.mjs";
+import { missingLicenseTexts } from "./spdx-licenses.mjs";
 
 export const NOTICES_FILE = "third-party-licenses.json";
 
@@ -25,6 +26,13 @@ export function thirdPartyLicenses({ rustManifestDir, requireRust, cssPackageDir
 				this.error("Rust-Lizenzen fehlen: `cargo metadata` ist hier nicht verfügbar.");
 			}
 			const notices = buildNotices({ npm, cargo });
+			const missing = missingLicenseTexts(notices);
+			if (missing.length > 0) {
+				const message = `Ohne Lizenztext: ${missing.join(", ")}`;
+				// Im Release-Build ist ein fehlender Text ein Fehler, sonst nur ein Hinweis.
+				if (requireRust) this.error(message);
+				this.warn(message);
+			}
 			this.emitFile({ type: "asset", fileName: NOTICES_FILE, source: JSON.stringify(notices) });
 			const rust = cargo ? `${cargo.length} Rust-Crates` : "Rust nicht verfügbar";
 			this.info(`${NOTICES_FILE}: ${npm.length} npm-Pakete, ${rust}, ${notices.texts.length} Texte`);
