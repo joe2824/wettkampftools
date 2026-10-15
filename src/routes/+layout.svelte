@@ -8,8 +8,11 @@
 	import * as Sidebar from "$lib/components/ui/sidebar";
 	import { Toaster } from "$lib/components/ui/sonner";
 	import { onMount } from "svelte";
+	import { logError } from "$lib/log";
 	import { toast } from "svelte-sonner";
 	import { initApp, migrationMessage, setAsideMessage } from "$lib/appInit";
+	import { flushPendingSaves } from "$lib/pendingSaves";
+	import { beforeWindowClose } from "$lib/platform/windowClose";
 	import { defaultLaunchDeps, startProjectLaunch } from "$lib/workflows/projectLaunch";
 
 	const TOAST_BOTTOM_OFFSET = "5rem";
@@ -17,6 +20,8 @@
 	let { children } = $props();
 
 	onMount(async () => {
+		// Beim Schließen noch ausstehende Änderungen speichern.
+		void beforeWindowClose(flushPendingSaves).catch(() => logError("window.closeHandlerFailed"));
 		const { migration, setAside } = await initApp();
 		for (const notice of setAside) {
 			const { title, description } = setAsideMessage(notice);

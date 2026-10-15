@@ -1,5 +1,6 @@
 // Verzögertes Speichern nach Änderungen; Schreibvorgänge laufen nacheinander.
 import { logError } from "$lib/log";
+import { registerPendingSave, unregisterPendingSave } from "$lib/pendingSaves";
 
 export type AutosaveStatus = "idle" | "pending" | "saved" | "failed";
 
@@ -10,6 +11,7 @@ export class DebouncedSave {
 	readonly #failureCode: string;
 	#timer: ReturnType<typeof setTimeout> | null = null;
 	#queue: Promise<void> = Promise.resolve();
+	readonly #flushOnClose = (): Promise<void> => this.flush();
 
 	constructor(write: () => Promise<void>, delayMs: number, failureCode: string) {
 		this.#write = write;
@@ -21,6 +23,7 @@ export class DebouncedSave {
 	schedule = (): void => {
 		this.#cancel();
 		this.status = "pending";
+		registerPendingSave(this.#flushOnClose);
 		this.#timer = setTimeout(() => {
 			this.#timer = null;
 			void this.#enqueue();
@@ -45,8 +48,13 @@ export class DebouncedSave {
 	}
 
 	#enqueue(): Promise<void> {
-		this.#queue = this.#queue.then(() => this.#run());
-		return this.#queue;
+		const queue = this.#queue.then(() => this.#run());
+		this.#queue = queue;
+		void queue.then(() => {
+			// Erst abmelden, wenn nichts mehr wartet.
+			if (this.#queue === queue && this.#timer === null) unregisterPendingSave(this.#flushOnClose);
+		});
+		return queue;
 	}
 
 	async #run(): Promise<void> {

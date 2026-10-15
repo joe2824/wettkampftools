@@ -63,12 +63,16 @@ Der Fachkern in `src/lib/` ist reines TypeScript und ohne Tauri testbar:
 Importe laufen nur nach unten: Oberfläche → `workflows/` → Fachkern → `platform/`. Keine
 Fachlogik in Svelte-Komponenten oder Plattform-Adaptern.
 
+Verzögertes Speichern läuft über `DebouncedSave` (`autosave.svelte.ts`) oder meldet
+sich selbst in `pendingSaves.ts` an: Beim Schließen des Fensters wird alles
+Ausstehende sofort geschrieben (höchstens 2 s).
+
 Rust bleibt schlank und kennt keine Fachlogik: `src-tauri/src/` mit `workbook`
 (Excel lesen/schreiben), `input` (gewählte oder abgelegte Dateien samt
 Erstellungsdatum lesen), `output` (Dateien schreiben), `legacy_settings`
 (Einstellungen der alten Version übernehmen), `file_check` (gemeinsame Pfad-
 und Endungsprüfung für `input` und `output`), `update_channel` (Update-Kanal
-stabil oder Beta) und `logging`.
+stabil oder Beta), `launch_file` (Projektdatei per Doppelklick) und `logging`.
 
 Der Test liegt **neben** seinem Modul (`foo.ts` → `foo.test.ts`), nicht in
 einem eigenen Baum: so wandert er beim Verschieben mit.
@@ -108,8 +112,8 @@ Keine echten Personendaten in Tests und Fixtures: keine realen Namen, Vereine
 oder Adressen. Platzhalter: `Anna Meier`, `Max Mustermann`, `Musterstadt`.
 
 Meldedateien enthalten Daten von **Minderjährigen**. Dateien mit den Endungen
-`.csv`, `.xls`, `.xlsx`, `.docx`, `.rwm` und `.txt` kommen **nie** ins Repo
-(Ausnahme: `static/fonts/OFL.txt`). Fixtures werden im Testcode erzeugt.
+`.csv`, `.xls`, `.xlsx`, `.docx`, `.rwm`, `.wwkprojekt` und `.txt` kommen **nie** ins Repo
+(Ausnahmen: `static/fonts/OFL.txt`, `LICENSE.txt`). Fixtures werden im Testcode erzeugt.
 
 ## Datenschutz
 

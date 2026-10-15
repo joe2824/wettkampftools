@@ -187,6 +187,7 @@ Prüfungen vor jedem Commit:
 ```sh
 npm run check
 npm test
+npm run format:check
 cd src-tauri && cargo clippy --all-targets -- -D warnings
 cd src-tauri && cargo test
 ```

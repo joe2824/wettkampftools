@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { defaultLayouts } from "$lib/certificates/layoutDefaults";
 import { LAYOUT_FILE, LayoutStore } from "$lib/certificates/layoutStore.svelte";
 import { logError } from "$lib/log";
+import { flushPendingSaves, pendingSaveCount } from "$lib/pendingSaves";
 import { resetAppDataStore, setAppDataStore } from "$lib/platform/fs";
 import { createFakeStore, type FakeStore } from "$lib/testing/fakeFs";
 import { LayoutEditorSession } from "./editorSession.svelte";
@@ -109,5 +110,13 @@ describe("LayoutAutosave", () => {
 		await autosave.flush();
 		expect(autosave.status).toBe("failed");
 		expect(logError).toHaveBeenCalledWith("layout.saveFailed");
+	});
+
+	it("schreibt beim Schließen des Fensters sofort und meldet sich danach ab", async () => {
+		removeFirst();
+		expect(pendingSaveCount()).toBe(1);
+		await flushPendingSaves();
+		expect(savedTeamIds()).toEqual(teamIds());
+		expect(pendingSaveCount()).toBe(0);
 	});
 });

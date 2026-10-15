@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { logError } from "$lib/log";
 import { DebouncedSave } from "./autosave.svelte";
+import { flushPendingSaves, pendingSaveCount } from "./pendingSaves";
 
 vi.mock("$lib/log", async (original) => ({ ...(await original<typeof import("$lib/log")>()), logError: vi.fn() }));
 
@@ -49,5 +50,41 @@ describe("DebouncedSave", () => {
 		await autosave.flush();
 		expect(autosave.status).toBe("failed");
 		expect(logError).toHaveBeenCalledWith("test.failed");
+	});
+
+	it("meldet sich bis zum Schreiben als ausstehend an, damit das Schließen es speichert", async () => {
+		const write = vi.fn(async () => undefined);
+		const autosave = new DebouncedSave(write, DELAY_MS, "test.failed");
+		expect(pendingSaveCount()).toBe(0);
+		autosave.schedule();
+		autosave.schedule();
+		expect(pendingSaveCount()).toBe(1);
+		await flushPendingSaves();
+		expect(write).toHaveBeenCalledTimes(1);
+		expect(pendingSaveCount()).toBe(0);
+	});
+
+	it("meldet sich nach dem verzögerten Schreiben ab", async () => {
+		const autosave = new DebouncedSave(async () => undefined, DELAY_MS, "test.failed");
+		autosave.schedule();
+		await vi.advanceTimersByTimeAsync(DELAY_MS);
+		await autosave.idle();
+		expect(pendingSaveCount()).toBe(0);
+	});
+
+	it("bleibt angemeldet, wenn während des Schreibens eine neue Änderung kommt", async () => {
+		let release = () => {};
+		const write = vi.fn(() => new Promise<void>((resolve) => (release = resolve)));
+		const autosave = new DebouncedSave(write, DELAY_MS, "test.failed");
+		autosave.schedule();
+		await vi.advanceTimersByTimeAsync(DELAY_MS);
+		autosave.schedule();
+		release();
+		await vi.advanceTimersByTimeAsync(0);
+		expect(pendingSaveCount()).toBe(1);
+		await vi.advanceTimersByTimeAsync(DELAY_MS);
+		release();
+		await autosave.idle();
+		expect(pendingSaveCount()).toBe(0);
 	});
 });

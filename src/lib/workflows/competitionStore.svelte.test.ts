@@ -10,6 +10,7 @@ import {
 	saveCompetitionState
 } from "$lib/competition/persistence";
 import { COMPETITION_RESULTS_PATH, saveStoredResults } from "$lib/competition/resultsFile";
+import { flushPendingSaves, pendingSaveCount } from "$lib/pendingSaves";
 import { resetAppDataStore, setAppDataStore } from "$lib/platform/fs";
 import type { Sheet } from "$lib/platform/workbook";
 import { SessionState } from "$lib/session.svelte";
@@ -242,6 +243,30 @@ describe("Autosave", () => {
 		await store.saveNow();
 		expect(fs.files.has(COMPETITION_RESULTS_PATH)).toBe(false);
 		expect(fs.files.has(COMPETITION_STATE_PATH)).toBe(true);
+	});
+
+	it("schreibt beim Schließen des Fensters sofort und meldet sich danach ab", async () => {
+		vi.useFakeTimers();
+		const stop = store.startAutosave();
+		flushSync();
+		expect(pendingSaveCount()).toBe(0);
+		loadRegistration();
+		flushSync();
+		expect(pendingSaveCount()).toBe(1);
+		await flushPendingSaves();
+		expect(fs.files.has(COMPETITION_STATE_PATH)).toBe(true);
+		expect(pendingSaveCount()).toBe(0);
+		stop();
+	});
+
+	it("meldet sich beim Beenden ohne Schreiben ab", () => {
+		vi.useFakeTimers();
+		const stop = store.startAutosave();
+		flushSync();
+		loadRegistration();
+		flushSync();
+		stop();
+		expect(pendingSaveCount()).toBe(0);
 	});
 
 	it("speichert nicht schon beim Start", async () => {

@@ -6,7 +6,9 @@
 *.docx
 *.rwm
 *.txt
+*.wwkprojekt
 !static/fonts/OFL.txt
+!LICENSE.txt
 .claude/
 
 # Node / SvelteKit
@@ -18,3 +20,7 @@ build/
 src-tauri/target/
 src-tauri/gen/
 coverage/
+
+# Python (frühere Version)
+.venv/
+__pycache__/

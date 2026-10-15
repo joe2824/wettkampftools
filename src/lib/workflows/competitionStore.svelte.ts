@@ -12,6 +12,7 @@ import {
 } from "$lib/competition/persistence";
 import { clearStoredResults, saveStoredResults, type StoredResults } from "$lib/competition/resultsFile";
 import { logError, logInfo } from "$lib/log";
+import { registerPendingSave, unregisterPendingSave } from "$lib/pendingSaves";
 import { session as defaultSession, type SessionResults, type SessionState } from "$lib/session.svelte";
 import { nextCompetitionEvent } from "$lib/settings/eventInfo";
 import type { Settings } from "$lib/settings/settings";
@@ -59,6 +60,7 @@ export class CompetitionStore {
 	#queue: Promise<void> = Promise.resolve();
 	/** Zuletzt in die eigene Datei geschriebene Ergebnisse. */
 	#savedResults: SessionResults | null | typeof UNSYNCED = UNSYNCED;
+	readonly #flushOnClose = (): Promise<void> => (this.#timer === null ? this.#queue : this.saveNow());
 
 	constructor(deps: CompetitionDeps) {
 		this.#session = deps.session;
@@ -112,6 +114,7 @@ export class CompetitionStore {
 		return () => {
 			stop();
 			this.#cancel();
+			unregisterPendingSave(this.#flushOnClose);
 		};
 	}
 
@@ -213,6 +216,7 @@ export class CompetitionStore {
 
 	#schedule(): void {
 		this.#cancel();
+		registerPendingSave(this.#flushOnClose);
 		this.#timer = setTimeout(() => {
 			this.#timer = null;
 			void this.#enqueue(() => this.#write());
@@ -227,8 +231,13 @@ export class CompetitionStore {
 
 	/** Schreibvorgänge nacheinander, damit „Neuer Wettkampf“ nie überschrieben wird. */
 	#enqueue(task: () => Promise<void>): Promise<void> {
-		this.#queue = this.#queue.then(task).catch(() => logError("competition.saveFailed"));
-		return this.#queue;
+		const queue = this.#queue.then(task).catch(() => logError("competition.saveFailed"));
+		this.#queue = queue;
+		void queue.then(() => {
+			// Erst abmelden, wenn nichts mehr wartet.
+			if (this.#queue === queue && this.#timer === null) unregisterPendingSave(this.#flushOnClose);
+		});
+		return queue;
 	}
 
 	async #write(): Promise<void> {

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resetAppDataStore, setAppDataStore } from "$lib/platform/fs";
+import { flushPendingSaves, pendingSaveCount } from "$lib/pendingSaves";
 import { createFakeStore, type FakeStore } from "$lib/testing/fakeFs";
 import { EVENT_AUTOSAVE_DELAY_MS, EventAutosave } from "./eventAutosave.svelte";
 import { defaultSettings } from "./settings";
@@ -102,5 +103,13 @@ describe("EventAutosave", () => {
 		await vi.advanceTimersByTimeAsync(EVENT_AUTOSAVE_DELAY_MS);
 		await autosave.idle();
 		expect(autosave.status).toBe("failed");
+	});
+
+	it("schreibt beim Schließen des Fensters sofort und meldet sich danach ab", async () => {
+		type("Pokal");
+		expect(pendingSaveCount()).toBe(1);
+		await flushPendingSaves();
+		expect(savedFile().event.title).toBe("Pokal");
+		expect(pendingSaveCount()).toBe(0);
 	});
 });

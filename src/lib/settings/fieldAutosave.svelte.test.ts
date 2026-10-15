@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { logError } from "$lib/log";
+import { flushPendingSaves, pendingSaveCount } from "$lib/pendingSaves";
 import { resetAppDataStore, setAppDataStore } from "$lib/platform/fs";
 import { createFakeStore, type FakeStore } from "$lib/testing/fakeFs";
 import { FIELD_AUTOSAVE_DELAY_MS, FieldAutosave } from "./fieldAutosave.svelte";
@@ -49,5 +50,14 @@ describe("FieldAutosave", () => {
 		await autosave.flush();
 		expect(autosave.status).toBe("failed");
 		expect(logError).toHaveBeenCalledWith("settings.teamNamesSaveFailed");
+	});
+
+	it("schreibt beim Schließen des Fensters sofort und meldet sich danach ab", async () => {
+		new FieldAutosave(store, "teamNameOverrides", "settings.teamNamesSaveFailed").schedule();
+		store.settings.teamNameOverrides = { Musterstadt: "Musterstadt / Süd" };
+		expect(pendingSaveCount()).toBe(1);
+		await flushPendingSaves();
+		expect(savedFile().teamNameOverrides).toEqual({ Musterstadt: "Musterstadt / Süd" });
+		expect(pendingSaveCount()).toBe(0);
 	});
 });
