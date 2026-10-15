@@ -1,5 +1,6 @@
 // Ausgabedateien schreiben, öffnen oder im Ordner zeigen.
-use crate::file_check::{app_scope, canonical_existing, has_extension, user_path};
+use crate::file_check::{canonical_existing, has_extension, user_path};
+use crate::grants::{normalized_target, WriteGrants};
 use percent_encoding::percent_decode_str;
 use std::path::{Path, PathBuf};
 use tauri::ipc::{InvokeBody, Request};
@@ -50,26 +51,40 @@ fn check_write_target(
     path: &Path,
     allowed_in_scope: impl Fn(&Path) -> bool,
 ) -> Result<PathBuf, String> {
-    let (Some(parent), Some(name)) = (path.parent(), path.file_name()) else {
+    let (Some(parent), Some(_)) = (path.parent(), path.file_name()) else {
         return Err(not_writable(path));
     };
     if !path.is_absolute() || !has_extension(path, &OUTPUT_EXTENSIONS) {
         return Err(not_writable(path));
     }
-    let target = std::fs::canonicalize(parent)
-        .map_err(|_| format!("Der Ordner {} wurde nicht gefunden.", parent.display()))?
-        .join(name);
+    let target = normalized_target(path)
+        .ok_or_else(|| format!("Der Ordner {} wurde nicht gefunden.", parent.display()))?;
     let existing = std::fs::symlink_metadata(&target).ok();
     if existing.is_some_and(|m| !m.is_file()) {
         return Err(not_writable(path));
     }
-    if !allowed_in_scope(path) && !allowed_in_scope(&target) {
+    if !allowed_in_scope(&target) {
         return Err(format!(
             "Die Datei {} wurde nicht in dieser Sitzung gewählt. Bitte erneut speichern.",
             path.display()
         ));
     }
     Ok(target)
+}
+
+/// Prüfung gegen die Schreibfreigaben aus dem Speichern-Dialog.
+fn write_scope(app: &tauri::AppHandle) -> impl Fn(&Path) -> bool + '_ {
+    use tauri::Manager;
+    let grants = app.try_state::<WriteGrants>();
+    move |p| grants.as_ref().is_some_and(|g| g.0.is_allowed(p))
+}
+
+/// Gibt ein im Speichern-Dialog gewähltes Ziel zum Schreiben frei.
+pub fn allow_write_path(app: &tauri::AppHandle, path: &Path) {
+    use tauri::Manager;
+    if let Some(grants) = app.try_state::<WriteGrants>() {
+        grants.0.allow(path);
+    }
 }
 
 /// Zielpfad aus der Kopfzeile und rohe Bytes aus dem Body.
@@ -89,7 +104,7 @@ fn raw_request<'a>(request: &'a Request<'_>) -> Result<(String, &'a [u8]), Strin
 #[tauri::command]
 pub fn write_output_file(app: tauri::AppHandle, request: Request<'_>) -> Result<(), String> {
     let (path, bytes) = raw_request(&request)?;
-    let target = check_write_target(Path::new(&path), app_scope(&app))?;
+    let target = check_write_target(Path::new(&path), write_scope(&app))?;
     std::fs::write(target, bytes).map_err(|_| WRITE_ERROR.to_string())
 }
 
@@ -109,7 +124,7 @@ fn check_penalty_catalog_target(
     if !canonical.is_file() {
         return Err(not_writable(rulebook));
     }
-    if !allowed_in_scope(rulebook) && !allowed_in_scope(&canonical) {
+    if !allowed_in_scope(&canonical) {
         return Err(format!(
             "Das Regelwerk {} wurde nicht in dieser Sitzung gespeichert. Bitte erneut speichern.",
             user_path(rulebook)
@@ -134,7 +149,7 @@ pub fn write_penalty_catalog(
     request: Request<'_>,
 ) -> Result<String, String> {
     let (path, bytes) = raw_request(&request)?;
-    let target = check_penalty_catalog_target(Path::new(&path), app_scope(&app))?;
+    let target = check_penalty_catalog_target(Path::new(&path), write_scope(&app))?;
     std::fs::write(&target, bytes).map_err(|_| WRITE_ERROR.to_string())?;
     Ok(user_path(&target))
 }
@@ -163,20 +178,20 @@ fn check_output_target(
     Ok(canonical)
 }
 
-/// Prüfung mit dem Datei-Scope der App: den füllt der Speichern-Dialog.
+/// Prüfung mit den Schreibfreigaben: die setzt der Speichern-Dialog.
 ///
 /// Geöffnet wird danach der Pfad aus dem Dialog, nicht der normalisierte:
 /// unter Windows trägt der normalisierte das Präfix `\\?\`, mit dem
 /// manche Programme nicht zurechtkommen.
-fn check_in_app_scope(app: &tauri::AppHandle, path: &str) -> Result<(), String> {
-    check_output_target(Path::new(path), app_scope(app)).map(|_| ())
+fn check_write_granted(app: &tauri::AppHandle, path: &str) -> Result<(), String> {
+    check_output_target(Path::new(path), write_scope(app)).map(|_| ())
 }
 
 /// Öffnet eine gespeicherte Ausgabedatei mit dem Standardprogramm.
 #[tauri::command]
 pub fn open_output_file(app: tauri::AppHandle, path: String) -> Result<(), String> {
     use tauri_plugin_opener::OpenerExt;
-    check_in_app_scope(&app, &path)?;
+    check_write_granted(&app, &path)?;
     app.opener()
         .open_path(path, None::<&str>)
         .map_err(|e| format!("Die Datei konnte nicht geöffnet werden: {e}"))
@@ -186,7 +201,7 @@ pub fn open_output_file(app: tauri::AppHandle, path: String) -> Result<(), Strin
 #[tauri::command]
 pub fn reveal_output_file(app: tauri::AppHandle, path: String) -> Result<(), String> {
     use tauri_plugin_opener::OpenerExt;
-    check_in_app_scope(&app, &path)?;
+    check_write_granted(&app, &path)?;
     app.opener()
         .reveal_item_in_dir(&path)
         .map_err(|e| format!("Der Ordner konnte nicht angezeigt werden: {e}"))
@@ -301,17 +316,25 @@ mod tests {
     }
 
     #[test]
-    fn write_requires_scope_from_save_dialog() {
+    fn write_requires_grant_from_save_dialog() {
         let path = write_target("a.pdf");
         let err = check_write_target(&path, |_| false).unwrap_err();
         assert!(err.contains("erneut speichern"), "{err}");
-        // Der Dialog gibt den Pfad so frei, wie er ihn liefert; normalisiert genügt auch.
-        let raw = path.clone();
-        assert!(check_write_target(&path, |p| p == raw).is_ok());
-        let canonical = std::fs::canonicalize(std::env::temp_dir())
-            .unwrap()
-            .join(path.file_name().unwrap());
-        assert!(check_write_target(&path, |p| p == canonical).is_ok());
+        // Der Dialog liefert den Pfad, wie ihn der Benutzer sieht; geprüft wird die normalisierte Form.
+        let grants = WriteGrants::default();
+        grants.0.allow(&path);
+        assert!(check_write_target(&path, |p| grants.0.is_allowed(p)).is_ok());
+    }
+
+    #[test]
+    fn read_grant_never_allows_writing() {
+        let file = temp_file("Ergebnisse.xlsx");
+        let read = crate::grants::ReadGrants::default();
+        read.0.allow(&file.0);
+        let writes = WriteGrants::default();
+        let err = check_write_target(&file.0, |p| writes.0.is_allowed(p)).unwrap_err();
+        assert!(err.contains("erneut speichern"), "{err}");
+        assert!(check_output_target(&file.0, |p| writes.0.is_allowed(p)).is_err());
     }
 
     #[test]

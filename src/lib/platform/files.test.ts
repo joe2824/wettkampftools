@@ -1,9 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const dialogMock = vi.hoisted(() => ({ save: vi.fn() }));
 const coreMock = vi.hoisted(() => ({ invoke: vi.fn() }));
 
-vi.mock("@tauri-apps/plugin-dialog", () => dialogMock);
 vi.mock("@tauri-apps/api/core", () => coreMock);
 
 import { datedFileName, saveFile, writePenaltyCatalogNextTo } from "./files";
@@ -23,24 +21,23 @@ describe("saveFile", () => {
 	const bytes = new Uint8Array([1, 2]);
 
 	beforeEach(() => {
-		dialogMock.save.mockReset();
 		coreMock.invoke.mockReset();
 	});
 
 	it("schreibt über die Desktop-Hülle an den gewählten Ort, Bytes roh und Pfad kodiert", async () => {
 		const path = "C:\\Urkunden\\Müller & Co.xlsx";
-		dialogMock.save.mockResolvedValue(path);
+		coreMock.invoke.mockResolvedValueOnce(path);
 		expect(await saveFile({ defaultName: "x.xlsx", filters, bytes })).toBe(path);
-		expect(dialogMock.save).toHaveBeenCalledWith({ defaultPath: "x.xlsx", filters });
+		expect(coreMock.invoke).toHaveBeenCalledWith("pick_save_path", { defaultName: "x.xlsx", filters });
 		expect(coreMock.invoke).toHaveBeenCalledWith("write_output_file", bytes, {
 			headers: { "x-output-path": encodeURIComponent(path) }
 		});
 	});
 
 	it("schreibt nichts nach Abbruch", async () => {
-		dialogMock.save.mockResolvedValue(null);
+		coreMock.invoke.mockResolvedValueOnce(null);
 		expect(await saveFile({ defaultName: "x.xlsx", filters, bytes })).toBeNull();
-		expect(coreMock.invoke).not.toHaveBeenCalled();
+		expect(coreMock.invoke).toHaveBeenCalledTimes(1);
 	});
 });
 

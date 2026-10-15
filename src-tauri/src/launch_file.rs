@@ -1,6 +1,6 @@
 // Projektdatei, mit der die Anwendung per Doppelklick gestartet wurde.
 use crate::file_check::{has_extension, user_path};
-use crate::input::{allow_dropped_paths, PROJECT_EXTENSION};
+use crate::input::{allow_read_paths, PROJECT_EXTENSION};
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use tauri::{AppHandle, Emitter, Manager};
@@ -50,7 +50,7 @@ fn open_path(app: &AppHandle, path: &Path) {
     let Some(canonical) = checked_project_file(path) else {
         return;
     };
-    allow_dropped_paths(app, std::slice::from_ref(&canonical));
+    allow_read_paths(app, std::slice::from_ref(&canonical));
     let text = user_path(&canonical);
     if let Some(pending) = app.try_state::<PendingProjectFile>() {
         pending.set(text.clone());

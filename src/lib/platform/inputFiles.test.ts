@@ -1,30 +1,27 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const coreMock = vi.hoisted(() => ({ invoke: vi.fn() }));
-const dialogMock = vi.hoisted(() => ({ open: vi.fn() }));
 vi.mock("@tauri-apps/api/core", () => coreMock);
 const webviewMock = vi.hoisted(() => ({ onDragDropEvent: vi.fn() }));
-vi.mock("@tauri-apps/plugin-dialog", () => dialogMock);
 vi.mock("@tauri-apps/api/webview", () => ({ getCurrentWebview: () => webviewMock }));
 
 import { listenFileDrop, pickInputFile, readInputFile } from "./inputFiles";
 
 beforeEach(() => {
 	coreMock.invoke.mockReset();
-	dialogMock.open.mockReset();
 });
 
 describe("pickInputFile", () => {
 	const filters = [{ name: "Excel-Datei", extensions: ["xlsx", "xls"] }];
 
 	it("gibt den gewählten Pfad zurück", async () => {
-		dialogMock.open.mockResolvedValue("C:\\Wettkampf\\Ergebnisse.xls");
+		coreMock.invoke.mockResolvedValue("C:\\Wettkampf\\Ergebnisse.xls");
 		await expect(pickInputFile(filters)).resolves.toBe("C:\\Wettkampf\\Ergebnisse.xls");
-		expect(dialogMock.open).toHaveBeenCalledWith({ multiple: false, directory: false, filters });
+		expect(coreMock.invoke).toHaveBeenCalledWith("pick_open_path", { filters });
 	});
 
 	it("liefert null bei Abbruch", async () => {
-		dialogMock.open.mockResolvedValue(null);
+		coreMock.invoke.mockResolvedValue(null);
 		await expect(pickInputFile(filters)).resolves.toBeNull();
 	});
 });

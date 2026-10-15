@@ -60,6 +60,9 @@ Weiteres:
    - Fenster mit ungespeicherten Einstellungen schließen → beim nächsten Start
      sind die Änderungen gespeichert.
    - Menü „Datei“ und Strg+N/O/S.
+   - Öffnen- und Speichern-Dialoge überall: Dateitypen, vorgeschlagener Name,
+     Dialog liegt vor dem Fenster; Speichern und danach „Öffnen“/„Im Ordner
+     zeigen“ klappt.
    - Jahresprüfung: alte Ergebnisdatei am Originalort und als Kopie → Warnung
      mit Bestätigung.
    - Entfernungen mit Karte, Export als PNG/PDF; Karte auf der Urkunde und

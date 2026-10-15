@@ -1,4 +1,6 @@
+mod dialogs;
 mod file_check;
+mod grants;
 mod input;
 mod launch_file;
 mod legacy_settings;
@@ -52,6 +54,8 @@ pub fn run() {
             legacy_settings::read_legacy_settings,
             workbook::read_workbook,
             workbook::write_workbook,
+            dialogs::pick_open_path,
+            dialogs::pick_save_path,
             output::write_output_file,
             output::write_penalty_catalog,
             output::open_output_file,
@@ -61,11 +65,12 @@ pub fn run() {
             launch_file::take_pending_project_file,
         ])
         .manage(launch_file::PendingProjectFile::default())
-        .manage(input::ReadGrants::default())
+        .manage(grants::ReadGrants::default())
+        .manage(grants::WriteGrants::default())
         .on_window_event(|window, event| {
             use tauri::{DragDropEvent, Manager, WindowEvent};
             if let WindowEvent::DragDrop(DragDropEvent::Drop { paths, .. }) = event {
-                input::allow_dropped_paths(window.app_handle(), paths);
+                input::allow_read_paths(window.app_handle(), paths);
             }
         })
         .setup(move |app| {

@@ -23,13 +23,6 @@ pub fn has_extension(path: &Path, extensions: &[&str]) -> bool {
         .is_some_and(|e| extensions.iter().any(|x| e.eq_ignore_ascii_case(x)))
 }
 
-/// Prüfung gegen den Datei-Scope der App (gefüllt von Dialogen und Ablegen).
-pub fn app_scope(app: &tauri::AppHandle) -> impl Fn(&Path) -> bool {
-    use tauri_plugin_fs::FsExt;
-    let scope = app.try_fs_scope();
-    move |p| scope.as_ref().is_some_and(|s| s.is_allowed(p))
-}
-
 #[cfg(test)]
 pub mod test_support {
     use std::path::{Path, PathBuf};

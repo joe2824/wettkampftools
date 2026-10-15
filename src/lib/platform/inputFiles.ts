@@ -1,7 +1,7 @@
 // Eingabedateien über den Öffnen-Dialog oder Ablegen lesen, samt Datum aus dem Dateisystem.
 // Pfad, Endung und Größe prüft die Desktop-Hülle.
 import { invoke } from "@tauri-apps/api/core";
-import { open, type DialogFilter } from "@tauri-apps/plugin-dialog";
+import type { DialogFilter } from "./dialog";
 
 export interface InputFile {
 	name: string;
@@ -21,8 +21,8 @@ interface InputFileInfo {
 
 /** Fragt nach einer Datei. Gibt den Pfad zurück, bei Abbruch null. */
 export async function pickInputFile(filters: DialogFilter[]): Promise<string | null> {
-	const path = await open({ multiple: false, directory: false, filters });
-	return path ?? null;
+	// Der Dialog der Desktop-Hülle gibt die Datei nur zum Lesen frei.
+	return invoke<string | null>("pick_open_path", { filters });
 }
 
 /** Liest eine gewählte oder abgelegte Datei. */

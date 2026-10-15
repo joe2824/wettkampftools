@@ -1,8 +1,7 @@
 // Vom Benutzer gewählte oder abgelegte Eingabedateien lesen.
-use crate::file_check::{app_scope, canonical_existing, has_extension, not_found, user_path};
-use std::collections::HashSet;
+use crate::file_check::{canonical_existing, has_extension, not_found, user_path};
+use crate::grants::ReadGrants;
 use std::path::{Path, PathBuf};
-use std::sync::Mutex;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 /// Nur diese Endungen liest die Anwendung ein.
@@ -101,38 +100,23 @@ fn file_times(path: &Path) -> std::io::Result<FileTimes> {
     })
 }
 
-/// Abgelegte oder per Doppelklick übergebene Dateien: nur lesbar.
-///
-/// Bewusst getrennt vom Datei-Scope der App, den `write_output_file` als
-/// Schreibfreigabe nutzt: eine abgelegte Datei darf nie überschrieben werden.
-#[derive(Default)]
-pub struct ReadGrants(Mutex<HashSet<PathBuf>>);
-
 impl ReadGrants {
-    /// Gibt einlesbare Dateien frei; gemerkt wird der normalisierte Pfad.
+    /// Gibt einlesbare Dateien frei; andere Endungen und Ordner werden übergangen.
     pub fn allow_paths(&self, paths: &[PathBuf]) {
-        let Ok(mut granted) = self.0.lock() else {
-            return;
-        };
-        let canonical = paths.iter().filter(|p| is_droppable(p));
-        granted.extend(canonical.filter_map(|p| std::fs::canonicalize(p).ok()));
-    }
-
-    /// Erwartet den normalisierten Pfad aus `check_input_target`.
-    fn is_allowed(&self, canonical: &Path) -> bool {
-        self.0
-            .lock()
-            .is_ok_and(|granted| granted.contains(canonical))
+        for path in paths.iter().filter(|p| is_droppable(p)) {
+            self.0.allow(path);
+        }
     }
 }
 
-/// Lesen erlaubt: im Öffnen-Dialog gewählt (Datei-Scope) oder abgelegt bzw. übergeben.
+/// Lesen erlaubt: im Öffnen-Dialog gewählt, abgelegt oder per Doppelklick übergeben.
+///
+/// Bewusst getrennt von den Schreibfreigaben: eine gelesene Datei wird nie überschrieben.
 fn check_readable(app: &tauri::AppHandle, path: &str) -> Result<PathBuf, String> {
     use tauri::Manager;
-    let in_scope = app_scope(app);
     let grants = app.try_state::<ReadGrants>();
     check_input_target(Path::new(path), |p| {
-        in_scope(p) || grants.as_ref().is_some_and(|g| g.is_allowed(p))
+        grants.as_ref().is_some_and(|g| g.0.is_allowed(p))
     })
 }
 
@@ -176,8 +160,8 @@ fn is_droppable(path: &Path) -> bool {
     path.is_file() && has_extension(path, &INPUT_EXTENSIONS)
 }
 
-/// Abgelegte Dateien nur zum Einlesen freigeben (der Öffnen-Dialog nutzt den Datei-Scope).
-pub fn allow_dropped_paths(app: &tauri::AppHandle, paths: &[PathBuf]) {
+/// Gewählte, abgelegte oder übergebene Dateien nur zum Einlesen freigeben.
+pub fn allow_read_paths(app: &tauri::AppHandle, paths: &[PathBuf]) {
     use tauri::Manager;
     if let Some(grants) = app.try_state::<ReadGrants>() {
         grants.allow_paths(paths);
@@ -353,8 +337,8 @@ mod tests {
         let grants = ReadGrants::default();
         grants.allow_paths(&[csv.0.clone(), exe.0.clone()]);
         let canonical = |file: &TempFile| std::fs::canonicalize(&file.0).unwrap();
-        assert!(grants.is_allowed(&canonical(&csv)));
-        assert!(!grants.is_allowed(&canonical(&exe)));
+        assert!(grants.0.is_allowed(&canonical(&csv)));
+        assert!(!grants.0.is_allowed(&canonical(&exe)));
     }
 
     #[test]
@@ -362,7 +346,7 @@ mod tests {
         let file = temp_file("Übung Süd.wwkprojekt");
         let grants = ReadGrants::default();
         grants.allow_paths(std::slice::from_ref(&file.dotted()));
-        let allowed = |p: &Path| grants.is_allowed(p);
+        let allowed = |p: &Path| grants.0.is_allowed(p);
         let simplified = dunce::canonicalize(&file.0).unwrap();
         assert!(check_input_target(&file.0, allowed).is_ok());
         assert!(check_input_target(&simplified, allowed).is_ok());

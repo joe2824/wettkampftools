@@ -73,7 +73,9 @@ sich selbst in `pendingSaves.ts` an: Beim Schließen des Fensters wird alles
 Ausstehende sofort geschrieben (höchstens 2 s).
 
 Rust bleibt schlank und kennt keine Fachlogik: `src-tauri/src/` mit `workbook`
-(Excel lesen/schreiben), `input` (gewählte oder abgelegte Dateien samt
+(Excel lesen/schreiben), `dialogs` (Öffnen- und Speichern-Dialog), `grants`
+(Freigaben: im Öffnen-Dialog gewählte oder abgelegte Dateien sind nur lesbar, im
+Speichern-Dialog gewählte nur beschreibbar), `input` (freigegebene Dateien samt
 Erstellungsdatum lesen), `output` (Dateien schreiben, auch den Strafenkatalog
 `<Name>m.def` neben ein gerade gespeichertes Regelwerk), `legacy_settings`
 (Einstellungen der alten Version übernehmen), `file_check` (gemeinsame Pfad-
