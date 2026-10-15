@@ -5149,6 +5149,7 @@ version = "2.0.0"
 dependencies = [
  "calamine",
  "chrono",
+ "percent-encoding",
  "rust_xlsxwriter",
  "serde",
  "serde_json",

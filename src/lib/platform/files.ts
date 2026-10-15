@@ -1,6 +1,6 @@
-// Ausgabedateien über den Speichern-Dialog schreiben.
+// Ausgabedateien über den Speichern-Dialog schreiben. Pfad und Endung prüft die Desktop-Hülle.
+import { invoke } from "@tauri-apps/api/core";
 import { save, type DialogFilter } from "@tauri-apps/plugin-dialog";
-import { writeFile } from "@tauri-apps/plugin-fs";
 
 export interface SaveFileRequest {
 	defaultName: string;
@@ -12,7 +12,8 @@ export interface SaveFileRequest {
 export async function saveFile({ defaultName, filters, bytes }: SaveFileRequest): Promise<string | null> {
 	const path = await save({ defaultPath: defaultName, filters });
 	if (!path) return null;
-	await writeFile(path, bytes);
+	// Bytes roh im Body; der Pfad steht kodiert in einer Kopfzeile.
+	await invoke("write_output_file", bytes, { headers: { "x-output-path": encodeURIComponent(path) } });
 	return path;
 }
 

@@ -42,6 +42,7 @@ pub fn run() {
             legacy_settings::read_legacy_settings,
             workbook::read_workbook,
             workbook::write_workbook,
+            output::write_output_file,
             output::open_output_file,
             output::reveal_output_file,
             input::read_input_file,

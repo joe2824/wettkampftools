@@ -113,13 +113,18 @@ pub fn input_file_info(app: tauri::AppHandle, path: String) -> Result<InputFileI
     })
 }
 
+/// Nur Dateien, die die Anwendung auch einlesen würde.
+fn is_droppable(path: &Path) -> bool {
+    path.is_file() && has_extension(path, &INPUT_EXTENSIONS)
+}
+
 /// Abgelegte Dateien für das Einlesen freigeben (Öffnen-Dialog macht das selbst).
 pub fn allow_dropped_paths(app: &tauri::AppHandle, paths: &[PathBuf]) {
     use tauri_plugin_fs::FsExt;
     let Some(scope) = app.try_fs_scope() else {
         return;
     };
-    for path in paths.iter().filter(|p| p.is_file()) {
+    for path in paths.iter().filter(|p| is_droppable(p)) {
         let _ = scope.allow_file(path);
         // Die Prüfung vergleicht den aufgelösten Pfad (z. B. hinter Verknüpfungen).
         if let Ok(canonical) = std::fs::canonicalize(path) {
@@ -241,6 +246,17 @@ mod tests {
         let failed: std::io::Result<std::time::SystemTime> =
             Err(std::io::Error::other("nicht unterstützt"));
         assert_eq!(epoch_millis(failed), None);
+    }
+
+    #[test]
+    fn only_readable_files_are_droppable() {
+        let csv = temp_file("meldungen.csv");
+        let exe = temp_file("programm.exe");
+        assert!(is_droppable(&csv.0));
+        assert!(!is_droppable(&exe.0));
+        assert!(!is_droppable(&std::env::temp_dir()));
+        let missing = std::env::temp_dir().join("wettkampftools-input-fehlt.csv");
+        assert!(!is_droppable(&missing));
     }
 
     #[test]

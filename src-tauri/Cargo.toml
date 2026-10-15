@@ -29,6 +29,8 @@ rust_xlsxwriter = "0.99"
 # Dokumenteigenschaften aus .xlsx lesen (ohnehin über calamine im Baum).
 zip = { version = "8.6", default-features = false, features = ["deflate"] }
 chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+# Zielpfad beim Schreiben von Ausgabedateien (ohnehin über tauri im Baum).
+percent-encoding = "2"
 
 [target.'cfg(windows)'.dependencies]
 # Nur lesend: Einstellungen der alten Version übernehmen.
