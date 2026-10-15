@@ -107,14 +107,18 @@ Start übernommen.
 
 ### Projekt auf einem anderen Rechner weiterbearbeiten
 
-Auf der Startseite speichert **Projekt speichern …** den ganzen Wettkampf in
+Oben links neben dem Knopf für die Seitenleiste liegt das Menü **Datei** mit
+**Neuer Wettkampf …** (Strg+N, auf dem Mac ⌘N), **Projekt öffnen …** (Strg+O)
+und **Projekt speichern …** (Strg+S).
+
+**Projekt speichern …** legt den ganzen Wettkampf in
 eine Datei (`.wwkprojekt`): Veranstaltung, Einstellungen samt Regelwerk und
 Mannschaftsnamen, Urkunden-Layout, Unterschriften (abwählbar), Meldedatei mit
 Wellenauswahl, Ergebnisse samt Jahresprüfung und Urkunden-Auswahl. Der
 Hintergrund-Scan ist nicht enthalten.
 
 Auf dem anderen Rechner die Datei unter **Projekt öffnen …** auswählen, auf
-die Fläche ziehen oder im Explorer doppelt anklicken; ein Doppelklick startet
+die Fläche der Startseite ziehen oder im Explorer doppelt anklicken; ein Doppelklick startet
 Wettkampftools oder holt das offene Fenster nach vorn. Nach einer Rückfrage ersetzt das Projekt den dortigen
 Stand; enthält es keine Unterschriften, bleiben die vorhandenen erhalten. Die
 Datei enthält Namen und Jahrgänge der Teilnehmenden und gehört nur in die

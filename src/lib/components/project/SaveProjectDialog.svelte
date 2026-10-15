@@ -9,7 +9,8 @@
 	import { Switch } from "$lib/components/ui/switch";
 	import { saveProject } from "$lib/workflows/project";
 
-	let open = $state(false);
+	let { open = $bindable(false) }: { open?: boolean } = $props();
+
 	let includeSignatures = $state(true);
 	let saving = $state(false);
 
@@ -29,14 +30,6 @@
 </script>
 
 <Dialog.Root bind:open>
-	<Dialog.Trigger>
-		{#snippet child({ props })}
-			<Button {...props}>
-				<SaveIcon data-icon="inline-start" />
-				Projekt speichern …
-			</Button>
-		{/snippet}
-	</Dialog.Trigger>
 	<Dialog.Content class="sm:max-w-md">
 		<Dialog.Header>
 			<Dialog.Title>Projekt speichern</Dialog.Title>

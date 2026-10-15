@@ -1,8 +1,10 @@
 <script lang="ts">
 	import "../app.css";
 	import { ModeWatcher } from "mode-watcher";
-	import ProjectOpenDialog from "$lib/components/home/ProjectOpenDialog.svelte";
+	import ProjectOpenDialog from "$lib/components/project/ProjectOpenDialog.svelte";
 	import AppSidebar from "$lib/components/shell/AppSidebar.svelte";
+	import FileMenu from "$lib/components/shell/FileMenu.svelte";
+	import { Separator } from "$lib/components/ui/separator";
 	import * as Sidebar from "$lib/components/ui/sidebar";
 	import { Toaster } from "$lib/components/ui/sonner";
 	import { onMount } from "svelte";
@@ -41,8 +43,10 @@
 <Sidebar.Provider>
 	<AppSidebar />
 	<Sidebar.Inset>
-		<header class="flex h-12 shrink-0 items-center border-b px-2">
+		<header class="flex h-12 shrink-0 items-center gap-1 border-b px-2">
 			<Sidebar.Trigger />
+			<Separator orientation="vertical" class="mx-1 data-[orientation=vertical]:h-4" />
+			<FileMenu />
 		</header>
 		<main class="@container flex flex-1 flex-col p-6">
 			{@render children()}
