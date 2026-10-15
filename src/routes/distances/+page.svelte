@@ -1,13 +1,15 @@
 <script lang="ts">
+	import MapIcon from "@lucide/svelte/icons/map";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 	import StepHeader from "$lib/components/StepHeader.svelte";
 	import * as Card from "$lib/components/ui/card";
 	import DataStep from "$lib/components/distances/DataStep.svelte";
-	import DistanceMap from "$lib/components/distances/DistanceMap.svelte";
-	import DistanceOverview from "$lib/components/distances/DistanceOverview.svelte";
+	import DistanceMapPanel from "$lib/components/distances/DistanceMapPanel.svelte";
 	import DistanceTable from "$lib/components/distances/DistanceTable.svelte";
-	import MapSaveButtons from "$lib/components/distances/MapSaveButtons.svelte";
+	import { readMapVisible, writeMapVisible } from "$lib/components/distances/mapPreference";
+	import { Button } from "$lib/components/ui/button";
+	import { cn } from "$lib/utils.js";
 	import SourceStep from "$lib/components/distances/SourceStep.svelte";
 	import type { ChoiceMap } from "$lib/distance/matching";
 	import { settingsStore } from "$lib/settings/settingsStore.svelte";
@@ -27,12 +29,15 @@
 	let organisations = $state.raw<OrganisationData | null>(null);
 	let loading = $state(false);
 	let highlighted = $state<string | null>(null);
+	let mapVisible = $state(readMapVisible());
 
 	const result = $derived(
 		source && organisations?.data
 			? computeDistances(source, organisations.data, { choices, overrides: settingsStore.settings.teamNameOverrides })
 			: null
 	);
+
+	const withMap = $derived(mapVisible && result !== null && result.matched.length > 0);
 
 	async function load(refresh: boolean) {
 		loading = true;
@@ -59,6 +64,11 @@
 		}
 	}
 
+	function toggleMap() {
+		mapVisible = !mapVisible;
+		writeMapVisible(mapVisible);
+	}
+
 	function showRow(name: string) {
 		highlighted = name;
 		document.getElementById(distanceRowId(name))?.scrollIntoView({ block: "center", behavior: "smooth" });
@@ -72,7 +82,7 @@
 	});
 </script>
 
-<div class="mx-auto flex max-w-4xl flex-col gap-6">
+<div class="page-width flex flex-col gap-6">
 	<header class="flex flex-col gap-1">
 		<h1 class="text-2xl font-bold">Entfernungen</h1>
 		<p class="text-muted-foreground">Wie weit reisen die Gliederungen nach Bad Nauheim an?</p>
@@ -106,39 +116,31 @@
 		</Card.Content>
 	</Card.Root>
 
-	{#if result && result.matched.length > 0}
-		<Card.Root>
-			<Card.Header>
-				<Card.Title>Karte</Card.Title>
-				<Card.Description>
-					Punkt anklicken, um die Gliederung in der Tabelle zu zeigen. Der Stern markiert Bad Nauheim.
-				</Card.Description>
-			</Card.Header>
-			<Card.Content class="grid gap-6 md:grid-cols-[minmax(0,1fr)_16rem]">
-				<DistanceMap
-					rows={result.matched}
-					{highlighted}
-					onhighlight={(name) => (highlighted = name)}
-					onselect={showRow}
-				/>
-				<div class="flex flex-col gap-4">
-					<DistanceOverview rows={result.matched} />
-					<MapSaveButtons rows={result.matched} />
-					<p class="text-xs text-muted-foreground">
-						Kartengrundlage: Natural Earth (gemeinfrei). Funktioniert ohne Internet.
-					</p>
-				</div>
-			</Card.Content>
-		</Card.Root>
-	{/if}
-
 	<Card.Root>
 		<Card.Header>
 			<StepHeader step={3} title="Ergebnis" description="Sortiert nach Entfernung, die weiteste Anreise zuerst." />
+			{#if result && result.matched.length > 0}
+				<Card.Action>
+					<Button variant="outline" size="sm" aria-pressed={mapVisible} onclick={toggleMap}>
+						<MapIcon data-icon="inline-start" />
+						{mapVisible ? "Karte ausblenden" : "Karte zeigen"}
+					</Button>
+				</Card.Action>
+			{/if}
 		</Card.Header>
 		<Card.Content>
 			{#if result}
-				<DistanceTable {result} onchoose={choose} {highlighted} onhighlight={(name) => (highlighted = name)} />
+				<div class={cn("grid items-start gap-6", withMap && "lg:grid-cols-[minmax(0,1fr)_minmax(0,28rem)]")}>
+					<DistanceTable {result} onchoose={choose} {highlighted} onhighlight={(name) => (highlighted = name)} />
+					{#if withMap}
+						<DistanceMapPanel
+							rows={result.matched}
+							{highlighted}
+							onhighlight={(name) => (highlighted = name)}
+							onselect={showRow}
+						/>
+					{/if}
+				</div>
 			{:else}
 				<p class="text-sm text-muted-foreground">
 					{source === null ? "Zuerst die Gliederungen wählen." : "Es fehlen noch die Standortdaten."}

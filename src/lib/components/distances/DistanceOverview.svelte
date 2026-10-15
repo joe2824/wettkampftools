@@ -12,7 +12,7 @@
 	const overview = $derived(distanceOverview(rows));
 </script>
 
-<dl class="grid grid-cols-2 gap-3 md:grid-cols-1">
+<dl class="grid grid-cols-2 gap-3">
 	<div class="rounded-lg border p-3">
 		<dt class="text-xs text-muted-foreground">Gliederungen</dt>
 		<dd class="text-2xl font-semibold tabular-nums">{overview.count}</dd>
