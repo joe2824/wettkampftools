@@ -38,8 +38,16 @@
 		<header class="flex h-12 shrink-0 items-center border-b px-2">
 			<Sidebar.Trigger />
 		</header>
-		<main class="@container flex-1 p-6">
+		<main class="@container flex flex-1 flex-col p-6">
 			{@render children()}
 		</main>
 	</Sidebar.Inset>
 </Sidebar.Provider>
+
+<style>
+	/* Seite füllt die Fensterhöhe, damit die Aktionsleiste immer unten steht. */
+	main > :global(*) {
+		flex: 1 0 auto;
+		width: 100%;
+	}
+</style>

@@ -16,7 +16,7 @@
 <div
 	role="toolbar"
 	aria-label={label}
-	class="action-bar sticky bottom-0 z-10 flex flex-wrap items-center gap-2 border-t border-border bg-background/95 py-3 backdrop-blur supports-backdrop-filter:bg-background/80"
+	class="action-bar sticky bottom-0 z-10 mt-auto flex flex-wrap items-center gap-2 border-t border-border bg-background/95 py-3 backdrop-blur supports-backdrop-filter:bg-background/80"
 >
 	{#if start}
 		<div data-slot="action-bar-start" class="flex flex-wrap items-center gap-2">

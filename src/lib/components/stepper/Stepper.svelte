@@ -45,7 +45,7 @@
 	}
 </script>
 
-<div class="flex scroll-mt-4 flex-col gap-4" bind:this={root}>
+<div class="flex flex-1 scroll-mt-4 flex-col gap-4" bind:this={root}>
 	<nav aria-label="Schritte" class="overflow-x-auto">
 		<ol class="flex min-w-max items-center gap-1 py-1 sm:min-w-0">
 			{#each steps as step, index (step.id)}
