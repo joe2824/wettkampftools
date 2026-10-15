@@ -6,6 +6,7 @@ mod launch_file;
 mod legacy_settings;
 mod logging;
 mod output;
+mod penalty_catalog;
 mod update_channel;
 mod workbook;
 
@@ -57,7 +58,7 @@ pub fn run() {
             dialogs::pick_open_path,
             dialogs::pick_save_path,
             output::write_output_file,
-            output::write_penalty_catalog,
+            penalty_catalog::write_penalty_catalog,
             output::open_output_file,
             output::reveal_output_file,
             input::read_input_file,
