@@ -105,6 +105,20 @@ Einstellungen lassen sich als Datei exportieren und importieren; die
 Veranstaltungsdaten sind darin enthalten, die Unterschriften nicht. Einstellungen der alten Version werden beim ersten
 Start übernommen.
 
+### Projekt auf einem anderen Rechner weiterbearbeiten
+
+Auf der Startseite speichert **Projekt speichern …** den ganzen Wettkampf in
+eine Datei (`.wwkprojekt`): Veranstaltung, Einstellungen samt Regelwerk und
+Mannschaftsnamen, Urkunden-Layout, Unterschriften (abwählbar), Meldedatei mit
+Wellenauswahl, Ergebnisse samt Jahresprüfung und Urkunden-Auswahl. Der
+Hintergrund-Scan ist nicht enthalten.
+
+Auf dem anderen Rechner die Datei unter **Projekt öffnen …** auswählen oder
+auf die Fläche ziehen. Nach einer Rückfrage ersetzt das Projekt den dortigen
+Stand; enthält es keine Unterschriften, bleiben die vorhandenen erhalten. Die
+Datei enthält Namen und Jahrgänge der Teilnehmenden und gehört nur in die
+Hände von Berechtigten.
+
 ## Ablauf am Wettkampftag
 
 1. **Meldedatei** aus dem DLRG-Meldeportal herunterladen (eine Datei).
@@ -129,7 +143,8 @@ Meldedaten und Ergebnisse werden nur auf dem eigenen Rechner verarbeitet und
 nirgendwohin übertragen. Damit ein Wettkampf über mehrere Tage bearbeitet werden
 kann, bleiben Meldedaten lokal auf diesem Rechner, bis ‚Neuer Wettkampf‘
 gewählt wird; sie werden nie in Logs oder Exporte der Einstellungen geschrieben.
-Erzeugte Dateien liegen dort, wo man sie selbst ablegt.
+Erzeugte Dateien liegen dort, wo man sie selbst ablegt. Eine Projektdatei
+mit Meldedaten und Ergebnissen entsteht nur, wenn man sie ausdrücklich speichert.
 
 Aus dem Internet geladen werden nur die öffentlichen DLRG-Standortdaten, das
 offizielle DLRG-Regelwerk aus JAuswertung (von `raw.githubusercontent.com`, für

@@ -1,6 +1,6 @@
 // Prüft eingelesene Dateien auf Endung, Signatur, Größe und Inhalt.
 
-export type FileKind = "csv" | "excel" | "image" | "rulebook" | "json";
+export type FileKind = "csv" | "excel" | "image" | "rulebook" | "json" | "project";
 
 interface KindRule {
 	label: string;
@@ -47,7 +47,8 @@ const KIND_RULES: Record<FileKind, KindRule> = {
 	excel: { label: "Excel-Datei", extensions: { xlsx: [ZIP], xlsm: [ZIP], xls: [OLE] } },
 	image: { label: "Bilddatei", extensions: { png: [PNG], jpg: [JPEG], jpeg: [JPEG] } },
 	rulebook: { label: "Wettkampfregelwerk", extensions: { rwm: [ZIP_PREFIX] } },
-	json: { label: "JSON-Datei", extensions: { json: [] } }
+	json: { label: "JSON-Datei", extensions: { json: [] } },
+	project: { label: "Wettkampf-Projekt", extensions: { wwkprojekt: [ZIP] } }
 };
 
 const extensionOf = (name: string): string => {

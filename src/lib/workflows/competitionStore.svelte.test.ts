@@ -305,3 +305,59 @@ describe("newCompetition", () => {
 		stop();
 	});
 });
+
+describe("stored", () => {
+	it("liefert Stand und Ergebnisse im Format der Sicherung", () => {
+		loadRegistration();
+		setResults();
+		selection.attach(session.results?.workbook ?? null);
+		selection.excluded = new Set(["e1"]);
+		const { state, results } = store.stored();
+		expect(state?.registration?.csvBase64).toBe(encodeBase64(csv));
+		expect(state?.certificateSelection?.excluded).toEqual(["e1"]);
+		expect(results).toEqual({
+			fileName: "JAuswertung.xlsx",
+			createdMs: null,
+			modifiedMs: 0,
+			workbook: WORKBOOK,
+			yearWarning: 2025,
+			yearConfirmed: true
+		});
+	});
+
+	it("liefert nichts ohne geladene Dateien", () => {
+		expect(store.stored()).toEqual({ state: null, results: null });
+	});
+});
+
+describe("replace", () => {
+	const projectState = {
+		savedAt: SAVED_AT,
+		registration: { fileName: "projekt.csv", csvBase64: encodeBase64(csv), waveSelection: ["r1"] },
+		certificateSelection: { hidden: { ageGroups: ["AK 12"], genders: [], kinds: [] }, excluded: ["e1"] }
+	};
+
+	it("ersetzt den Stand, prüft das Dateijahr neu und sichert sofort", async () => {
+		loadRegistration();
+		await store.replace({ state: projectState, results: STORED_RESULTS }, settings);
+		expect(session.registration?.fileName).toBe("projekt.csv");
+		expect([...(session.registration?.waveSelection ?? [])]).toEqual(["r1"]);
+		expect(session.results).toMatchObject({ createdMs: at(2025), yearWarning: 2025, yearConfirmed: true });
+		expect([...selection.excluded]).toEqual(["e1"]);
+		const { state, results } = await loadCompetition();
+		expect(state?.registration?.fileName).toBe("projekt.csv");
+		expect(results?.fileName).toBe("JAuswertung.xlsx");
+		expect(store.savedAt).toBe(NOW.toISOString());
+	});
+
+	it("entfernt vorhandene Dateien, wenn das Projekt keinen Stand hat", async () => {
+		loadRegistration();
+		setResults();
+		await store.saveNow();
+		await store.replace({ state: null, results: null }, settings);
+		expect(session.registration).toBeNull();
+		expect(session.results).toBeNull();
+		expect(fs.files.has(COMPETITION_STATE_PATH)).toBe(false);
+		expect(fs.files.has(COMPETITION_RESULTS_PATH)).toBe(false);
+	});
+});

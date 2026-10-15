@@ -103,6 +103,10 @@ Meldedateien enthalten Daten von **Minderjährigen**. Dateien mit den Endungen
 - Unlesbare Dateien (`settings.json`, `layout.json`, `competition/*.json`) werden
   nicht überschrieben, sondern als `<Name>.unreadable-<Zeitstempel>` aufbewahrt.
 - Exporte enthalten keine Bilder.
+- Projektdateien (`.wwkprojekt`) enthalten Personendaten (Meldedatei,
+  Ergebnisse) und optional die Unterschriften. Sie entstehen nur auf
+  ausdrücklichen Wunsch über „Projekt speichern“; ihr Inhalt erscheint nie in
+  Logs.
 
 ## Fachbegriffe
 

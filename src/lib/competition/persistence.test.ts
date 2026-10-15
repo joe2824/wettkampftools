@@ -11,6 +11,7 @@ import {
 	loadCompetition,
 	parseCompetitionState,
 	saveCompetitionState,
+	serializeCompetitionState,
 	type CompetitionState
 } from "./persistence";
 import { COMPETITION_RESULTS_PATH, saveStoredResults } from "./resultsFile";
@@ -109,6 +110,13 @@ describe("parseCompetitionState", () => {
 		expect(parseCompetitionState({ ...fullState() })).toBeNull();
 		expect(parseCompetitionState({ schemaVersion: 3, ...fullState() })).toBeNull();
 		expect(parseCompetitionState({ schemaVersion: 2, savedAt: "gestern" })).toBeNull();
+	});
+});
+
+describe("serializeCompetitionState", () => {
+	it("ergibt das Format, das parseCompetitionState wieder liest", () => {
+		const raw = serializeCompetitionState(fullState());
+		expect(parseCompetitionState(JSON.parse(JSON.stringify(raw)))?.state).toEqual(fullState());
 	});
 });
 

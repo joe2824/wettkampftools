@@ -58,6 +58,17 @@ describe("checkFile", () => {
 		expect(checkFile({ name: "Regelwerk.rwm", bytes: text("<xml/>") }, ["rulebook"]).ok).toBe(false);
 	});
 
+	it("erkennt Projektdateien (.wwkprojekt als ZIP)", () => {
+		expect(checkFile({ name: "39. Wellenwettkampf.wwkprojekt", bytes: bytes(...ZIP) }, ["project"])).toEqual({
+			ok: true,
+			kind: "project"
+		});
+		expect(checkFile({ name: "Projekt.wwkprojekt", bytes: text("{}") }, ["project"])).toEqual({
+			ok: false,
+			message: "Der Inhalt passt nicht zur Dateiendung. Erwartet: Wettkampf-Projekt (.wwkprojekt)."
+		});
+	});
+
 	it("nimmt CSV- und JSON-Text an", () => {
 		expect(checkFile({ name: "export.csv", bytes: text("gliederung;ak\nMusterstadt;AK 12") }, ["csv"])).toEqual({
 			ok: true,

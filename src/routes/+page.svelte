@@ -5,6 +5,7 @@
 	import * as Card from "$lib/components/ui/card";
 	import CompetitionStatus from "$lib/components/home/CompetitionStatus.svelte";
 	import EventSummary from "$lib/components/home/EventSummary.svelte";
+	import ProjectCard from "$lib/components/home/ProjectCard.svelte";
 	import RecUpdateHint from "$lib/components/records/RecUpdateHint.svelte";
 	import { FOOTER_ITEMS, NAVIGATION_GROUPS } from "$lib/navigation";
 	import { shouldShowRecUpdateHint } from "$lib/records/updateHint";
@@ -89,6 +90,8 @@
 			</Card.Root>
 		{/each}
 	</section>
+
+	<ProjectCard />
 
 	<section aria-labelledby="tools-heading" class="flex flex-col gap-3">
 		<h2 id="tools-heading" class="text-sm font-medium text-muted-foreground">Werkzeuge</h2>

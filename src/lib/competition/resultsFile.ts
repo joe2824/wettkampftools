@@ -68,8 +68,13 @@ export function parseLegacyResults(raw: unknown): StoredResults | null {
 	return { ...common, createdMs: null, modifiedMs: raw.lastModified as number };
 }
 
+/** Inhalt von results.json. */
+export function serializeStoredResults(results: StoredResults): object {
+	return { schemaVersion: SCHEMA_VERSION, ...results };
+}
+
 export function saveStoredResults(results: StoredResults): Promise<void> {
-	return writeJson(COMPETITION_RESULTS_PATH, { schemaVersion: SCHEMA_VERSION, ...results });
+	return writeJson(COMPETITION_RESULTS_PATH, serializeStoredResults(results));
 }
 
 export function clearStoredResults(): Promise<void> {

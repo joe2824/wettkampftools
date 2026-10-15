@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use tauri::ipc::{InvokeBody, Request};
 
 /// Nur diese Endungen schreibt die Anwendung selbst.
-const OUTPUT_EXTENSIONS: [&str; 4] = ["xlsx", "pdf", "json", "rwm"];
+const OUTPUT_EXTENSIONS: [&str; 5] = ["xlsx", "pdf", "json", "rwm", "wwkprojekt"];
 
 /// Kopfzeile mit dem URL-kodierten Zielpfad; die Bytes kommen roh im Body.
 const PATH_HEADER: &str = "x-output-path";
@@ -138,7 +138,7 @@ mod tests {
 
     #[test]
     fn output_accepts_allowed_extensions() {
-        for name in ["a.xlsx", "b.pdf", "c.json", "d.rwm"] {
+        for name in ["a.xlsx", "b.pdf", "c.json", "d.rwm", "e.wwkprojekt"] {
             let file = temp_file(name);
             let checked = check_output_target(&file.0, allow_all).expect("erlaubt");
             assert_eq!(checked, std::fs::canonicalize(&file.0).unwrap());
@@ -183,7 +183,14 @@ mod tests {
 
     #[test]
     fn write_accepts_new_file_with_allowed_extension() {
-        for name in ["a.xlsx", "b.pdf", "c.json", "d.rwm", "E.PDF"] {
+        for name in [
+            "a.xlsx",
+            "b.pdf",
+            "c.json",
+            "d.rwm",
+            "E.PDF",
+            "f.wwkprojekt",
+        ] {
             let path = write_target(name);
             let checked = check_write_target(&path, allow_all).expect("erlaubt");
             assert_eq!(checked.file_name(), path.file_name());

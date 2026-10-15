@@ -4,14 +4,34 @@ use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 /// Nur diese Endungen liest die Anwendung ein.
-const INPUT_EXTENSIONS: [&str; 9] = [
-    "csv", "xls", "xlsx", "xlsm", "rwm", "json", "png", "jpg", "jpeg",
+const INPUT_EXTENSIONS: [&str; 10] = [
+    "csv",
+    "xls",
+    "xlsx",
+    "xlsm",
+    "rwm",
+    "json",
+    "png",
+    "jpg",
+    "jpeg",
+    PROJECT_EXTENSION,
 ];
+
+/// Projektdatei mit dem ganzen Wettkampfstand; darf größer sein.
+const PROJECT_EXTENSION: &str = "wwkprojekt";
 
 const BYTES_PER_MB: u64 = 1024 * 1024;
 const MAX_INPUT_MB: u64 = 20;
-/// Größere Dateien werden nicht gelesen.
-const MAX_INPUT_BYTES: u64 = MAX_INPUT_MB * BYTES_PER_MB;
+const MAX_PROJECT_MB: u64 = 50;
+
+/// Größte lesbare Dateigröße in MB, je nach Endung; größere Dateien werden nicht gelesen.
+fn max_input_mb(path: &Path) -> u64 {
+    if has_extension(path, &[PROJECT_EXTENSION]) {
+        MAX_PROJECT_MB
+    } else {
+        MAX_INPUT_MB
+    }
+}
 
 /// Erstellungs- und Änderungszeit in Millisekunden seit 1970; fehlt, wenn das System sie nicht kennt.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -49,8 +69,9 @@ fn check_input_target(
             canonical.display()
         ));
     }
-    if metadata.len() > MAX_INPUT_BYTES {
-        return Err(format!("Die Datei ist größer als {MAX_INPUT_MB} MB."));
+    let max_mb = max_input_mb(&canonical);
+    if metadata.len() > max_mb * BYTES_PER_MB {
+        return Err(format!("Die Datei ist größer als {max_mb} MB."));
     }
     if !allowed_in_scope(&canonical) {
         return Err("Die Datei bitte erneut auswählen oder hierher ziehen.".to_string());
@@ -145,7 +166,16 @@ mod tests {
     #[test]
     fn input_accepts_allowed_extensions() {
         for name in [
-            "a.csv", "b.xls", "c.xlsx", "d.xlsm", "e.rwm", "f.json", "g.png", "h.jpg", "i.jpeg",
+            "a.csv",
+            "b.xls",
+            "c.xlsx",
+            "d.xlsm",
+            "e.rwm",
+            "f.json",
+            "g.png",
+            "h.jpg",
+            "i.jpeg",
+            "j.wwkprojekt",
         ] {
             let file = temp_file(name);
             let checked = check_input_target(&file.0, allow_all).expect("erlaubt");
@@ -197,9 +227,23 @@ mod tests {
             .write(true)
             .open(&file.0)
             .unwrap();
-        handle.set_len(MAX_INPUT_BYTES + 1).unwrap();
+        handle.set_len(MAX_INPUT_MB * BYTES_PER_MB + 1).unwrap();
         let err = check_input_target(&file.0, allow_all).unwrap_err();
         assert!(err.contains("größer als 20 MB"), "{err}");
+    }
+
+    #[test]
+    fn project_files_may_be_larger() {
+        let file = temp_file("gross.wwkprojekt");
+        let handle = std::fs::OpenOptions::new()
+            .write(true)
+            .open(&file.0)
+            .unwrap();
+        handle.set_len(MAX_INPUT_MB * BYTES_PER_MB + 1).unwrap();
+        assert!(check_input_target(&file.0, allow_all).is_ok());
+        handle.set_len(MAX_PROJECT_MB * BYTES_PER_MB + 1).unwrap();
+        let err = check_input_target(&file.0, allow_all).unwrap_err();
+        assert!(err.contains("größer als 50 MB"), "{err}");
     }
 
     #[test]

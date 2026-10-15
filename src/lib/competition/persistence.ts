@@ -115,14 +115,13 @@ export function parseCompetitionState(raw: unknown): ParsedCompetitionState | nu
 	return { state, legacyResults };
 }
 
-/** Schreibt nur den kleinen Stand; Ergebnisse gehören in ihre eigene Datei. */
-export function saveCompetitionState({ savedAt, registration, certificateSelection }: CompetitionState): Promise<void> {
-	return writeJson(COMPETITION_STATE_PATH, {
-		schemaVersion: SCHEMA_VERSION,
-		savedAt,
-		registration,
-		certificateSelection
-	});
+/** Inhalt von state.json; Ergebnisse gehören in ihre eigene Datei. */
+export function serializeCompetitionState({ savedAt, registration, certificateSelection }: CompetitionState): object {
+	return { schemaVersion: SCHEMA_VERSION, savedAt, registration, certificateSelection };
+}
+
+export function saveCompetitionState(state: CompetitionState): Promise<void> {
+	return writeJson(COMPETITION_STATE_PATH, serializeCompetitionState(state));
 }
 
 /** Lädt beide Dateien; unlesbare werden beiseitegelegt und nur mit Code protokolliert. */

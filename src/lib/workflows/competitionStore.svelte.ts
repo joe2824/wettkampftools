@@ -32,6 +32,12 @@ export interface CompetitionDeps {
 
 type Snapshot = Omit<CompetitionState, "savedAt">;
 
+/** Wettkampfstand im Format der Sicherung, z. B. für die Projektdatei. */
+export interface StoredCompetition {
+	state: CompetitionState | null;
+	results: StoredResults | null;
+}
+
 function toStoredResults(results: SessionResults): StoredResults {
 	const { fileName, createdMs, modifiedMs, workbook, yearWarning, yearConfirmed } = results;
 	return { fileName, createdMs, modifiedMs, workbook, yearWarning, yearConfirmed };
@@ -65,13 +71,32 @@ export class CompetitionStore {
 	async restore(settings: Settings): Promise<void> {
 		const { state, results, needsMigration, setAside } = await loadCompetition(this.#now());
 		this.setAside = setAside;
-		if (state) this.savedAt = state.savedAt;
-		if (state?.registration) this.#restoreRegistration(state.registration, settings);
-		if (results) this.#restoreResults(results, state?.certificateSelection);
+		this.#apply({ state, results }, settings);
 		// Nicht wiederherstellbare Ergebnisse beim nächsten Sichern entfernen.
 		const restored = results === null || this.#session.results !== null;
 		this.#savedResults = restored && !needsMigration ? this.#session.results : UNSYNCED;
 		if (needsMigration) await this.saveNow();
+	}
+
+	/** Ersetzt den ganzen Stand, z. B. aus einer Projektdatei, und sichert ihn sofort. */
+	async replace(stored: StoredCompetition, settings: Settings): Promise<void> {
+		this.#cancel();
+		this.#session.clear();
+		this.#selection.attach(null);
+		await this.#enqueue(() => this.#clear());
+		this.#apply(stored, settings);
+		this.#savedResults = UNSYNCED;
+		await this.saveNow();
+	}
+
+	/** Aktueller Stand im Format der Sicherung. */
+	stored(): StoredCompetition {
+		const snapshot = this.snapshot();
+		const results = this.#session.results;
+		return {
+			state: snapshot === null ? null : { savedAt: this.#now().toISOString(), ...snapshot },
+			results: results === null ? null : toStoredResults(results)
+		};
 	}
 
 	/** Beobachtet Sitzung und Urkunden-Auswahl; liefert eine Funktion zum Beenden. */
@@ -130,6 +155,12 @@ export class CompetitionStore {
 			};
 		}
 		return snapshot;
+	}
+
+	#apply({ state, results }: StoredCompetition, settings: Settings): void {
+		if (state) this.savedAt = state.savedAt;
+		if (state?.registration) this.#restoreRegistration(state.registration, settings);
+		if (results) this.#restoreResults(results, state?.certificateSelection);
 	}
 
 	#restoreRegistration(stored: StoredRegistration, settings: Settings): void {

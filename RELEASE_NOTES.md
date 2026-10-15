@@ -54,5 +54,10 @@ schneller und mit allem, was die bisherige Version konnte.
   die Änderung zum Vorjahr und die Herkunft; die Startseite erinnert daran.
 - **Einstellungen** lassen sich als Datei sichern und auf einem anderen
   Rechner wieder einlesen.
+- **Projektdatei:** Auf der Startseite lässt sich der ganze Wettkampf
+  (Veranstaltung, Einstellungen, Layout, Unterschriften, Meldungen und
+  Ergebnisse) als eine Datei speichern und auf einem anderen Rechner öffnen,
+  um dort weiterzuarbeiten.
 - **Automatische Updates:** Neue Versionen werden beim Start gemeldet und
   lassen sich direkt aus der Anwendung installieren.
+- Entfernungen: Gibt es mehrere DLRG-Gliederungen gleichen Namens, werden sie markiert und lassen sich zuordnen; ein Zusatz im Mannschaftsnamen (z. B. „Saar“) führt zu einem Vorschlag zum Prüfen. Gliederungen wie Dorheim, die zusammen mit ihrer Jugend eingetragen sind, werden jetzt gefunden.

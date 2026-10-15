@@ -6,7 +6,8 @@ import {
 	clearStoredResults,
 	parseLegacyResults,
 	parseStoredResults,
-	saveStoredResults
+	saveStoredResults,
+	serializeStoredResults
 } from "./resultsFile";
 import { storedResults } from "$lib/testing/competitionFixtures";
 
@@ -70,6 +71,13 @@ describe("parseLegacyResults", () => {
 	it("lehnt unvollständige alte Ergebnisse ab", () => {
 		expect(parseLegacyResults({ ...storedResults() })).toBeNull();
 		expect(parseLegacyResults(undefined)).toBeNull();
+	});
+});
+
+describe("serializeStoredResults", () => {
+	it("ergibt das Format, das parseStoredResults wieder liest", () => {
+		const raw = JSON.parse(JSON.stringify(serializeStoredResults(storedResults())));
+		expect(parseStoredResults(raw)).toEqual(storedResults());
 	});
 });
 
