@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { resetAppDataStore, setAppDataStore } from "$lib/platform/fs";
 import { setWorkbookAdapter, type Cell, type Sheet, type WorkbookAdapter } from "$lib/platform/workbook";
 import { session } from "$lib/session.svelte";
+import { createFakeStore, type FakeStore } from "$lib/testing/fakeFs";
 import { createFakeWorkbookAdapter } from "$lib/testing/fakeWorkbook";
 import { confirmResultsYear, loadResultsFile, needsYearConfirmation } from "./results";
 
@@ -31,14 +33,19 @@ function useAdapter(adapter: WorkbookAdapter) {
 	setWorkbookAdapter(adapter);
 }
 
+let store: FakeStore;
+
 beforeEach(() => {
 	useAdapter(createFakeWorkbookAdapter());
 	session.clear();
+	store = createFakeStore();
+	setAppDataStore(store);
 });
 
 afterEach(() => {
 	setWorkbookAdapter(null);
 	session.clear();
+	resetAppDataStore();
 });
 
 describe("loadResultsFile", () => {
@@ -136,5 +143,40 @@ describe("Bestätigung des Dateijahrs", () => {
 		confirmResultsYear();
 		await loadResultsFile(fileOf([teamSheet()], at(2024), at(2024)), TODAY);
 		expect(needsYearConfirmation(session.results)).toBe(true);
+	});
+});
+
+describe("Bestzeiten für die Rec-Werte", () => {
+	const WAVE_TIME = 20000 / (24 * 60 * 60 * 100);
+	const timedSheet = (): Sheet => ({
+		name: "Daten",
+		rows: [
+			[...TEAM_HEADER, "Zeit 1", "Strafe 1"],
+			[1, "Musterstadt", "Anna Meier", "Max Mustermann", "Musterstadt", "AkW offen", "weiblich", 1234.5, WAVE_TIME, ""]
+		]
+	});
+	const stored = (year: number) => store.readText(`records/best-times-${year}.json`);
+
+	it("merkt sich die Bestzeiten einer Datei aus dem laufenden Jahr ohne Namen", async () => {
+		await loadResultsFile(fileOf([timedSheet()]), TODAY);
+		const text = await stored(2026);
+		expect(JSON.parse(text!)).toEqual({
+			year: 2026,
+			entries: [{ ageGroup: "AkW offen", gender: "female", disciplineIndex: 0, time: 20000 }]
+		});
+		expect(text).not.toContain("Musterstadt");
+		expect(text).not.toContain("Anna Meier");
+	});
+
+	it("wartet bei einer Datei aus einem anderen Jahr auf die Bestätigung", async () => {
+		await loadResultsFile(fileOf([timedSheet()], at(2025), at(2025)), TODAY);
+		expect(await store.list("records")).toEqual([]);
+		await confirmResultsYear();
+		expect(JSON.parse((await stored(2025))!).year).toBe(2025);
+	});
+
+	it("legt ohne Zeiten nichts ab", async () => {
+		await loadResultsFile(fileOf([teamSheet()]), TODAY);
+		expect(await store.list("records")).toEqual([]);
 	});
 });

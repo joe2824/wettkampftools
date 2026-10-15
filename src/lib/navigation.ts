@@ -4,6 +4,7 @@ import ClipboardList from "@lucide/svelte/icons/clipboard-list";
 import LayoutTemplate from "@lucide/svelte/icons/layout-template";
 import Ruler from "@lucide/svelte/icons/ruler";
 import Settings from "@lucide/svelte/icons/settings";
+import Timer from "@lucide/svelte/icons/timer";
 import Trophy from "@lucide/svelte/icons/trophy";
 
 export type NavigationItem = {
@@ -30,7 +31,8 @@ export const NAVIGATION_GROUPS: readonly NavigationGroup[] = [
 		label: "Werkzeuge",
 		items: [
 			{ label: "Entfernungen", href: "/distances", icon: Ruler },
-			{ label: "Urkunden-Layout", href: "/certificates/layout", icon: LayoutTemplate }
+			{ label: "Urkunden-Layout", href: "/certificates/layout", icon: LayoutTemplate },
+			{ label: "Rec-Werte", href: "/records", icon: Timer }
 		]
 	}
 ];

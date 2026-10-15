@@ -1,6 +1,7 @@
 // Ergebnisdatei aus JAuswertung laden; genutzt von Auswertung und Urkunden.
-import { logInfo } from "$lib/log";
+import { logError, logInfo } from "$lib/log";
 import { readWorkbook, type Workbook } from "$lib/platform/workbook";
+import { rememberBestTimes } from "$lib/records/storage";
 import { session, type SessionResults } from "$lib/session.svelte";
 import { readJAuswertungResults, workbookYear, type CompetitionKind, type FileDates } from "$lib/wwk/results";
 import { userMessage } from "./errors";
@@ -42,11 +43,23 @@ export function needsYearConfirmation(results: SessionResults | null): boolean {
 	return results !== null && results.yearWarning !== null && !results.yearConfirmed;
 }
 
-/** Bestätigt die geladene Datei; Arbeitsmappe und Zeilen bleiben dieselben. */
-export function confirmResultsYear(): void {
-	if (session.results === null) return;
-	session.setResults({ ...session.results, yearConfirmed: true });
+/** Bestzeiten fürs Rec-Werte-Werkzeug merken; ein Fehler dabei stört das Laden nicht. */
+async function keepBestTimes(workbook: Workbook, year: number): Promise<void> {
+	try {
+		const entries = await rememberBestTimes(workbook, year);
+		logInfo("records.bestTimesStored", { year, entries });
+	} catch {
+		logError("records.bestTimesFailed");
+	}
+}
+
+/** Bestätigt die geladene Datei; Arbeitsmappe und Zeilen bleiben dieselben. Bestzeiten zählen dann fürs Dateijahr. */
+export async function confirmResultsYear(): Promise<void> {
+	const results = session.results;
+	if (results === null) return;
+	session.setResults({ ...results, yearConfirmed: true });
 	logInfo("results.yearConfirmed");
+	if (results.yearWarning !== null) await keepBestTimes(results.workbook, results.yearWarning);
 }
 
 /** Liest die Datei; nur bei Erfolg wird die Sitzung ersetzt. */
@@ -60,6 +73,7 @@ export async function loadResultsFile(file: ResultsFile, today: Date = new Date(
 		const { name: fileName, lastModified } = file;
 		session.setResults({ fileName, lastModified, workbook, kind, rows, ...check, yearConfirmed: false });
 		logInfo("results.loaded", { rows: rows.length, team: kind === "team", creationUnknown: check.creationUnknown });
+		if (check.yearWarning === null) await keepBestTimes(workbook, today.getFullYear());
 		return { ok: true, summary: { kind, rowCount: rows.length, ...check } };
 	} catch (error) {
 		return { ok: false, message: userMessage(error, UNREADABLE) };

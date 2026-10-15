@@ -13,7 +13,10 @@
     "fs:allow-write-file",
     {
       "identifier": "http:default",
-      "allow": [{ "url": "https://services.dlrg.net/*" }]
+      "allow": [
+        { "url": "https://services.dlrg.net/*" },
+        { "url": "https://raw.githubusercontent.com/dennisfabri/JAuswertung/*" }
+      ]
     },
     {
       "identifier": "opener:allow-open-url",

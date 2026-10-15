@@ -18,6 +18,7 @@ describe("Navigation", () => {
 			"Urkunden",
 			"Entfernungen",
 			"Urkunden-Layout",
+			"Rec-Werte",
 			"Einstellungen"
 		]);
 	});
