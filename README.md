@@ -89,7 +89,12 @@ Tabelle, dazu eine Übersicht (Anzahl, weiteste Anreise, Durchschnitt,
 Bundesländer). Die Karte lässt sich als PNG-Bild oder PDF speichern. Sie kommt
 ohne Online-Kartendienst aus.
 
-### Rec-Werte fürs neue Jahr
+### Regelwerk fürs neue Jahr
+
+Unter **Werkzeuge → Regelwerk fürs neue Jahr** entstehen Rec-Werte und
+Strafenkatalog für die nächste Saison.
+
+#### Rec-Werte
 
 Erstellt aus dem bisherigen Vereins-Regelwerk ein neues Regelwerk (.rwm) zum
 Import in JAuswertung; nur Rec-Werte und Beschreibung ändern sich.
@@ -108,6 +113,39 @@ Import in JAuswertung; nur Rec-Werte und Beschreibung ändern sich.
   App direkt aus JAuswertung, sobald es dort veröffentlicht ist; die
   Bestzeiten des Vorjahres sind bereits ausgewählt. Bis zum Wettkampftag
   erinnert die Startseite daran.
+
+#### Regelwerk und Strafenkatalog fürs neue Jahr
+
+JAuswertung führt den Strafenkatalog getrennt vom Regelwerk (Datei `.def`).
+Die App lädt den offiziellen Mannschafts-Katalog („Von JAuswertung laden“,
+`defaultm.def`) oder nimmt eine abgelegte `.def` und wendet die Vereinsregeln an:
+
+- **Fehlstart (V1):** 100 Strafpunkte statt Disqualifikation. Alle anderen
+  Einträge bleiben wie im offiziellen Katalog (auch W4).
+- **Retten in der Welle (RW1):** „Opfer nicht mit Rautek- oder
+  Schultertragegriff herausgetragen“, 200 Strafpunkte, dazu RW1#1 bis RW1#4
+  für den 1. bis 4. Schwimmer wie bei den offiziellen Mannschafts-Einträgen.
+  Die Einträge stehen im neuen Paragraphen „Wellenwettkampf“ im Kapitel
+  „Verstöße in den Teilstrecken“, hinter „Disziplin“.
+
+Eine Tabelle zeigt jede Änderung mit altem und neuem Wert. Beim Speichern
+entstehen zwei Dateien im selben Ordner: `Regelwerk_<Jahr>.rwm` und
+`Regelwerk_<Jahr>m.def`. JAuswertung übernimmt den Katalog nur, wenn **ein
+neuer Wettkampf** mit diesem Regelwerk angelegt wird; bestehende Wettkämpfe
+(`.wk`) behalten ihren alten Katalog. Die Wettkampfdateien der letzten Jahre
+enthielten einen veralteten Katalog (Fehlstart als Disqualifikation, kein
+Eintrag für das Herausbringen in der Welle). Die App warnt, falls im
+Regelwerk für eine Altersklasse „jede Strafe disqualifiziert“ eingestellt ist.
+
+**Bestehende Wettkampfdatei weiterverwenden:** Wer die Vorjahresdatei mit
+ihren Bahn- und anderen Einstellungen behalten will, kopiert sie, entfernt in
+JAuswertung alle Mannschaften und Ergebnisse, speichert und legt die Kopie in
+Schritt 7 ab. Die App ersetzt darin den Strafenkatalog sowie Rec-Werte und
+Beschreibung des eingebetteten Regelwerks und speichert das Ergebnis als
+**neue** Datei; alles andere bleibt zeichengenau erhalten. Sie lehnt ab, wenn
+noch Strafen vergeben sind, der Katalog mit anderen Daten verknüpft ist, die
+Altersklassen nicht zum Vereins-Regelwerk passen oder es ein Einzelwettkampf
+ist. Nach dem Schreiben liest sie die Datei zur Kontrolle erneut ein.
 
 ### Einstellungen
 
@@ -164,8 +202,10 @@ Erzeugte Dateien liegen dort, wo man sie selbst ablegt. Eine Projektdatei
 mit Meldedaten und Ergebnissen entsteht nur, wenn man sie ausdrücklich speichert.
 
 Aus dem Internet geladen werden nur die öffentlichen DLRG-Standortdaten, das
-offizielle DLRG-Regelwerk aus JAuswertung (von `raw.githubusercontent.com`, für
-die Rec-Werte) und Updates; hochgeladen wird dabei nichts.
+offizielle DLRG-Regelwerk und der offizielle Strafenkatalog aus JAuswertung (von
+`raw.githubusercontent.com`, fürs Regelwerk des neuen Jahres) und Updates;
+hochgeladen wird dabei nichts. Der Strafenkatalog wird nicht mit der App
+ausgeliefert.
 
 Für die Rec-Werte bleiben im App-Datenordner dauerhaft gespeichert, auch nach
 ‚Neuer Wettkampf‘: die Bestzeiten je Altersklasse und Disziplin aus geladenen

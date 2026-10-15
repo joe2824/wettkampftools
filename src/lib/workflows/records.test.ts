@@ -3,22 +3,24 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const httpMock = vi.hoisted(() => ({ platformFetch: vi.fn() }));
 vi.mock("$lib/platform/http", () => httpMock);
-const filesMock = vi.hoisted(() => ({ saveFile: vi.fn() }));
+const filesMock = vi.hoisted(() => ({ saveFile: vi.fn(), writePenaltyCatalogNextTo: vi.fn() }));
 vi.mock("$lib/platform/files", () => filesMock);
 
-import { strFromU8, unzipSync } from "fflate";
+import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
 import { resetAppDataStore, setAppDataStore } from "$lib/platform/fs";
 import { setWorkbookAdapter, type Sheet } from "$lib/platform/workbook";
 import { parseRulebookRecords } from "$lib/records/rulebookRecords";
 import { createFakeStore, type FakeStore } from "$lib/testing/fakeFs";
 import { createFakeWorkbookAdapter } from "$lib/testing/fakeWorkbook";
-import { rulebookFile, type FixtureAgeGroup } from "$lib/testing/rulebookFixture";
+import { rulebookFile, rulebookXml, type FixtureAgeGroup } from "$lib/testing/rulebookFixture";
 import {
 	downloadOfficialRulebook,
 	importBestTimesFile,
+	newPenaltyCatalogFileName,
 	newRulebookDescription,
 	officialRulebookName,
 	officialRulebookUrl,
+	penaltyDisqualifyingWarning,
 	readRulebookFile,
 	restoreClubRulebook,
 	saveNewRulebook,
@@ -42,6 +44,7 @@ beforeEach(() => {
 	setWorkbookAdapter(createFakeWorkbookAdapter());
 	httpMock.platformFetch.mockReset();
 	filesMock.saveFile.mockReset();
+	filesMock.writePenaltyCatalogNextTo.mockReset();
 });
 
 afterEach(() => {
@@ -160,13 +163,69 @@ describe("saveNewRulebook", () => {
 		const club = readRulebookFile("Regelwerk_2025.rwm", rulebookFile(GROUPS));
 		if (!club.ok) throw new Error("Fixture");
 		const rows = [{ ageGroup: "AkW offen", gender: "male" as const, disciplineIndex: 0, oldRec: 16221, newRec: 16500 }];
-		expect(await saveNewRulebook(club.rulebook, rows, 2026)).toBe("C:/Regelwerk_2026.rwm");
+		expect(await saveNewRulebook(club.rulebook, rows, 2026, null)).toEqual({
+			rulebookPath: "C:/Regelwerk_2026.rwm",
+			penaltyPath: null,
+			penaltyError: null
+		});
+		expect(filesMock.writePenaltyCatalogNextTo).not.toHaveBeenCalled();
 		const request = filesMock.saveFile.mock.calls[0][0];
 		expect(request.defaultName).toBe("Regelwerk_2026.rwm");
 		expect(parseRulebookRecords(request.bytes)[1].rec).toBe(16500);
 		expect(strFromU8(unzipSync(request.bytes)["data.xml"])).toContain(
 			"<beschreibung>Wellen-Wk 2026 (mit Rec-Werten für 2025)</beschreibung>"
 		);
+	});
+
+	it("schreibt den Strafenkatalog neben das Regelwerk", async () => {
+		filesMock.saveFile.mockResolvedValue("C:/Regelwerk_2026.rwm");
+		filesMock.writePenaltyCatalogNextTo.mockResolvedValue("C:/Regelwerk_2026m.def");
+		const club = readRulebookFile("Regelwerk_2025.rwm", rulebookFile(GROUPS));
+		if (!club.ok) throw new Error("Fixture");
+		const penalties = new Uint8Array([7]);
+		expect(await saveNewRulebook(club.rulebook, [], 2026, penalties)).toEqual({
+			rulebookPath: "C:/Regelwerk_2026.rwm",
+			penaltyPath: "C:/Regelwerk_2026m.def",
+			penaltyError: null
+		});
+		expect(filesMock.writePenaltyCatalogNextTo).toHaveBeenCalledWith("C:/Regelwerk_2026.rwm", penalties);
+	});
+
+	it("meldet einen gescheiterten Strafenkatalog, ohne das Regelwerk zu verlieren", async () => {
+		filesMock.saveFile.mockResolvedValue("C:/Regelwerk_2026.rwm");
+		filesMock.writePenaltyCatalogNextTo.mockRejectedValue("Die Datei darf nicht geschrieben werden.");
+		const club = readRulebookFile("Regelwerk_2025.rwm", rulebookFile(GROUPS));
+		if (!club.ok) throw new Error("Fixture");
+		const saved = await saveNewRulebook(club.rulebook, [], 2026, new Uint8Array([7]));
+		expect(saved).toEqual({
+			rulebookPath: "C:/Regelwerk_2026.rwm",
+			penaltyPath: null,
+			penaltyError: "Die Datei darf nicht geschrieben werden."
+		});
+	});
+
+	it("schreibt nach Abbruch nichts", async () => {
+		filesMock.saveFile.mockResolvedValue(null);
+		const club = readRulebookFile("Regelwerk_2025.rwm", rulebookFile(GROUPS));
+		if (!club.ok) throw new Error("Fixture");
+		expect(await saveNewRulebook(club.rulebook, [], 2026, new Uint8Array([7]))).toBeNull();
+		expect(filesMock.writePenaltyCatalogNextTo).not.toHaveBeenCalled();
+	});
+
+	it("warnt, wenn im Regelwerk jede Strafe disqualifiziert", () => {
+		const xml = rulebookXml(GROUPS).replace(
+			"<minMembers>",
+			"<strafeIstDisqualifikation>true</strafeIstDisqualifikation><minMembers>"
+		);
+		const club = readRulebookFile("Regelwerk.rwm", zipSync({ "data.xml": strToU8(xml) }));
+		if (!club.ok) throw new Error("Fixture");
+		expect(penaltyDisqualifyingWarning(club.rulebook)).toContain("AkW offen");
+		const plain = readRulebookFile("Regelwerk.rwm", rulebookFile(GROUPS));
+		expect(plain.ok && penaltyDisqualifyingWarning(plain.rulebook)).toBeNull();
+	});
+
+	it("benennt den Strafenkatalog wie JAuswertung ihn neben dem Regelwerk sucht", () => {
+		expect(newPenaltyCatalogFileName(2026)).toBe("Regelwerk_2026m.def");
 	});
 
 	it("beschreibt das neue Regelwerk mit Jahr und Vorjahr", () => {

@@ -32,7 +32,7 @@ export const NAVIGATION_GROUPS: readonly NavigationGroup[] = [
 		items: [
 			{ label: "Entfernungen", href: "/distances", icon: Ruler },
 			{ label: "Urkunden-Layout", href: "/certificates/layout", icon: LayoutTemplate },
-			{ label: "Rec-Werte", href: "/records", icon: Timer }
+			{ label: "Regelwerk fürs neue Jahr", href: "/records", icon: Timer }
 		]
 	}
 ];

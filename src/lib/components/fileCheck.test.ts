@@ -69,6 +69,22 @@ describe("checkFile", () => {
 		});
 	});
 
+	it("erkennt Strafenkataloge (.def) und Wettkampfdateien (.wk) als ZIP", () => {
+		expect(checkFile({ name: "defaultm.def", bytes: bytes(...ZIP) }, ["penalties"])).toEqual({
+			ok: true,
+			kind: "penalties"
+		});
+		expect(checkFile({ name: "Wellenwettkampf.wk", bytes: bytes(...ZIP) }, ["competition"])).toEqual({
+			ok: true,
+			kind: "competition"
+		});
+		expect(checkFile({ name: "Wellenwettkampf.wk", bytes: text("<xml/>") }, ["competition"])).toEqual({
+			ok: false,
+			message: "Der Inhalt passt nicht zur Dateiendung. Erwartet: JAuswertung-Wettkampf (.wk)."
+		});
+		expect(checkFile({ name: "defaultm.def", bytes: text("x") }, ["penalties"]).ok).toBe(false);
+	});
+
 	it("nimmt CSV- und JSON-Text an", () => {
 		expect(checkFile({ name: "export.csv", bytes: text("gliederung;ak\nMusterstadt;AK 12") }, ["csv"])).toEqual({
 			ok: true,

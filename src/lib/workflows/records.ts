@@ -1,10 +1,15 @@
 // Rec-Werte fürs neue Jahr: Regelwerke laden, Bestzeiten nachtragen, neues Regelwerk speichern.
 import { parseRulebook } from "$lib/io/rulebook";
-import { saveFile } from "$lib/platform/files";
+import { saveFile, writePenaltyCatalogNextTo } from "$lib/platform/files";
 import { platformFetch } from "$lib/platform/http";
 import { readWorkbook } from "$lib/platform/workbook";
 import { toRecUpdates, type RecChange } from "$lib/records/proposal";
-import { parseRulebookRecords, writeRulebookRecords, type RulebookRecord } from "$lib/records/rulebookRecords";
+import {
+	disqualifyingAgeGroups,
+	parseRulebookRecords,
+	writeRulebookRecords,
+	type RulebookRecord
+} from "$lib/records/rulebookRecords";
 import { loadClubRulebook, rememberBestTimes, saveClubRulebook, type StoredRulebook } from "$lib/records/storage";
 import { workbookYear } from "$lib/wwk/results";
 import { userMessage } from "./errors";
@@ -16,6 +21,13 @@ export interface LoadedRulebook extends StoredRulebook {
 }
 
 export type RulebookOutcome = { ok: true; rulebook: LoadedRulebook } | { ok: false; message: string };
+export interface SavedRulebook {
+	rulebookPath: string;
+	/** Pfad des Strafenkatalogs; null, wenn keiner mitgespeichert wurde. */
+	penaltyPath: string | null;
+	penaltyError: string | null;
+}
+
 export type BestTimesOutcome = { ok: true; year: number; entries: number } | { ok: false; message: string };
 
 const OFFICIAL_BASE_URL =
@@ -26,6 +38,7 @@ const UNREADABLE_RULEBOOK = "Die Datei ist kein JAuswertung-Regelwerk.";
 const DOWNLOAD_FAILED = "Das offizielle Regelwerk konnte nicht geladen werden. Besteht eine Internetverbindung?";
 const UNREADABLE_RESULTS = "Die Ergebnisdatei konnte nicht gelesen werden.";
 const NO_TIMES = "Die Ergebnisdatei enthält keine gültigen Zeiten.";
+const PENALTY_WRITE_FAILED = "Der Strafenkatalog konnte nicht neben das Regelwerk geschrieben werden.";
 
 const RULEBOOK_EXTENSION = /\.rwm$/i;
 
@@ -49,6 +62,9 @@ export const officialRulebookUrl = (year: number): string =>
 export const newRulebookDescription = (year: number): string => `Wellen-Wk ${year} (mit Rec-Werten für ${year - 1})`;
 
 export const newRulebookFileName = (year: number): string => `Regelwerk_${year}.rwm`;
+
+/** So sucht JAuswertung den Katalog neben dem Regelwerk. */
+export const newPenaltyCatalogFileName = (year: number): string => `Regelwerk_${year}m.def`;
 
 export function readRulebookFile(name: string, bytes: Uint8Array): RulebookOutcome {
 	try {
@@ -99,12 +115,34 @@ export async function importBestTimesFile(file: ResultsFile, today: Date = new D
 	}
 }
 
-/** Schreibt das neue Regelwerk; gibt den Pfad zurück, bei Abbruch null. */
-export function saveNewRulebook(
+/** Gilt im Regelwerk „jede Strafe disqualifiziert“, greifen Strafpunkte nicht; das soll nirgends so sein. */
+export function penaltyDisqualifyingWarning(club: LoadedRulebook): string | null {
+	const groups = disqualifyingAgeGroups(club.bytes);
+	if (groups.length === 0) return null;
+	return (
+		`Im Regelwerk führt in ${groups.join(", ")} jede Strafe zur Disqualifikation. ` +
+		"Strafpunkte (z. B. 100 für den Fehlstart) wirken dort nicht. Bitte in JAuswertung im Regelwerk ändern."
+	);
+}
+
+/**
+ * Schreibt das neue Regelwerk über den Speichern-Dialog und, falls vorhanden, den
+ * Strafenkatalog als „<Name>m.def“ daneben. Bei Abbruch null.
+ */
+export async function saveNewRulebook(
 	club: LoadedRulebook,
 	rows: readonly RecChange[],
-	year: number
-): Promise<string | null> {
+	year: number,
+	penaltyCatalog: Uint8Array | null
+): Promise<SavedRulebook | null> {
 	const bytes = writeRulebookRecords(club.bytes, toRecUpdates(rows), newRulebookDescription(year));
-	return saveFile({ defaultName: newRulebookFileName(year), filters: RULEBOOK_FILTERS, bytes });
+	const rulebookPath = await saveFile({ defaultName: newRulebookFileName(year), filters: RULEBOOK_FILTERS, bytes });
+	if (rulebookPath === null) return null;
+	if (penaltyCatalog === null) return { rulebookPath, penaltyPath: null, penaltyError: null };
+	try {
+		const penaltyPath = await writePenaltyCatalogNextTo(rulebookPath, penaltyCatalog);
+		return { rulebookPath, penaltyPath, penaltyError: null };
+	} catch (error) {
+		return { rulebookPath, penaltyPath: null, penaltyError: userMessage(error, PENALTY_WRITE_FAILED) };
+	}
 }

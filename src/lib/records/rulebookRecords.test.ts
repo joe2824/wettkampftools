@@ -4,7 +4,7 @@ import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
 import { describe, expect, it } from "vitest";
 import { RulebookError } from "$lib/io/rulebook";
 import { rulebookFile, rulebookXml, type FixtureAgeGroup } from "$lib/testing/rulebookFixture";
-import { parseRulebookRecords, writeRulebookRecords } from "./rulebookRecords";
+import { disqualifyingAgeGroups, parseRulebookRecords, writeRulebookRecords } from "./rulebookRecords";
 
 const GROUPS: FixtureAgeGroup[] = [
 	{
@@ -123,6 +123,26 @@ describe("writeRulebookRecords", () => {
 		expect(() => writeRulebookRecords(original, [unknown], "neu")).toThrow();
 		const invalid = { ageGroup: "AK 12", gender: "male" as const, disciplineIndex: 0, rec: 0 };
 		expect(() => writeRulebookRecords(original, [invalid], "neu")).toThrow();
+	});
+});
+
+describe("disqualifyingAgeGroups", () => {
+	const withFlag = (flags: string[]): Uint8Array => {
+		let index = 0;
+		const xml = rulebookXml(GROUPS).replace(
+			/<minMembers>/g,
+			() => `<strafeIstDisqualifikation>${flags[index++]}</strafeIstDisqualifikation>\n      <minMembers>`
+		);
+		return zipSync({ "data.xml": strToU8(xml) });
+	};
+
+	it("nennt Altersklassen, in denen jede Strafe disqualifiziert", () => {
+		expect(disqualifyingAgeGroups(withFlag(["false", "true"]))).toEqual(["AkW offen"]);
+		expect(disqualifyingAgeGroups(withFlag(["false", "false"]))).toEqual([]);
+	});
+
+	it("wertet ein fehlendes Feld wie JAuswertung als „nein“", () => {
+		expect(disqualifyingAgeGroups(rulebookFile(GROUPS))).toEqual([]);
 	});
 });
 

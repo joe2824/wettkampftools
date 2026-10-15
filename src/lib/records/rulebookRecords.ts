@@ -80,10 +80,25 @@ function unzipRulebook(bytes: Uint8Array): Unzipped {
 	throw new RulebookError();
 }
 
+/** Rec-Werte eines Regelwerk-Elements: Wurzel der .rwm oder `<aks>` in einer Wettkampfdatei. */
+export function readRulebookElementRecords(element: Element): RulebookRecord[] {
+	return collectRecs(element).map(({ record }) => record);
+}
+
 /** Alle Rec-Werte in der Reihenfolge des Regelwerks. */
 export function parseRulebookRecords(bytes: Uint8Array): RulebookRecord[] {
 	const xml = strFromU8(unzipRulebook(bytes)[DATA_ENTRY]);
-	return collectRecs(parseRulebookRoot(xml)).map(({ record }) => record);
+	return readRulebookElementRecords(parseRulebookRoot(xml));
+}
+
+/** Altersklassen, in denen jede Strafe zur Disqualifikation führt (soll im Verein nirgends so sein). */
+export function disqualifyingAgeGroups(bytes: Uint8Array): string[] {
+	const root = parseRulebookRoot(strFromU8(unzipRulebook(bytes)[DATA_ENTRY]));
+	const list = directChild(root, "aks");
+	const groups = list ? directChildren(list, "Altersklasse") : [];
+	return groups
+		.filter((group) => childText(group, "strafeIstDisqualifikation") === "true")
+		.map((group) => childText(group, "name"));
 }
 
 function escapeXml(text: string): string {
@@ -113,13 +128,29 @@ function replaceRecs(xml: string, values: number[]): string {
 	return result;
 }
 
-function replaceDescription(xml: string, description: string): string {
+function replaceDescription(xml: string, description: string, closeTag: string): string {
 	const tag = `<beschreibung>${escapeXml(description)}</beschreibung>`;
 	const count = xml.match(DESCRIPTION_TAG)?.length ?? 0;
 	if (count > 1) throw new RulebookError();
 	if (count === 1) return xml.replace(DESCRIPTION_TAG, () => tag);
-	const close = xml.lastIndexOf(ROOT_CLOSE);
+	const close = xml.lastIndexOf(closeTag);
+	if (close < 0) throw new RulebookError();
 	return `${xml.slice(0, close)}  ${tag}\n${xml.slice(close)}`;
+}
+
+/**
+ * Ersetzt Rec-Werte und Beschreibung im Text eines Regelwerk-Elements. `element` ist
+ * dasselbe Element geparst und sichert ab, dass jedes <rec> zu einer Disziplin gehört.
+ */
+export function updateRulebookText(
+	text: string,
+	element: Element,
+	updates: readonly RecUpdate[],
+	description: string,
+	closeTag: string
+): string {
+	const values = newRecValues(element, updates);
+	return replaceDescription(replaceRecs(text, values), description, closeTag);
 }
 
 /**
@@ -133,7 +164,6 @@ export function writeRulebookRecords(
 ): Uint8Array {
 	const entries = unzipRulebook(bytes);
 	const xml = strFromU8(entries[DATA_ENTRY]);
-	const values = newRecValues(parseRulebookRoot(xml), updates);
-	const updated = replaceDescription(replaceRecs(xml, values), description);
+	const updated = updateRulebookText(xml, parseRulebookRoot(xml), updates, description, ROOT_CLOSE);
 	return zipSync({ ...entries, [DATA_ENTRY]: strToU8(updated) });
 }

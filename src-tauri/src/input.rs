@@ -6,7 +6,7 @@ use std::sync::Mutex;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 /// Nur diese Endungen liest die Anwendung ein.
-const INPUT_EXTENSIONS: [&str; 10] = [
+const INPUT_EXTENSIONS: [&str; 12] = [
     "csv",
     "xls",
     "xlsx",
@@ -16,11 +16,16 @@ const INPUT_EXTENSIONS: [&str; 10] = [
     "png",
     "jpg",
     "jpeg",
+    "def",
+    COMPETITION_EXTENSION,
     PROJECT_EXTENSION,
 ];
 
 /// Projektdatei mit dem ganzen Wettkampfstand; darf größer sein.
 pub const PROJECT_EXTENSION: &str = "wwkprojekt";
+
+/// JAuswertung-Wettkampfdatei; darf so groß sein wie eine Projektdatei.
+const COMPETITION_EXTENSION: &str = "wk";
 
 const BYTES_PER_MB: u64 = 1024 * 1024;
 const MAX_INPUT_MB: u64 = 20;
@@ -28,7 +33,7 @@ const MAX_PROJECT_MB: u64 = 50;
 
 /// Größte lesbare Dateigröße in MB, je nach Endung; größere Dateien werden nicht gelesen.
 fn max_input_mb(path: &Path) -> u64 {
-    if has_extension(path, &[PROJECT_EXTENSION]) {
+    if has_extension(path, &[PROJECT_EXTENSION, COMPETITION_EXTENSION]) {
         MAX_PROJECT_MB
     } else {
         MAX_INPUT_MB
@@ -201,6 +206,8 @@ mod tests {
             "h.jpg",
             "i.jpeg",
             "j.wwkprojekt",
+            "k.def",
+            "l.wk",
         ] {
             let file = temp_file(name);
             let checked = check_input_target(&file.0, allow_all).expect("erlaubt");
@@ -269,6 +276,17 @@ mod tests {
         handle.set_len(MAX_PROJECT_MB * BYTES_PER_MB + 1).unwrap();
         let err = check_input_target(&file.0, allow_all).unwrap_err();
         assert!(err.contains("größer als 50 MB"), "{err}");
+    }
+
+    #[test]
+    fn competition_files_may_be_larger() {
+        let file = temp_file("gross.wk");
+        let handle = std::fs::OpenOptions::new()
+            .write(true)
+            .open(&file.0)
+            .unwrap();
+        handle.set_len(MAX_INPUT_MB * BYTES_PER_MB + 1).unwrap();
+        assert!(check_input_target(&file.0, allow_all).is_ok());
     }
 
     #[test]

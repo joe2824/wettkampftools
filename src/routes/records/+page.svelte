@@ -1,14 +1,15 @@
 <script lang="ts">
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
-	import StepHeader from "$lib/components/StepHeader.svelte";
 	import type { CheckedFile } from "$lib/components/fileCheck";
 	import BestTimesStep from "$lib/components/records/BestTimesStep.svelte";
+	import CompetitionFileStep from "$lib/components/records/CompetitionFileStep.svelte";
 	import OfficialRulebookStep from "$lib/components/records/OfficialRulebookStep.svelte";
+	import PenaltyStep from "$lib/components/records/PenaltyStep.svelte";
 	import ProposalStep from "$lib/components/records/ProposalStep.svelte";
 	import RulebookSource from "$lib/components/records/RulebookSource.svelte";
 	import SaveStep from "$lib/components/records/SaveStep.svelte";
-	import * as Card from "$lib/components/ui/card";
+	import StepCard from "$lib/components/records/StepCard.svelte";
 	import { Input } from "$lib/components/ui/input";
 	import { Label } from "$lib/components/ui/label";
 	import type { BestTimes } from "$lib/records/bestTimes";
@@ -28,8 +29,10 @@
 		restoreClubRulebook,
 		useClubRulebook,
 		type LoadedRulebook,
-		type RulebookOutcome
+		type RulebookOutcome,
+		type SavedRulebook
 	} from "$lib/workflows/records";
+	import type { LoadedPenalties } from "$lib/workflows/penalties";
 
 	const currentYear = new Date().getFullYear();
 
@@ -44,7 +47,8 @@
 	let surchargeEnabled = $state(true);
 	let surchargeLoaded = false;
 	let overrides = $state.raw<ReadonlyMap<string, number>>(new Map());
-	let savedPath = $state<string | null>(null);
+	let saved = $state.raw<SavedRulebook | null>(null);
+	let penalties = $state.raw<LoadedPenalties | null>(null);
 
 	const year = $derived(yearInput !== null && Number.isInteger(yearInput) ? yearInput : currentYear);
 	const rows = $derived(
@@ -98,7 +102,7 @@
 		if (outcome.ok) {
 			club = outcome.rulebook;
 			overrides = new Map();
-			savedPath = null;
+			saved = null;
 		}
 		return outcome;
 	}
@@ -129,8 +133,10 @@
 <div class="page-width flex flex-col gap-6">
 	<header class="flex flex-wrap items-end justify-between gap-4">
 		<div class="flex flex-col gap-1">
-			<h1 class="text-2xl font-bold">Rec-Werte</h1>
-			<p class="text-muted-foreground">Neue Rec-Werte ins Vereins-Regelwerk übernehmen, zum Import in JAuswertung.</p>
+			<h1 class="text-2xl font-bold">Regelwerk fürs neue Jahr</h1>
+			<p class="text-muted-foreground">
+				Neue Rec-Werte und den aktuellen Strafenkatalog fürs Vereins-Regelwerk, zum Import in JAuswertung.
+			</p>
 			<p class="text-sm font-medium" aria-live="polite">Regelwerk für das Jahr {year} (Rec-Werte aus {year - 1})</p>
 		</div>
 		<div class="flex flex-col gap-2">
@@ -139,86 +145,78 @@
 		</div>
 	</header>
 
-	<Card.Root>
-		<Card.Header>
-			<StepHeader
-				step={1}
-				title="Vereins-Regelwerk"
-				description="Das bisherige Regelwerk des Wellenwettkampfs."
-				done={club !== null}
-			/>
-		</Card.Header>
-		<Card.Content>
-			<RulebookSource
-				rulebook={club}
-				title="Vereins-Regelwerk (.rwm)"
-				hint="Wird gespeichert und beim nächsten Mal wieder angeboten."
-				onfile={handleClub}
-			/>
-		</Card.Content>
-	</Card.Root>
+	<StepCard
+		step={1}
+		title="Vereins-Regelwerk"
+		description="Das bisherige Regelwerk des Wellenwettkampfs."
+		done={club !== null}
+	>
+		<RulebookSource
+			rulebook={club}
+			title="Vereins-Regelwerk (.rwm)"
+			hint="Wird gespeichert und beim nächsten Mal wieder angeboten."
+			onfile={handleClub}
+		/>
+	</StepCard>
 
-	<Card.Root>
-		<Card.Header>
-			<StepHeader
-				step={2}
-				title="Offizielles DLRG-Regelwerk"
-				description="Liefert die Rec-Werte der Rettungsdisziplinen."
-				done={official !== null}
-			/>
-		</Card.Header>
-		<Card.Content>
-			<OfficialRulebookStep bind:official {year} />
-		</Card.Content>
-	</Card.Root>
+	<StepCard
+		step={2}
+		title="Offizielles DLRG-Regelwerk"
+		description="Liefert die Rec-Werte der Rettungsdisziplinen."
+		done={official !== null}
+	>
+		<OfficialRulebookStep bind:official {year} />
+	</StepCard>
 
-	<Card.Root>
-		<Card.Header>
-			<StepHeader
-				step={3}
-				title="Bestzeiten des Vorjahres"
-				description="Grundlage für die Wellendisziplinen."
-				done={bestTimes !== null}
-			/>
-		</Card.Header>
-		<Card.Content>
-			<BestTimesStep {years} bind:year={bestYear} {bestTimes} expectedYear={year - 1} onimport={importBestTimes} />
-		</Card.Content>
-	</Card.Root>
+	<StepCard
+		step={3}
+		title="Bestzeiten des Vorjahres"
+		description="Grundlage für die Wellendisziplinen."
+		done={bestTimes !== null}
+	>
+		<BestTimesStep {years} bind:year={bestYear} {bestTimes} expectedYear={year - 1} onimport={importBestTimes} />
+	</StepCard>
 
-	<Card.Root>
-		<Card.Header>
-			<StepHeader step={4} title="Vergleich" description="Alte und neue Werte; jeder neue Wert lässt sich ändern." />
-		</Card.Header>
-		<Card.Content>
-			{#if club}
-				<ProposalStep
-					{rows}
-					{mapping}
-					club={club.records}
-					official={official?.records ?? null}
-					bind:surcharge
-					bind:surchargeEnabled
-					onmapping={changeMapping}
-					onedit={edit}
-				/>
-			{:else}
-				<p class="text-sm text-muted-foreground">Zuerst das Vereins-Regelwerk laden.</p>
-			{/if}
-		</Card.Content>
-	</Card.Root>
-
-	<Card.Root>
-		<Card.Header>
-			<StepHeader
-				step={5}
-				title="Neues Regelwerk speichern"
-				description="Gleicher Aufbau wie bisher, nur Rec-Werte und Beschreibung sind neu."
-				done={savedPath !== null}
+	<StepCard step={4} title="Vergleich" description="Alte und neue Werte; jeder neue Wert lässt sich ändern.">
+		{#if club}
+			<ProposalStep
+				{rows}
+				{mapping}
+				club={club.records}
+				official={official?.records ?? null}
+				bind:surcharge
+				bind:surchargeEnabled
+				onmapping={changeMapping}
+				onedit={edit}
 			/>
-		</Card.Header>
-		<Card.Content>
-			<SaveStep {club} {rows} {year} bind:savedPath />
-		</Card.Content>
-	</Card.Root>
+		{:else}
+			<p class="text-sm text-muted-foreground">Zuerst das Vereins-Regelwerk laden.</p>
+		{/if}
+	</StepCard>
+
+	<StepCard
+		step={5}
+		title="Strafenkatalog"
+		description="Offizieller Katalog mit den Vereinsregeln: Fehlstart 100 Strafpunkte, Retten in der Welle."
+		done={penalties !== null && penalties.issues.length === 0}
+	>
+		<PenaltyStep bind:penalties />
+	</StepCard>
+
+	<StepCard
+		step={6}
+		title="Neues Regelwerk speichern"
+		description="Regelwerk mit neuen Rec-Werten und Beschreibung, daneben der Strafenkatalog."
+		done={saved !== null}
+	>
+		<SaveStep {club} {penalties} {rows} {year} bind:saved />
+	</StepCard>
+
+	<StepCard
+		step={7}
+		title="Wettkampfdatei fürs neue Jahr aktualisieren"
+		description="Optional: eine bestehende JAuswertung-Datei weiterverwenden."
+	>
+		<CompetitionFileStep {club} {penalties} {rows} {year} />
+	</StepCard>
 </div>

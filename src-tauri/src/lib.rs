@@ -53,6 +53,7 @@ pub fn run() {
             workbook::read_workbook,
             workbook::write_workbook,
             output::write_output_file,
+            output::write_penalty_catalog,
             output::open_output_file,
             output::reveal_output_file,
             input::read_input_file,

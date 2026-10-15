@@ -111,3 +111,5 @@ schneller und mit allem, was die bisherige Version konnte.
 - Die Seiten nutzen breite Fenster besser aus.
 - Beim Öffnen einer Projektdatei wird der bisherige Stand vorher gesichert; schlägt das Übernehmen fehl, wird er automatisch wiederhergestellt.
 - Projektdateien nehmen auch die Gliederungswahl der Entfernungen sowie Zuordnung, Wellen-Zuschlag, Vereins-Regelwerk und Bestzeiten der Rec-Werte mit.
+- Das Werkzeug **„Regelwerk fürs neue Jahr“** (bisher „Rec-Werte“) erstellt jetzt auch den Strafenkatalog mit den Vereinsregeln (Fehlstart 100 Strafpunkte, neuer Eintrag für das Herausbringen beim Retten in der Welle) und speichert ihn neben dem Regelwerk.
+- Eine kopierte JAuswertung-Wettkampfdatei des Vorjahres lässt sich fürs neue Jahr aktualisieren: Strafenkatalog und Rec-Werte werden getauscht, Bahn-Einstellungen und alles andere bleiben erhalten. Gespeichert wird als neue Datei.

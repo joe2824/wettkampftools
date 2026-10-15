@@ -12,9 +12,19 @@ export interface SaveFileRequest {
 export async function saveFile({ defaultName, filters, bytes }: SaveFileRequest): Promise<string | null> {
 	const path = await save({ defaultPath: defaultName, filters });
 	if (!path) return null;
-	// Bytes roh im Body; der Pfad steht kodiert in einer Kopfzeile.
-	await invoke("write_output_file", bytes, { headers: { "x-output-path": encodeURIComponent(path) } });
+	await invoke("write_output_file", bytes, pathHeader(path));
 	return path;
+}
+
+/** Bytes roh im Body; der Pfad steht kodiert in einer Kopfzeile. */
+const pathHeader = (path: string) => ({ headers: { "x-output-path": encodeURIComponent(path) } });
+
+/**
+ * Schreibt den Strafenkatalog als „<Name>m.def“ neben ein gerade über den Dialog
+ * gespeichertes Regelwerk. Gibt den Pfad des Katalogs zurück.
+ */
+export function writePenaltyCatalogNextTo(rulebookPath: string, bytes: Uint8Array): Promise<string> {
+	return invoke<string>("write_penalty_catalog", bytes, pathHeader(rulebookPath));
 }
 
 const pad2 = (n: number): string => String(n).padStart(2, "0");

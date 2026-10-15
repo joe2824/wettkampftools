@@ -5,7 +5,21 @@ use std::path::{Path, PathBuf};
 use tauri::ipc::{InvokeBody, Request};
 
 /// Nur diese Endungen schreibt die Anwendung selbst.
-const OUTPUT_EXTENSIONS: [&str; 6] = ["xlsx", "pdf", "json", "rwm", "wwkprojekt", "png"];
+const OUTPUT_EXTENSIONS: [&str; 8] = [
+    "xlsx",
+    "pdf",
+    "json",
+    RULEBOOK_EXTENSION,
+    "wwkprojekt",
+    "png",
+    "def",
+    "wk",
+];
+
+const RULEBOOK_EXTENSION: &str = "rwm";
+
+/// Strafenkatalog neben dem Regelwerk: so findet JAuswertung ihn beim Anlegen eines Wettkampfs.
+const PENALTY_CATALOG_SUFFIX: &str = "m.def";
 
 /// Kopfzeile mit dem URL-kodierten Zielpfad; die Bytes kommen roh im Body.
 const PATH_HEADER: &str = "x-output-path";
@@ -58,9 +72,8 @@ fn check_write_target(
     Ok(target)
 }
 
-/// Schreibt eine Ausgabedatei an das im Speichern-Dialog gewählte Ziel.
-#[tauri::command]
-pub fn write_output_file(app: tauri::AppHandle, request: Request<'_>) -> Result<(), String> {
+/// Zielpfad aus der Kopfzeile und rohe Bytes aus dem Body.
+fn raw_request<'a>(request: &'a Request<'_>) -> Result<(String, &'a [u8]), String> {
     let InvokeBody::Raw(bytes) = request.body() else {
         return Err(WRITE_ERROR.to_string());
     };
@@ -69,9 +82,61 @@ pub fn write_output_file(app: tauri::AppHandle, request: Request<'_>) -> Result<
         .get(PATH_HEADER)
         .and_then(|value| value.to_str().ok())
         .ok_or_else(|| WRITE_ERROR.to_string())?;
-    let path = decode_path_header(header)?;
+    Ok((decode_path_header(header)?, bytes))
+}
+
+/// Schreibt eine Ausgabedatei an das im Speichern-Dialog gewählte Ziel.
+#[tauri::command]
+pub fn write_output_file(app: tauri::AppHandle, request: Request<'_>) -> Result<(), String> {
+    let (path, bytes) = raw_request(&request)?;
     let target = check_write_target(Path::new(&path), app_scope(&app))?;
     std::fs::write(target, bytes).map_err(|_| WRITE_ERROR.to_string())
+}
+
+/// Ziel des Strafenkatalogs neben einem gerade gespeicherten Regelwerk.
+///
+/// Erlaubt nur, wenn das Regelwerk (.rwm) existiert und im Speichern-Dialog
+/// gewählt wurde (`allowed_in_scope`). Ziel ist derselbe Ordner, Name
+/// `<Name des Regelwerks>m.def`; Ordner und Verknüpfungen werden abgelehnt.
+fn check_penalty_catalog_target(
+    rulebook: &Path,
+    allowed_in_scope: impl Fn(&Path) -> bool,
+) -> Result<PathBuf, String> {
+    if !rulebook.is_absolute() || !has_extension(rulebook, &[RULEBOOK_EXTENSION]) {
+        return Err(not_writable(rulebook));
+    }
+    let canonical = canonical_existing(rulebook)?;
+    if !canonical.is_file() {
+        return Err(not_writable(rulebook));
+    }
+    if !allowed_in_scope(rulebook) && !allowed_in_scope(&canonical) {
+        return Err(format!(
+            "Das Regelwerk {} wurde nicht in dieser Sitzung gespeichert. Bitte erneut speichern.",
+            user_path(rulebook)
+        ));
+    }
+    let (Some(parent), Some(stem)) = (canonical.parent(), rulebook.file_stem()) else {
+        return Err(not_writable(rulebook));
+    };
+    let mut name = stem.to_os_string();
+    name.push(PENALTY_CATALOG_SUFFIX);
+    let target = parent.join(name);
+    if std::fs::symlink_metadata(&target).is_ok_and(|m| !m.is_file()) {
+        return Err(not_writable(&target));
+    }
+    Ok(target)
+}
+
+/// Schreibt den Strafenkatalog neben das gerade gespeicherte Regelwerk; gibt seinen Pfad zurück.
+#[tauri::command]
+pub fn write_penalty_catalog(
+    app: tauri::AppHandle,
+    request: Request<'_>,
+) -> Result<String, String> {
+    let (path, bytes) = raw_request(&request)?;
+    let target = check_penalty_catalog_target(Path::new(&path), app_scope(&app))?;
+    std::fs::write(&target, bytes).map_err(|_| WRITE_ERROR.to_string())?;
+    Ok(user_path(&target))
 }
 
 /// Prüft eine Ausgabedatei und gibt ihren normalisierten Pfad zurück.
@@ -138,7 +203,15 @@ mod tests {
 
     #[test]
     fn output_accepts_allowed_extensions() {
-        for name in ["a.xlsx", "b.pdf", "c.json", "d.rwm", "e.wwkprojekt"] {
+        for name in [
+            "a.xlsx",
+            "b.pdf",
+            "c.json",
+            "d.rwm",
+            "e.wwkprojekt",
+            "f.def",
+            "g.wk",
+        ] {
             let file = temp_file(name);
             let checked = check_output_target(&file.0, allow_all).expect("erlaubt");
             assert_eq!(checked, std::fs::canonicalize(&file.0).unwrap());
@@ -191,6 +264,8 @@ mod tests {
             "E.PDF",
             "f.wwkprojekt",
             "g.png",
+            "h.def",
+            "i.wk",
         ] {
             let path = write_target(name);
             let checked = check_write_target(&path, allow_all).expect("erlaubt");
@@ -237,6 +312,46 @@ mod tests {
             .unwrap()
             .join(path.file_name().unwrap());
         assert!(check_write_target(&path, |p| p == canonical).is_ok());
+    }
+
+    #[test]
+    fn penalty_catalog_goes_next_to_rulebook() {
+        let rulebook = TempFile::with_bytes("output", "Regelwerk_2026.rwm", b"PK");
+        let target = check_penalty_catalog_target(&rulebook.0, allow_all).expect("erlaubt");
+        let name = target.file_name().unwrap().to_string_lossy().into_owned();
+        assert!(name.ends_with("Regelwerk_2026m.def"), "{name}");
+        assert_eq!(
+            target.parent().unwrap(),
+            std::fs::canonicalize(rulebook.0.parent().unwrap()).unwrap()
+        );
+    }
+
+    #[test]
+    fn penalty_catalog_needs_saved_rulebook_in_scope() {
+        let rulebook = TempFile::with_bytes("output", "Regelwerk.rwm", b"PK");
+        let err = check_penalty_catalog_target(&rulebook.0, |_| false).unwrap_err();
+        assert!(err.contains("erneut speichern"), "{err}");
+        let other = TempFile::with_bytes("output", "Auswertung.pdf", b"x");
+        let err = check_penalty_catalog_target(&other.0, allow_all).unwrap_err();
+        assert!(err.contains("darf nicht geschrieben werden"), "{err}");
+        let missing = write_target("fehlt.rwm");
+        assert!(check_penalty_catalog_target(&missing, allow_all).is_err());
+    }
+
+    #[test]
+    fn penalty_catalog_does_not_replace_folder() {
+        let rulebook = TempFile::with_bytes("output", "Ordner.rwm", b"PK");
+        let stem = rulebook
+            .0
+            .file_stem()
+            .unwrap()
+            .to_string_lossy()
+            .into_owned();
+        let dir = rulebook.0.with_file_name(format!("{stem}m.def"));
+        std::fs::create_dir_all(&dir).unwrap();
+        let err = check_penalty_catalog_target(&rulebook.0, allow_all).unwrap_err();
+        let _ = std::fs::remove_dir(&dir);
+        assert!(err.contains("darf nicht geschrieben werden"), "{err}");
     }
 
     #[test]

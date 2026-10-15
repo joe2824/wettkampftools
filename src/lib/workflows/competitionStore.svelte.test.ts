@@ -394,4 +394,11 @@ describe("replace", () => {
 		await store.replace({ state: projectState, results: null }, settings).catch(() => undefined);
 		expect(store.savedAt).toBeNull();
 	});
+
+	it("meldet ein gescheitertes Sichern, damit das Öffnen den alten Stand zurückholen kann", async () => {
+		vi.spyOn(fs, "writeText").mockRejectedValue(new Error("Platte voll"));
+		await expect(store.replace({ state: projectState, results: null }, settings)).rejects.toThrow("Platte voll");
+		// Normales Sichern meldet den Fehler weiterhin nur im Protokoll.
+		await expect(store.saveNow()).resolves.toBeUndefined();
+	});
 });

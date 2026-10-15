@@ -74,7 +74,8 @@ Ausstehende sofort geschrieben (höchstens 2 s).
 
 Rust bleibt schlank und kennt keine Fachlogik: `src-tauri/src/` mit `workbook`
 (Excel lesen/schreiben), `input` (gewählte oder abgelegte Dateien samt
-Erstellungsdatum lesen), `output` (Dateien schreiben), `legacy_settings`
+Erstellungsdatum lesen), `output` (Dateien schreiben, auch den Strafenkatalog
+`<Name>m.def` neben ein gerade gespeichertes Regelwerk), `legacy_settings`
 (Einstellungen der alten Version übernehmen), `file_check` (gemeinsame Pfad-
 und Endungsprüfung für `input` und `output`), `update_channel` (Update-Kanal
 stabil oder Beta), `launch_file` (Projektdatei per Doppelklick) und `logging`.
@@ -138,6 +139,16 @@ Meldedateien enthalten Daten von **Minderjährigen**. Dateien mit den Endungen
   Ergebnisse) und optional die Unterschriften. Sie entstehen nur auf
   ausdrücklichen Wunsch über „Projekt speichern“; ihr Inhalt erscheint nie in
   Logs.
+
+## JAuswertung-Dateien
+
+`.rwm` (Regelwerk), `.def` (Strafenkatalog) und `.wk` (Wettkampf) sind ZIPs mit
+XStream-XML in `data.xml`. Geändert wird **im Text** (`records/rulebookRecords.ts`,
+`records/competitionFile.ts`), damit Aufbau und Formatierung für JAuswertung gleich
+bleiben. XStream verknüpft gleiche Objekte über `reference="…"`-Pfade: einen Block
+nur ersetzen, wenn kein Verweis hinein, heraus oder hindurch führt
+(`records/xstreamReferences.ts`). JAuswertung liest nur den **ersten** ZIP-Eintrag,
+er muss `data.xml` sein.
 
 ## Fachbegriffe
 

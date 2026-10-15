@@ -81,17 +81,17 @@ export class CompetitionStore {
 		if (needsMigration) await this.saveNow();
 	}
 
-	/** Ersetzt den ganzen Stand, z. B. aus einer Projektdatei, und sichert ihn sofort. */
+	/** Ersetzt den ganzen Stand, z. B. aus einer Projektdatei, und sichert ihn sofort; ein Fehler beim Sichern wird gemeldet. */
 	async replace(stored: StoredCompetition, settings: Settings): Promise<void> {
 		// Die Speicherzeit des Projekts gilt hier nicht; gesetzt wird sie erst beim eigenen Sichern.
 		this.savedAt = null;
 		this.#cancel();
 		this.#session.clear();
 		this.#selection.attach(null);
-		await this.#enqueue(() => this.#clear());
+		await this.#enqueueReporting(() => this.#clear());
 		this.#apply(stored, settings);
 		this.#savedResults = UNSYNCED;
-		await this.saveNow();
+		await this.#enqueueReporting(() => this.#write());
 	}
 
 	/** Aktueller Stand im Format der Sicherung. */
@@ -233,13 +233,19 @@ export class CompetitionStore {
 
 	/** Schreibvorgänge nacheinander, damit „Neuer Wettkampf“ nie überschrieben wird. */
 	#enqueue(task: () => Promise<void>): Promise<void> {
-		const queue = this.#queue.then(task).catch(() => logError("competition.saveFailed"));
+		return this.#enqueueReporting(task).catch(() => undefined);
+	}
+
+	/** Wie #enqueue, aber ein Fehler erreicht auch den Aufrufer. */
+	#enqueueReporting(task: () => Promise<void>): Promise<void> {
+		const run = this.#queue.then(task);
+		const queue = run.catch(() => logError("competition.saveFailed"));
 		this.#queue = queue;
 		void queue.then(() => {
 			// Erst abmelden, wenn nichts mehr wartet.
 			if (this.#queue === queue && this.#timer === null) unregisterPendingSave(this.#flushOnClose);
 		});
-		return queue;
+		return run;
 	}
 
 	async #write(): Promise<void> {
