@@ -1,19 +1,25 @@
 // Entfernungen: Gliederungen sammeln, Standortdaten laden (mit Zwischenspeicher), Tabelle aufbereiten.
+import { fetchOrganisations, parseGldCache, type GldCache } from "$lib/distance/dlrgPoi";
 import {
 	distancesToBadNauheim,
-	fetchOrganisations,
-	parseGldCache,
-	type DistanceResult,
-	type GldCache
-} from "$lib/distance/dlrgPoi";
+	parseChoiceMap,
+	withChoice,
+	type Candidate,
+	type ChoiceMap,
+	type DistanceResult
+} from "$lib/distance/matching";
 import { MissingColumnsError, parseRegistrationCsv } from "$lib/io/csv";
 import { logError, logInfo } from "$lib/log";
 import { readJson, writeJson } from "$lib/platform/fs";
 import { platformFetch } from "$lib/platform/http";
+import { teamBaseName, type TeamNameOverrides } from "$lib/wwk/teamNames";
 import { NOT_A_TEAM_EXPORT } from "./errors";
 
 export const GLD_CACHE_FILE = "gld-cache.json";
+/** Gewählte Gliederung bei gleichnamigen Einträgen; keine Personendaten. */
+export const CHOICES_FILE = "distances/choices.json";
 const ORGANISATION_COLUMN = "gliederung";
+const TEAM_NAME_COLUMN = "name";
 const KM_DECIMALS = 2;
 
 /**
@@ -33,7 +39,24 @@ export interface LoadOrganisationsOptions {
 	now?: Date;
 }
 
-export type NamesOutcome = { ok: true; names: string[] } | { ok: false; message: string };
+/** Gliederungen und ihre Mannschaftsnamen (Hinweise bei gleichnamigen Gliederungen). */
+export interface DistanceSource {
+	names: string[];
+	teamNames: Record<string, string[]>;
+}
+
+export type NamesOutcome = ({ ok: true } & DistanceSource) | { ok: false; message: string };
+
+export interface TeamNameSource {
+	organisation: string;
+	name: string;
+	originalName?: string;
+}
+
+export interface ComputeOptions {
+	choices?: ChoiceMap;
+	overrides?: TeamNameOverrides;
+}
 
 export async function fetchPoiJson(url: string): Promise<unknown> {
 	const response = await platformFetch(url);
@@ -55,11 +78,14 @@ async function fetchFresh(fetchJson: (url: string) => Promise<unknown>, now: Dat
 	}
 }
 
+// Ältere Zwischenspeicher ohne Kennungen können gleichnamige Gliederungen nicht unterscheiden.
+const hasIds = (cache: GldCache): boolean => cache.organisations.every((org) => org.id !== undefined);
+
 /** Nimmt den gespeicherten Stand; abgerufen wird auf Wunsch oder wenn nichts gespeichert ist. */
 export async function loadOrganisations(options: LoadOrganisationsOptions = {}): Promise<OrganisationData> {
 	const { refresh = false, fetchJson = fetchPoiJson, now = new Date() } = options;
 	const cached = await readJson(GLD_CACHE_FILE, parseGldCache);
-	if (cached && !refresh) return { data: cached, status: "cache" };
+	if (cached && !refresh && hasIds(cached)) return { data: cached, status: "cache" };
 	const fresh = await fetchFresh(fetchJson, now);
 	if (fresh) return { data: fresh, status: "fresh" };
 	return cached ? { data: cached, status: "offline" } : { data: null, status: "unavailable" };
@@ -70,21 +96,63 @@ export function organisationsFromTeams(teams: readonly { organisation: string }[
 	return [...new Set(teams.map((team) => team.organisation.trim()).filter((name) => name !== ""))];
 }
 
+/** Verschiedene, nicht leere Mannschaftsnamen je Gliederung. */
+export function teamNamesByOrganisation(teams: readonly TeamNameSource[]): Record<string, string[]> {
+	const byOrganisation = new Map<string, Set<string>>();
+	for (const team of teams) {
+		const key = team.organisation.trim();
+		const names = byOrganisation.get(key) ?? new Set<string>();
+		for (const name of [team.name, team.originalName ?? ""]) if (name.trim() !== "") names.add(name.trim());
+		byOrganisation.set(key, names);
+	}
+	return Object.fromEntries([...byOrganisation].map(([key, names]) => [key, [...names]]));
+}
+
+export function sourceFromTeams(teams: readonly TeamNameSource[]): DistanceSource {
+	return { names: organisationsFromTeams(teams), teamNames: teamNamesByOrganisation(teams) };
+}
+
 export function organisationsFromCsv(bytes: Uint8Array): NamesOutcome {
 	try {
 		const { rows } = parseRegistrationCsv(bytes);
-		return {
-			ok: true,
-			names: organisationsFromTeams(rows.map((row) => ({ organisation: row[ORGANISATION_COLUMN] ?? "" })))
-		};
+		const teams = rows.map((row) => ({
+			organisation: row[ORGANISATION_COLUMN] ?? "",
+			name: row[TEAM_NAME_COLUMN] ?? ""
+		}));
+		return { ok: true, ...sourceFromTeams(teams) };
 	} catch (error) {
 		if (error instanceof MissingColumnsError) return { ok: false, message: NOT_A_TEAM_EXPORT };
 		throw error;
 	}
 }
 
-export function computeDistances(names: string[], data: GldCache): DistanceResult {
-	return distancesToBadNauheim(names, data.organisations);
+/** Hinweise: Mannschaftsnamen der Quelle und der eigene Mannschaftsname aus den Einstellungen. */
+export function computeDistances(source: DistanceSource, data: GldCache, options: ComputeOptions = {}): DistanceResult {
+	const { choices = {}, overrides = {} } = options;
+	const hints = Object.fromEntries(
+		source.names.map((name) => [name, [...(source.teamNames[name] ?? []), teamBaseName(name, overrides)]])
+	);
+	return distancesToBadNauheim(source.names, data.organisations, { choices, hints });
+}
+
+export async function loadChoices(): Promise<ChoiceMap> {
+	return (await readJson(CHOICES_FILE, parseChoiceMap)) ?? {};
+}
+
+/** Speichert sofort und liefert den neuen Stand. */
+export async function saveChoice(choices: ChoiceMap, name: string, id: string): Promise<ChoiceMap> {
+	const next = withChoice(choices, name, id);
+	await writeJson(CHOICES_FILE, next);
+	logInfo("distances.choiceSaved", { choices: Object.keys(next).length });
+	return next;
+}
+
+/** Automatisch zugeordnete zählen als mehrdeutig, bis sie bestätigt sind. */
+export function distanceSummary(result: DistanceResult): string {
+	const automatic = result.matched.filter((row) => row.choice?.automatic).length;
+	const found = result.matched.length - automatic;
+	const ambiguous = result.ambiguous.length + automatic;
+	return `${found} gefunden · ${ambiguous} mehrdeutig · ${result.unmatched.length} nicht gefunden`;
 }
 
 export function formatKm(km: number): string {
@@ -93,6 +161,11 @@ export function formatKm(km: number): string {
 
 export function formatDataDate(iso: string): string {
 	return new Date(iso).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+
+/** Auswahltext einer Gliederung mit Entfernung. */
+export function candidateText(candidate: Candidate): string {
+	return `${candidate.label} · ${formatKm(candidate.km)} km`;
 }
 
 /** Tabulator-getrennt, damit das Einfügen in Excel Spalten ergibt. */

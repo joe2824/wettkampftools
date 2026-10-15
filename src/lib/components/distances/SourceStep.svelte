@@ -4,11 +4,11 @@
 	import type { CheckedFile } from "$lib/components/fileCheck";
 	import { Button } from "$lib/components/ui/button";
 	import { session } from "$lib/session.svelte";
-	import { organisationsFromCsv, organisationsFromTeams } from "$lib/workflows/distances";
+	import { organisationsFromCsv, sourceFromTeams, type DistanceSource } from "$lib/workflows/distances";
 
 	interface Props {
 		sourceLabel: string | null;
-		onnames: (names: string[], sourceLabel: string) => void;
+		onnames: (source: DistanceSource, sourceLabel: string) => void;
 	}
 
 	let { sourceLabel, onnames }: Props = $props();
@@ -18,7 +18,7 @@
 		const registration = session.registration;
 		if (!registration) return;
 		error = null;
-		onnames(organisationsFromTeams(registration.teams), registration.fileName);
+		onnames(sourceFromTeams(registration.teams), registration.fileName);
 	}
 
 	function handleFile(file: CheckedFile) {
@@ -34,7 +34,7 @@
 			return;
 		}
 		error = null;
-		onnames(outcome.names, file.name);
+		onnames({ names: outcome.names, teamNames: outcome.teamNames }, file.name);
 	}
 </script>
 

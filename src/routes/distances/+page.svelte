@@ -6,14 +6,28 @@
 	import DataStep from "$lib/components/distances/DataStep.svelte";
 	import DistanceTable from "$lib/components/distances/DistanceTable.svelte";
 	import SourceStep from "$lib/components/distances/SourceStep.svelte";
-	import { computeDistances, loadOrganisations, type OrganisationData } from "$lib/workflows/distances";
+	import type { ChoiceMap } from "$lib/distance/matching";
+	import { settingsStore } from "$lib/settings/settingsStore.svelte";
+	import {
+		computeDistances,
+		loadChoices,
+		loadOrganisations,
+		saveChoice,
+		type DistanceSource,
+		type OrganisationData
+	} from "$lib/workflows/distances";
 
-	let names = $state.raw<string[] | null>(null);
+	let source = $state.raw<DistanceSource | null>(null);
+	let choices = $state.raw<ChoiceMap>({});
 	let sourceLabel = $state<string | null>(null);
 	let organisations = $state.raw<OrganisationData | null>(null);
 	let loading = $state(false);
 
-	const result = $derived(names && organisations?.data ? computeDistances(names, organisations.data) : null);
+	const result = $derived(
+		source && organisations?.data
+			? computeDistances(source, organisations.data, { choices, overrides: settingsStore.settings.teamNameOverrides })
+			: null
+	);
 
 	async function load(refresh: boolean) {
 		loading = true;
@@ -27,13 +41,24 @@
 		}
 	}
 
-	function handleNames(next: string[], label: string) {
-		names = next;
+	function handleSource(next: DistanceSource, label: string) {
+		source = next;
 		sourceLabel = label;
+	}
+
+	async function choose(name: string, id: string) {
+		try {
+			choices = await saveChoice(choices, name, id);
+		} catch {
+			toast.error("Die Zuordnung konnte nicht gespeichert werden.");
+		}
 	}
 
 	onMount(() => {
 		void load(false);
+		loadChoices()
+			.then((stored) => (choices = stored))
+			.catch(() => toast.error("Die gemerkten Zuordnungen konnten nicht gelesen werden."));
 	});
 </script>
 
@@ -49,11 +74,11 @@
 				step={1}
 				title="Gliederungen wählen"
 				description="Aus der Vorbereitung übernehmen oder eine Meldedatei laden."
-				done={names !== null}
+				done={source !== null}
 			/>
 		</Card.Header>
 		<Card.Content>
-			<SourceStep {sourceLabel} onnames={handleNames} />
+			<SourceStep {sourceLabel} onnames={handleSource} />
 		</Card.Content>
 	</Card.Root>
 
@@ -77,10 +102,10 @@
 		</Card.Header>
 		<Card.Content>
 			{#if result}
-				<DistanceTable {result} />
+				<DistanceTable {result} onchoose={choose} />
 			{:else}
 				<p class="text-sm text-muted-foreground">
-					{names === null ? "Zuerst die Gliederungen wählen." : "Es fehlen noch die Standortdaten."}
+					{source === null ? "Zuerst die Gliederungen wählen." : "Es fehlen noch die Standortdaten."}
 				</p>
 			{/if}
 		</Card.Content>

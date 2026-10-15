@@ -4,11 +4,9 @@ import {
 	POI_URL,
 	cleanName,
 	distanceKm,
-	distancesToBadNauheim,
 	fetchOrganisations,
 	parseGldCache,
-	parsePoiResponse,
-	type Organisation
+	parsePoiResponse
 } from "./dlrgPoi";
 
 const FRANKFURT = { lat: 50.1109, lon: 8.6821 };
@@ -61,9 +59,24 @@ describe("parsePoiResponse", () => {
 		expect(parsePoiResponse(json)).toEqual([{ name: "Musterstadt  e.V.", lat: 50.34, lon: 8.79 }]);
 	});
 
-	it("ordnet Namen mit doppelten Leerzeichen zu", () => {
-		const orgs = [{ name: "Musterstadt  e.V.", lat: 50.34, lon: 8.79 }];
-		expect(distancesToBadNauheim(["Musterstadt"], orgs).matched.map((m) => m.name)).toEqual(["Musterstadt"]);
+	it("übernimmt Kennung, Postleitzahl, Ort und Art der Gliederung", () => {
+		const json = {
+			locs: [
+				{
+					typ: "Gld",
+					lat: 50,
+					lon: 8,
+					pois: [
+						{ name: "Musterstadt e.V.", bez: "Ortsgruppe", plz: "12345", ort: " Musterstadt ", id: "17" },
+						{ name: "Beispielhausen", bez: true, plz: null, id: 5 }
+					]
+				}
+			]
+		};
+		expect(parsePoiResponse(json)).toEqual([
+			{ name: "Musterstadt e.V.", lat: 50, lon: 8, id: "17", plz: "12345", ort: "Musterstadt", bez: "Ortsgruppe" },
+			{ name: "Beispielhausen", lat: 50, lon: 8, id: "5" }
+		]);
 	});
 
 	it("übernimmt nur Gliederungen mit gültigen Koordinaten", () => {
@@ -112,31 +125,21 @@ describe("fetchOrganisations", () => {
 	});
 });
 
-describe("distancesToBadNauheim", () => {
-	const orgs: Organisation[] = [
-		{ name: "Ortsgruppe Musterstadt e.V.", ...FRANKFURT },
-		{ name: "Musterstadt", lat: 51, lon: 9 },
-		{ name: "Bezirk Beispielhausen", lat: 50.4, lon: 8.75 }
-	];
-
-	it("ordnet über bereinigte Namen zu und sortiert absteigend nach Entfernung", () => {
-		const result = distancesToBadNauheim(["Musterstadt e.V.", "beispielhausen", "Unbekanntdorf"], orgs);
-		expect(result.matched.map((m) => m.name)).toEqual(["Musterstadt e.V.", "beispielhausen"]);
-		expect(result.matched[0].km).toBe(FRANKFURT_KM);
-		expect(result.matched[1].km).toBe(Math.round(distanceKm(BAD_NAUHEIM, orgs[2]) * 100) / 100);
-		expect(result.unmatched).toEqual(["Unbekanntdorf"]);
-	});
-
-	it("liefert alles als nicht zugeordnet ohne Gliederungsdaten", () => {
-		expect(distancesToBadNauheim(["Musterstadt"], [])).toEqual({ matched: [], unmatched: ["Musterstadt"] });
-	});
-});
-
 describe("parseGldCache", () => {
 	const valid = { fetchedAt: "2026-10-14T08:00:00.000Z", organisations: [{ name: "Musterstadt", lat: 50, lon: 8 }] };
 
 	it("akzeptiert einen gültigen Cache", () => {
 		expect(parseGldCache(valid)).toEqual(valid);
+	});
+
+	it("behält die Angaben zur Gliederung", () => {
+		const detailed = {
+			...valid,
+			organisations: [
+				{ name: "Musterstadt", lat: 50, lon: 8, id: "17", plz: "12345", ort: "Musterstadt", bez: "Ortsgruppe" }
+			]
+		};
+		expect(parseGldCache(detailed)).toEqual(detailed);
 	});
 
 	it("verwirft ungültige Caches", () => {
@@ -146,5 +149,6 @@ describe("parseGldCache", () => {
 		expect(parseGldCache({ ...valid, organisations: "x" })).toBeNull();
 		expect(parseGldCache({ ...valid, organisations: [{ name: "Musterstadt", lat: "50", lon: 8 }] })).toBeNull();
 		expect(parseGldCache({ ...valid, organisations: [{ name: "Musterstadt", lat: 120, lon: 8 }] })).toBeNull();
+		expect(parseGldCache({ ...valid, organisations: [{ name: "Musterstadt", lat: 50, lon: 8, id: 17 }] })).toBeNull();
 	});
 });

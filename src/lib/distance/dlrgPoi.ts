@@ -7,11 +7,12 @@ export interface Coordinates {
 
 export interface Organisation extends Coordinates {
 	name: string;
-}
-
-export interface DistanceResult {
-	matched: { name: string; km: number }[];
-	unmatched: string[];
+	/** Kennung im DLRG-Dienst; fehlt in älteren Zwischenspeichern. */
+	id?: string;
+	plz?: string;
+	ort?: string;
+	/** Art der Gliederung, z. B. Ortsgruppe oder Bezirk. */
+	bez?: string;
 }
 
 export interface GldCache {
@@ -25,7 +26,6 @@ export const POI_URL = "https://services.dlrg.net/service.php?doc=poi&strict=1&l
 const ORGANISATION_TYPE = "Gld";
 const NAME_NOISE = /(ortsgruppe|bezirk|ortsverband|landesverband|e\.v\.)/gi;
 const METERS_PER_KM = 1000;
-const KM_DECIMALS_FACTOR = 100;
 const MAX_LAT = 90;
 const MAX_LON = 180;
 
@@ -49,8 +49,28 @@ function toCoordinate(value: unknown, limit: number): number | null {
 	return Number.isFinite(parsed) && Math.abs(parsed) <= limit ? parsed : null;
 }
 
+const DETAIL_FIELDS = ["id", "plz", "ort", "bez"] as const;
+type DetailField = (typeof DETAIL_FIELDS)[number];
+type Details = Pick<Organisation, DetailField>;
+
+function readDetail(value: unknown): string | undefined {
+	if (typeof value === "string") return value.trim();
+	if (typeof value === "number" && Number.isFinite(value)) return String(value);
+	return undefined;
+}
+
+/** Nur vorhandene Angaben, damit fehlende Felder gar nicht erst auftauchen. */
+function readDetails(poi: Record<string, unknown> | Organisation): Details {
+	const details: Details = {};
+	for (const field of DETAIL_FIELDS) {
+		const value = readDetail(poi[field]);
+		if (value !== undefined) details[field] = value;
+	}
+	return details;
+}
+
 // Orte mit mehreren Einträgen (z. B. Ortsgruppe und Jugend) tragen den Typ am einzelnen Eintrag.
-function isOrganisationPoi(poi: unknown, locationType: unknown): poi is { name: string } {
+function isOrganisationPoi(poi: unknown, locationType: unknown): poi is { name: string } & Record<string, unknown> {
 	if (!isRecord(poi) || typeof poi.name !== "string" || poi.name === "") return false;
 	return (poi.typ ?? locationType) === ORGANISATION_TYPE;
 }
@@ -61,8 +81,8 @@ function parseLocation(loc: unknown): Organisation[] {
 	const lon = toCoordinate(loc.lon, MAX_LON);
 	if (lat === null || lon === null) return [];
 	return loc.pois
-		.filter((poi): poi is { name: string } => isOrganisationPoi(poi, loc.typ))
-		.map((poi) => ({ name: poi.name, lat, lon }));
+		.filter((poi) => isOrganisationPoi(poi, loc.typ))
+		.map((poi) => ({ name: poi.name, lat, lon, ...readDetails(poi) }));
 }
 
 export function parsePoiResponse(json: unknown): Organisation[] {
@@ -74,30 +94,6 @@ export async function fetchOrganisations(fetchFn: (url: string) => Promise<unkno
 	return parsePoiResponse(await fetchFn(POI_URL));
 }
 
-function matchKey(name: string): string {
-	return cleanName(name).toLowerCase();
-}
-
-function roundKm(km: number): number {
-	return Math.round(km * KM_DECIMALS_FACTOR) / KM_DECIMALS_FACTOR;
-}
-
-export function distancesToBadNauheim(names: string[], orgs: Organisation[]): DistanceResult {
-	const firstByKey = new Map<string, Organisation>();
-	for (const org of orgs) {
-		const key = matchKey(org.name);
-		if (!firstByKey.has(key)) firstByKey.set(key, org);
-	}
-	const result: DistanceResult = { matched: [], unmatched: [] };
-	for (const name of names) {
-		const org = firstByKey.get(matchKey(name));
-		if (org) result.matched.push({ name, km: roundKm(distanceKm(BAD_NAUHEIM, org)) });
-		else result.unmatched.push(name);
-	}
-	result.matched.sort((a, b) => b.km - a.km);
-	return result;
-}
-
 function isOrganisation(value: unknown): value is Organisation {
 	return (
 		isRecord(value) &&
@@ -105,7 +101,8 @@ function isOrganisation(value: unknown): value is Organisation {
 		typeof value.lat === "number" &&
 		typeof value.lon === "number" &&
 		toCoordinate(value.lat, MAX_LAT) !== null &&
-		toCoordinate(value.lon, MAX_LON) !== null
+		toCoordinate(value.lon, MAX_LON) !== null &&
+		DETAIL_FIELDS.every((field) => value[field] === undefined || typeof value[field] === "string")
 	);
 }
 
@@ -115,6 +112,11 @@ export function parseGldCache(value: unknown): GldCache | null {
 	if (!Array.isArray(value.organisations) || !value.organisations.every(isOrganisation)) return null;
 	return {
 		fetchedAt: value.fetchedAt,
-		organisations: value.organisations.map(({ name, lat, lon }) => ({ name, lat, lon }))
+		organisations: value.organisations.map((org) => ({
+			name: org.name,
+			lat: org.lat,
+			lon: org.lon,
+			...readDetails(org)
+		}))
 	};
 }
