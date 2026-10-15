@@ -1,12 +1,12 @@
 name: CI
 
-# Bei Pushes auf main und Heist-Branches sowie bei jedem PR; andere Branches
+# Bei Pushes auf main und dev sowie bei jedem PR; andere Branches
 # prüft der PR, damit nichts doppelt läuft. Was geprüft wird, steht in verify.yml.
 on:
   push:
     branches:
       - main
-      - "heist/**"
+      - dev
   pull_request:
   workflow_dispatch:
 
