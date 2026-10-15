@@ -49,6 +49,26 @@ describe("parseRulebookRecords", () => {
 	});
 });
 
+describe("parseRulebookRecords: unvollständige Regelwerke", () => {
+	const zipXml = (xml: string): Uint8Array => zipSync({ "data.xml": strToU8(xml) });
+
+	it("lehnt Altersklassen ohne Namen ab", () => {
+		const xml = rulebookXml(GROUPS).replace("<name>AK 12</name>", "<name></name>");
+		expect(() => parseRulebookRecords(zipXml(xml))).toThrow(RulebookError);
+	});
+
+	it("lehnt Disziplinen ohne Rec-Wert ab", () => {
+		const xml = rulebookXml(GROUPS).replace("<rec>5817</rec>", "");
+		expect(() => parseRulebookRecords(zipXml(xml))).toThrow(RulebookError);
+	});
+
+	it("lehnt Regelwerke ohne Altersklassen ab", () => {
+		expect(() => parseRulebookRecords(zipXml(rulebookXml([])))).toThrow(RulebookError);
+		const withoutList = rulebookXml(GROUPS).replace(/<aks>[\s\S]*<\/aks>/, "");
+		expect(() => parseRulebookRecords(zipXml(withoutList))).toThrow(RulebookError);
+	});
+});
+
 describe("writeRulebookRecords", () => {
 	it("ändert nur Rec-Werte und Beschreibung, alles andere bleibt Zeichen für Zeichen", () => {
 		const original = rulebookFile(GROUPS, "Wellen-Wk 2025");
@@ -76,6 +96,19 @@ describe("writeRulebookRecords", () => {
 	it("behält weitere Einträge im Archiv", () => {
 		const original = zipSync({ "data.xml": strToU8(rulebookXml(GROUPS)), "extra.txt": strToU8("x") });
 		expect(Object.keys(unzipSync(writeRulebookRecords(original, [], "neu"))).sort()).toEqual(["data.xml", "extra.txt"]);
+	});
+
+	it("ergänzt eine fehlende Beschreibung vor dem Ende", () => {
+		const xml = rulebookXml(GROUPS).replace(/<beschreibung>[^<]*<\/beschreibung>/, "");
+		const updated = dataXml(writeRulebookRecords(zipSync({ "data.xml": strToU8(xml) }), [], "neu"));
+		expect(updated).toContain("  <beschreibung>neu</beschreibung>\n</Altersklassen>");
+	});
+
+	it("lehnt doppelte Beschreibungen und Rec-Werte außerhalb von Disziplinen ab", () => {
+		const twice = rulebookXml(GROUPS).replace("</Altersklassen>", "<beschreibung>x</beschreibung></Altersklassen>");
+		expect(() => writeRulebookRecords(zipSync({ "data.xml": strToU8(twice) }), [], "neu")).toThrow(RulebookError);
+		const stray = rulebookXml(GROUPS).replace("</Altersklassen>", "<rec>1</rec></Altersklassen>");
+		expect(() => writeRulebookRecords(zipSync({ "data.xml": strToU8(stray) }), [], "neu")).toThrow(RulebookError);
 	});
 
 	it("lehnt unbekannte Ziele und ungültige Werte ab", () => {

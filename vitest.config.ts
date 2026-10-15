@@ -21,6 +21,11 @@ export default defineConfig({
 		include: ["src/**/*.test.ts"],
 		// Feste Zeitzone, in der das Programm läuft.
 		env: { TZ: process.env.TZ ?? "Europe/Berlin" },
-		passWithNoTests: true
+		passWithNoTests: true,
+		coverage: {
+			provider: "v8",
+			include: ["src/lib/**/*.ts"],
+			exclude: ["src/lib/components/ui/**", "src/lib/testing/**", "src/**/*.test.ts", "src/**/*.svelte"]
+		}
 	}
 });
