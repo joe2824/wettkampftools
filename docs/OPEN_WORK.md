@@ -1,6 +1,6 @@
 # Was offen ist
 
-Stand: 2026-10-14, Branch `heist/tauri-port`. Der Neuaufbau mit Tauri und
+Stand: 2026-10-15, Branch `heist/tauri-port`. Der Neuaufbau mit Tauri und
 SvelteKit ist im Code fertig. Offen sind die manuelle Abnahme, der
 Updater-Schlüssel und das erste Release. Die Python-Version bleibt bis zur
 manuellen Abnahme im Repo.
@@ -49,6 +49,17 @@ Weiteres:
    über das vorbedruckte Papier legen. Abweichung höchstens 1 mm.
 4. **Windows:** Installation, Drag & Drop, Speichern und Öffnen, Update und
    Übernahme der alten Einstellungen prüfen.
+
+5. **Neue Funktionen unter Windows:**
+   - Projektdatei speichern, auf einem zweiten Rechner per Doppelklick öffnen
+     (App geschlossen und offen; Pfad mit Leerzeichen und Umlauten).
+   - Menü „Datei“ und Strg+N/O/S.
+   - Jahresprüfung: alte Ergebnisdatei am Originalort und als Kopie → Warnung
+     mit Bestätigung.
+   - Entfernungen mit Karte, Export als PNG/PDF; Karte auf der Urkunde und
+     Position auf dem vorgedruckten Papier.
+   - Rec-Werte: Regelwerk fürs neue Jahr erzeugen und in JAuswertung laden.
+   - Aktionsleiste unten, Schritt-Assistent, Urkunden-Vorschau.
 
 ## Nächste Schritte
 
