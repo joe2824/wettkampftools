@@ -1,11 +1,12 @@
 // Gliederungsnamen den DLRG-Standorten zuordnen; gleichnamige Gliederungen werden zur Wahl gestellt.
-import { BAD_NAUHEIM, cleanName, distanceKm, type Organisation } from "./dlrgPoi";
+import { BAD_NAUHEIM, cleanName, distanceKm, type Coordinates, type Organisation } from "./dlrgPoi";
 import { pickByHint } from "./hints";
 
 export interface Candidate {
 	id: string;
 	label: string;
 	km: number;
+	position: Coordinates;
 }
 
 export interface RowChoice {
@@ -18,6 +19,7 @@ export interface RowChoice {
 export interface DistanceRow {
 	name: string;
 	km: number;
+	position: Coordinates;
 	/** Nur bei gleichnamigen Gliederungen. */
 	choice?: RowChoice;
 }
@@ -76,7 +78,10 @@ function candidatesByName(orgs: readonly Organisation[]): Map<string, Candidate[
 		const key = matchKey(org.name);
 		const group = byName.get(key) ?? new Map<string, Candidate>();
 		const id = organisationId(org);
-		if (!group.has(id)) group.set(id, { id, label: candidateLabel(org), km: roundKm(distanceKm(BAD_NAUHEIM, org)) });
+		if (!group.has(id)) {
+			const km = roundKm(distanceKm(BAD_NAUHEIM, org));
+			group.set(id, { id, label: candidateLabel(org), km, position: { lat: org.lat, lon: org.lon } });
+		}
 		byName.set(key, group);
 	}
 	return new Map([...byName].map(([key, group]) => [key, [...group.values()].sort((a, b) => a.km - b.km)]));
@@ -99,12 +104,12 @@ function addName(result: DistanceResult, name: string, candidates: Candidate[] |
 		return;
 	}
 	if (candidates.length === 1) {
-		result.matched.push({ name, km: candidates[0].km });
+		result.matched.push({ name, km: candidates[0].km, position: candidates[0].position });
 		return;
 	}
 	const choice = selectCandidate(name, candidates, options);
 	const selected = candidates.find((candidate) => candidate.id === choice?.selectedId);
-	if (choice && selected) result.matched.push({ name, km: selected.km, choice });
+	if (choice && selected) result.matched.push({ name, km: selected.km, position: selected.position, choice });
 	else result.ambiguous.push({ name, candidates });
 }
 

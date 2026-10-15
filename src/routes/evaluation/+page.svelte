@@ -32,7 +32,7 @@
 	const rules = $derived(trophyRulesText({ excludeUnplaced: settings.excludeUnplacedTeams }));
 </script>
 
-<div class="mx-auto flex max-w-5xl flex-col gap-6">
+<div class="page-width flex flex-col gap-6">
 	<header class="flex flex-col gap-1">
 		<h1 class="text-2xl font-bold">Auswertung</h1>
 		<p class="text-muted-foreground">

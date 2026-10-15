@@ -49,7 +49,7 @@
 	);
 </script>
 
-<div class="mx-auto flex max-w-5xl flex-col gap-8">
+<div class="page-width flex flex-col gap-8">
 	<header class="flex items-center gap-4">
 		<img src="/logo.png" alt="" class="size-14 shrink-0" />
 		<div class="flex flex-col gap-1">

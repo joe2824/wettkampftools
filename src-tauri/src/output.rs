@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 use tauri::ipc::{InvokeBody, Request};
 
 /// Nur diese Endungen schreibt die Anwendung selbst.
-const OUTPUT_EXTENSIONS: [&str; 5] = ["xlsx", "pdf", "json", "rwm", "wwkprojekt"];
+const OUTPUT_EXTENSIONS: [&str; 6] = ["xlsx", "pdf", "json", "rwm", "wwkprojekt", "png"];
 
 /// Kopfzeile mit dem URL-kodierten Zielpfad; die Bytes kommen roh im Body.
 const PATH_HEADER: &str = "x-output-path";
@@ -190,6 +190,7 @@ mod tests {
             "d.rwm",
             "E.PDF",
             "f.wwkprojekt",
+            "g.png",
         ] {
             let path = write_target(name);
             let checked = check_write_target(&path, allow_all).expect("erlaubt");

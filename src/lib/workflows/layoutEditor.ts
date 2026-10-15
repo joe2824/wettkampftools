@@ -5,6 +5,7 @@ import type { TextMetrics } from "$lib/certificates/fonts";
 import type { Layout, LayoutSet, LayoutVariant, SignatureSlot } from "$lib/certificates/layout";
 import type { PlaceholderValues } from "$lib/certificates/layoutTemplate";
 import { IMAGE_FORMAT_ERROR, type ImageSlot } from "$lib/certificates/layoutStore.svelte";
+import type { CertificateMapData } from "$lib/certificates/mapRender";
 import { placeholderValues, type CertificateEntry } from "$lib/certificates/model";
 import { layoutPage, type DrawOp, type OffsetMm } from "$lib/certificates/render";
 import { logError, logInfo } from "$lib/log";
@@ -44,6 +45,7 @@ export type OpenedFileOutcome =
 export interface PreviewOptions {
 	withMemberNames: boolean;
 	availableSlots: ReadonlySet<SignatureSlot>;
+	map?: CertificateMapData;
 }
 
 const orSample = (value: string, sample: string): string => (value.trim() === "" ? sample : value);

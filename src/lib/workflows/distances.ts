@@ -1,6 +1,7 @@
 // Entfernungen: Gliederungen sammeln, Standortdaten laden (mit Zwischenspeicher), Tabelle aufbereiten.
 import { fetchOrganisations, parseGldCache, type GldCache } from "$lib/distance/dlrgPoi";
 import {
+	choiceKey,
 	distancesToBadNauheim,
 	parseChoiceMap,
 	withChoice,
@@ -8,6 +9,7 @@ import {
 	type ChoiceMap,
 	type DistanceResult
 } from "$lib/distance/matching";
+import { formatKm } from "$lib/format/distance";
 import { MissingColumnsError, parseRegistrationCsv } from "$lib/io/csv";
 import { logError, logInfo } from "$lib/log";
 import { readJson, writeJson } from "$lib/platform/fs";
@@ -19,8 +21,8 @@ export const GLD_CACHE_FILE = "gld-cache.json";
 /** Gewählte Gliederung bei gleichnamigen Einträgen; keine Personendaten. */
 export const CHOICES_FILE = "distances/choices.json";
 const ORGANISATION_COLUMN = "gliederung";
+const WHITESPACE = /\s+/g;
 const TEAM_NAME_COLUMN = "name";
-const KM_DECIMALS = 2;
 
 /**
  * cache: gespeicherter Stand, fresh: gerade abgerufen,
@@ -155,9 +157,7 @@ export function distanceSummary(result: DistanceResult): string {
 	return `${found} gefunden · ${ambiguous} mehrdeutig · ${result.unmatched.length} nicht gefunden`;
 }
 
-export function formatKm(km: number): string {
-	return km.toLocaleString("de-DE", { minimumFractionDigits: KM_DECIMALS, maximumFractionDigits: KM_DECIMALS });
-}
+export { formatKm };
 
 export function formatDataDate(iso: string): string {
 	return new Date(iso).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
@@ -173,4 +173,9 @@ export function distanceTableText(result: DistanceResult): string {
 	const header = "Platz\tGliederung\tEntfernung (km)";
 	const rows = result.matched.map((row, index) => `${index + 1}\t${row.name}\t${formatKm(row.km)}`);
 	return [header, ...rows].join("\n");
+}
+
+/** Kennung der Tabellenzeile, damit die Karte zu ihr springen kann. */
+export function distanceRowId(name: string): string {
+	return `distance-row-${choiceKey(name).replace(WHITESPACE, "-")}`;
 }

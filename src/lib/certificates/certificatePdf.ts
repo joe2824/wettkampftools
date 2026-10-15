@@ -3,6 +3,7 @@ import { renderPdf, type PdfAssets } from "$lib/pdf/document";
 import { calibrationPage } from "./calibration";
 import { createMetrics, type FontBytes, type TextMetrics } from "./fonts";
 import { SIGNATURE_SLOTS, type Layout, type SignatureSlot } from "./layout";
+import type { CertificateMapData } from "./mapRender";
 import type { CertificatePage } from "./model";
 import { layoutPage, type DrawOp, type OffsetMm } from "./render";
 
@@ -13,6 +14,8 @@ export interface CertificatePdfInput {
 	offsetMm: OffsetMm;
 	fonts: FontBytes;
 	images: Partial<Record<SignatureSlot, Uint8Array>>;
+	/** Punkte für die Deutschlandkarte; fehlt ohne Standortdaten. */
+	map?: CertificateMapData;
 }
 
 const CERTIFICATES_TITLE = "Urkunden";
@@ -22,7 +25,7 @@ const NO_PAGES_ERROR = "Es sind keine Urkunden ausgewählt.";
 /** Zeichenbefehle je Urkunde; Unterschriften nur, wenn ein Bild hinterlegt ist. */
 export function certificatePageOps(input: Omit<CertificatePdfInput, "fonts">, metrics: TextMetrics): DrawOp[][] {
 	const availableSlots = new Set(SIGNATURE_SLOTS.filter((slot) => input.images[slot] !== undefined));
-	const options = { withMemberNames: input.withMemberNames, offsetMm: input.offsetMm, availableSlots };
+	const options = { withMemberNames: input.withMemberNames, offsetMm: input.offsetMm, availableSlots, map: input.map };
 	return input.pages.map((page) => layoutPage(input.layout, page.values, options, metrics));
 }
 

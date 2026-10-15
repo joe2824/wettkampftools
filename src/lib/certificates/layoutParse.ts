@@ -4,6 +4,7 @@ import {
 	LAYOUT_KEYS,
 	LAYOUT_SCHEMA_VERSION,
 	LAYOUT_VARIANTS,
+	MAP_OBJECT_KEYS,
 	MAX_FONT_PT,
 	MAX_TEMPLATE_LENGTH,
 	MIN_EXTENT_MM,
@@ -19,6 +20,7 @@ import {
 	type LayoutObject,
 	type LayoutSet,
 	type LayoutVariant,
+	type MapObject,
 	type TextObject
 } from "./layout";
 import { defaultLayouts } from "./layoutDefaults";
@@ -92,18 +94,15 @@ function parseTextObject(raw: Fields): TextObject | undefined {
 	};
 }
 
-function parseImageObject(raw: Fields): ImageObject | undefined {
-	const fields = {
-		id: readString(raw.id, MAX_ID_LENGTH, false),
-		kind: "image" as const,
-		label: readString(raw.label, MAX_LABEL_LENGTH, true),
-		slot: readEnum(raw.slot, SIGNATURE_SLOTS),
-		xMm: readNumber(raw.xMm),
-		yMm: readNumber(raw.yMm),
-		widthMm: readNumber(raw.widthMm),
-		heightMm: readNumber(raw.heightMm)
-	};
-	if (!hasAll<ImageObject>(fields)) return undefined;
+interface BoxFields {
+	xMm: number;
+	yMm: number;
+	widthMm: number;
+	heightMm: number;
+}
+
+/** Rechteck vollständig auf der Seite */
+function clampBox<T extends BoxFields>(fields: T): T {
 	const xMm = clamp(fields.xMm, 0, PAGE_WIDTH_MM - MIN_EXTENT_MM);
 	const yMm = clamp(fields.yMm, 0, PAGE_HEIGHT_MM - MIN_EXTENT_MM);
 	return {
@@ -115,11 +114,51 @@ function parseImageObject(raw: Fields): ImageObject | undefined {
 	};
 }
 
+const readBox = (raw: Fields) => ({
+	xMm: readNumber(raw.xMm),
+	yMm: readNumber(raw.yMm),
+	widthMm: readNumber(raw.widthMm),
+	heightMm: readNumber(raw.heightMm)
+});
+
+function parseImageObject(raw: Fields): ImageObject | undefined {
+	const fields = {
+		id: readString(raw.id, MAX_ID_LENGTH, false),
+		kind: "image" as const,
+		label: readString(raw.label, MAX_LABEL_LENGTH, true),
+		slot: readEnum(raw.slot, SIGNATURE_SLOTS),
+		...readBox(raw)
+	};
+	return hasAll<ImageObject>(fields) ? clampBox(fields) : undefined;
+}
+
+const readBoolean = (value: unknown): boolean | undefined => (typeof value === "boolean" ? value : undefined);
+
+function parseMapObject(raw: Fields): MapObject | undefined {
+	const fields = {
+		id: readString(raw.id, MAX_ID_LENGTH, false),
+		kind: "map" as const,
+		label: readString(raw.label, MAX_LABEL_LENGTH, true),
+		...readBox(raw),
+		highlightOwn: readBoolean(raw.highlightOwn)
+	};
+	if (!hasAll<Omit<MapObject, "visible">>(fields)) return undefined;
+	if (raw.visible === undefined) return clampBox(fields);
+	const visible = readBoolean(raw.visible);
+	return visible === undefined ? undefined : clampBox({ ...fields, visible });
+}
+
+const OBJECT_KEYS = { text: TEXT_OBJECT_KEYS, image: IMAGE_OBJECT_KEYS, map: MAP_OBJECT_KEYS } as const;
+const PARSERS = { text: parseTextObject, image: parseImageObject, map: parseMapObject } as const;
+type ObjectKind = keyof typeof OBJECT_KEYS;
+
+const isObjectKind = (kind: unknown): kind is ObjectKind =>
+	typeof kind === "string" && Object.hasOwn(OBJECT_KEYS, kind);
+
 function parseObject(raw: unknown): LayoutObject | undefined {
-	if (!isRecord(raw)) return undefined;
-	if (raw.kind === "text" && extraKeys(raw, TEXT_OBJECT_KEYS).length === 0) return parseTextObject(raw);
-	if (raw.kind === "image" && extraKeys(raw, IMAGE_OBJECT_KEYS).length === 0) return parseImageObject(raw);
-	return undefined;
+	if (!isRecord(raw) || !isObjectKind(raw.kind)) return undefined;
+	if (extraKeys(raw, OBJECT_KEYS[raw.kind]).length > 0) return undefined;
+	return PARSERS[raw.kind](raw);
 }
 
 function parseObjects(rawObjects: unknown[], variantName: string, issues: string[]): LayoutObject[] {
@@ -186,11 +225,14 @@ function pick(source: object, keys: readonly string[]): Fields {
 	return Object.fromEntries(keys.map((key) => [key, record[key]]));
 }
 
+const withoutUndefined = (fields: Fields): Fields =>
+	Object.fromEntries(Object.entries(fields).filter(([, value]) => value !== undefined));
+
 function serializeLayout(layout: Layout): Fields {
 	return {
 		schemaVersion: LAYOUT_SCHEMA_VERSION,
 		variant: layout.variant,
-		objects: layout.objects.map((object) => pick(object, object.kind === "text" ? TEXT_OBJECT_KEYS : IMAGE_OBJECT_KEYS))
+		objects: layout.objects.map((object) => withoutUndefined(pick(object, OBJECT_KEYS[object.kind])))
 	};
 }
 

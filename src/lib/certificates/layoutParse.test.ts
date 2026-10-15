@@ -150,3 +150,53 @@ describe("serializeLayoutSet", () => {
 		expect(JSON.stringify(json)).not.toContain("data:");
 	});
 });
+
+describe("Kartenobjekt", () => {
+	const validMap = (overrides: Record<string, unknown> = {}): Record<string, unknown> => ({
+		id: "map",
+		kind: "map",
+		label: "Deutschlandkarte",
+		xMm: 150,
+		yMm: 40,
+		widthMm: 45,
+		heightMm: 55,
+		highlightOwn: false,
+		...overrides
+	});
+
+	it("übernimmt eine Karte mit und ohne Sichtbarkeit (Hin- und Rückweg)", () => {
+		const result = parseLayoutSet(setWith([validMap(), validMap({ id: "map2", visible: false })]));
+		expect(result.issues).toEqual([]);
+		expect(result.layouts.team.objects).toEqual([validMap(), validMap({ id: "map2", visible: false })]);
+		const json = JSON.parse(JSON.stringify(serializeLayoutSet(result.layouts)));
+		expect(parseLayoutSet(json).layouts).toEqual(result.layouts);
+	});
+
+	it.each([
+		["Hervorhebung kein Wahrheitswert", { highlightOwn: "ja" }],
+		["Sichtbarkeit kein Wahrheitswert", { visible: 1 }],
+		["Höhe fehlt", { heightMm: undefined }],
+		["zusätzliches Feld", { points: [] }]
+	])("verwirft ungültige Karte: %s", (_name, overrides) => {
+		const result = parseLayoutSet(setWith([validMap(overrides)]));
+		expect(result.layouts.team.objects).toEqual([]);
+		expect(result.issues).toHaveLength(1);
+	});
+
+	it("begrenzt die Karte auf die Seite", () => {
+		const result = parseLayoutSet(setWith([validMap({ xMm: 300, yMm: -5, widthMm: 500, heightMm: 900 })]));
+		const [map] = result.layouts.team.objects;
+		expect(map).toMatchObject({ xMm: PAGE_WIDTH_MM - 1, yMm: 0, widthMm: 1, heightMm: PAGE_HEIGHT_MM });
+	});
+
+	it("lehnt unbekannte Arten weiterhin ab", () => {
+		const result = parseLayoutSet(setWith([{ ...validMap(), kind: "chart" }]));
+		expect(result.layouts.team.objects).toEqual([]);
+		expect(result.issues).toHaveLength(1);
+	});
+
+	it("Standardlayouts enthalten keine Karte", () => {
+		const kinds = Object.values(defaultLayouts()).flatMap((layout) => layout.objects.map((object) => object.kind));
+		expect(kinds).not.toContain("map");
+	});
+});

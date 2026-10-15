@@ -70,12 +70,20 @@ Gesamtwertung um den Pokal und erscheinen nie auf einer Urkunde.
 - Layout-Editor mit A4-Vorschau: Texte und Unterschriften frei positionieren,
   den Scan der vorbedruckten Urkunde zur Ausrichtung einblenden.
 - Kalibrierungsseite, um den Versatz des eigenen Druckers auszugleichen.
+- Auf Wunsch eine Deutschlandkarte auf der Urkunde (Schalter „Karte auf der
+  Urkunde“ im Layout-Editor): alle teilnehmenden Gliederungen als Punkte, Bad
+  Nauheim als Stern, die eigene Gliederung wahlweise hervorgehoben.
 
 ### Entfernungen
 
 Berechnet die Entfernung jeder gemeldeten Gliederung nach Bad Nauheim anhand
 der öffentlichen DLRG-Standortdaten. Der letzte Datenstand bleibt auch ohne
 Internet verfügbar.
+
+Eine Deutschlandkarte zeigt jede Gliederung als Punkt, verknüpft mit der
+Tabelle, dazu eine Übersicht (Anzahl, weiteste Anreise, Durchschnitt,
+Bundesländer). Die Karte lässt sich als PNG-Bild oder PDF speichern. Sie kommt
+ohne Online-Kartendienst aus.
 
 ### Rec-Werte fürs neue Jahr
 
@@ -184,3 +192,6 @@ Aufbau, Konventionen und Regeln stehen in [`AGENTS.md`](AGENTS.md).
 ## Lizenz
 
 Veröffentlicht unter MIT-Lizenz. Siehe [`LICENSE.txt`](LICENSE.txt).
+
+Kartendaten: [Natural Earth](https://www.naturalearthdata.com/) (gemeinfrei,
+public domain), vereinfacht.

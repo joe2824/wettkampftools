@@ -3,6 +3,7 @@
 	import FileSpreadsheetIcon from "@lucide/svelte/icons/file-spreadsheet";
 	import LoaderCircleIcon from "@lucide/svelte/icons/loader-circle";
 	import { toast } from "svelte-sonner";
+	import type { CertificateMapData } from "$lib/certificates/mapRender";
 	import type { CertificateEntry } from "$lib/certificates/model";
 	import { layoutStore } from "$lib/certificates/layoutStore.svelte";
 	import SaveResult from "$lib/components/SaveResult.svelte";
@@ -19,9 +20,11 @@
 		pageCount: number;
 		/** Gesperrt, solange die Ergebnisdatei nicht bestätigt ist. */
 		locked?: boolean;
+		/** Punkte der Deutschlandkarte; fehlt ohne Standortdaten. */
+		map?: CertificateMapData;
 	}
 
-	let { entries, competition, pageCount, locked = false }: Props = $props();
+	let { entries, competition, pageCount, locked = false, map }: Props = $props();
 
 	let busy = $state<"pdf" | "serialLetter" | null>(null);
 	let pdfPath = $state<string | null>(null);
@@ -38,7 +41,8 @@
 			competition,
 			settings: $state.snapshot(settingsStore.settings),
 			layouts: $state.snapshot(layoutStore.layouts),
-			images: layoutStore.images
+			images: layoutStore.images,
+			map
 		};
 	}
 

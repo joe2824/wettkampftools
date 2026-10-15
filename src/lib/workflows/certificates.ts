@@ -2,6 +2,7 @@
 import { loadAppFonts } from "$lib/certificates/appFonts";
 import { buildCertificatesPdf } from "$lib/certificates/certificatePdf";
 import { SIGNATURE_SLOTS, type LayoutSet, type SignatureSlot } from "$lib/certificates/layout";
+import type { CertificateMapData } from "$lib/certificates/mapRender";
 import { buildCertificatePages, type CertificateEntry } from "$lib/certificates/model";
 import { logError, logInfo } from "$lib/log";
 import { datedFileName, saveFile } from "$lib/platform/files";
@@ -25,6 +26,8 @@ export interface CertificateJob {
 	settings: Settings;
 	layouts: LayoutSet;
 	images: Partial<Record<SignatureSlot, Uint8Array | null>>;
+	/** Punkte der Deutschlandkarte; fehlt ohne Standortdaten. */
+	map?: CertificateMapData;
 }
 
 export type PdfOutcome =
@@ -49,7 +52,8 @@ async function renderCertificates(job: CertificateJob): Promise<{ bytes: Uint8Ar
 		withMemberNames,
 		offsetMm: printOffsetMm,
 		fonts: await loadAppFonts(),
-		images: signatureImages(job.images)
+		images: signatureImages(job.images),
+		map: job.map
 	});
 	return { bytes, pageCount: pages.length };
 }

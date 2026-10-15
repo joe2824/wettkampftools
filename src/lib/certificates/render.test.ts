@@ -1,9 +1,16 @@
 import { readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 import { createMetrics, loadFontBytes } from "./fonts";
-import { LAYOUT_SCHEMA_VERSION, type ImageObject, type Layout, type LayoutObject, type TextObject } from "./layout";
+import {
+	LAYOUT_SCHEMA_VERSION,
+	type ImageObject,
+	type Layout,
+	type LayoutObject,
+	type MapObject,
+	type TextObject
+} from "./layout";
 import { defaultLayouts } from "./layoutDefaults";
-import { layoutPage, type DrawOp, type RenderOptions, type TextOp } from "./render";
+import { grayCss, layoutPage, type DrawOp, type RenderOptions, type TextOp } from "./render";
 
 const metrics = createMetrics(await loadFontBytes(async (path) => new Uint8Array(await readFile(`static${path}`))));
 
@@ -203,5 +210,44 @@ describe("layoutPage – Bilder und Versatz", () => {
 				expect(op.topMm).toBeCloseTo(base.topMm - 2, 9);
 			} else throw new Error("Unerwartete Reihenfolge");
 		});
+	});
+});
+
+describe("layoutPage – Deutschlandkarte", () => {
+	const map: MapObject = {
+		id: "map",
+		kind: "map",
+		label: "Deutschlandkarte",
+		xMm: 150,
+		yMm: 40,
+		widthMm: 45,
+		heightMm: 55,
+		highlightOwn: false
+	};
+	const markers = [{ name: "Musterstadt", position: { lat: 53.55, lon: 9.99 } }];
+
+	it("zeichnet die Karte als Vektorbefehle und verschiebt sie mit dem Druckversatz", () => {
+		const plain = layoutPage(page([map]), {}, { ...OPTIONS, map: { markers } }, metrics);
+		const shifted = layoutPage(page([map]), {}, { ...OPTIONS, map: { markers }, offsetMm: { x: 2, y: -1 } }, metrics);
+		expect(plain.map((op) => op.kind)).toContain("circle");
+		expect(plain.every((op) => op.kind === "path" || op.kind === "circle")).toBe(true);
+		const dot = plain.find((op) => op.kind === "circle")!;
+		const shiftedDot = shifted.find((op) => op.kind === "circle")!;
+		expect(shiftedDot).toMatchObject({ cxMm: dot.cxMm + 2, cyMm: dot.cyMm - 1 });
+		const firstPoint = (ops: DrawOp[]) => (ops[0].kind === "path" ? ops[0].rings[0][0] : null);
+		expect(firstPoint(shifted)!.x).toBeCloseTo(firstPoint(plain)!.x + 2, 9);
+	});
+
+	it("lässt eine ausgeschaltete Karte weg", () => {
+		expect(layoutPage(page([{ ...map, visible: false }]), {}, OPTIONS, metrics)).toEqual([]);
+	});
+});
+
+describe("grayCss", () => {
+	it("übersetzt Grauwerte in CSS-Farben", () => {
+		expect(grayCss(0)).toBe("rgb(0 0 0)");
+		expect(grayCss(1)).toBe("rgb(255 255 255)");
+		expect(grayCss(0.5)).toBe("rgb(128 128 128)");
+		expect(grayCss(null)).toBe("none");
 	});
 });

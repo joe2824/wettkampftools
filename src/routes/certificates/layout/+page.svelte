@@ -6,20 +6,25 @@
 	import { updateObject, replaceObject, type ObjectPatch } from "$lib/certificates/editorOps";
 	import { SIGNATURE_SLOTS, type LayoutObject, type LayoutVariant } from "$lib/certificates/layout";
 	import { layoutStore } from "$lib/certificates/layoutStore.svelte";
+	import { isMapEnabled, setMapEnabled } from "$lib/certificates/mapObject";
 	import FontsUnavailableAlert from "$lib/components/certificates/FontsUnavailableAlert.svelte";
 	import { ImageUrls } from "$lib/components/certificates/imageUrls.svelte";
 	import LayoutCanvas, { type CanvasZoom } from "$lib/components/certificates/LayoutCanvas.svelte";
 	import LayoutToolbar from "$lib/components/certificates/LayoutToolbar.svelte";
+	import { MapLocations } from "$lib/components/certificates/mapLocations.svelte";
 	import ObjectList from "$lib/components/certificates/ObjectList.svelte";
 	import { PreviewFonts } from "$lib/components/certificates/previewFonts.svelte";
 	import PropertiesPanel from "$lib/components/certificates/PropertiesPanel.svelte";
 	import BackgroundControls from "$lib/components/layoutEditor/BackgroundControls.svelte";
+	import MapControls from "$lib/components/layoutEditor/MapControls.svelte";
 	import PreviewOptions from "$lib/components/layoutEditor/PreviewOptions.svelte";
 	import UndoControls from "$lib/components/layoutEditor/UndoControls.svelte";
 	import * as Card from "$lib/components/ui/card";
 	import { Separator } from "$lib/components/ui/separator";
 	import { Skeleton } from "$lib/components/ui/skeleton";
+	import { session } from "$lib/session.svelte";
 	import { settingsStore } from "$lib/settings/settingsStore.svelte";
+	import { participantNames } from "$lib/workflows/certificateMap";
 	import { layoutSnapshot, previewOps, sampleValues, saveLayoutEditor } from "$lib/workflows/layoutEditor";
 
 	const LEAVE_QUESTION = "Es gibt ungespeicherte Änderungen am Layout. Seite trotzdem verlassen?";
@@ -36,6 +41,7 @@
 	const fonts = new PreviewFonts();
 	let savedSnapshot = $state(layoutSnapshot(layoutStore.layouts));
 	const images = new ImageUrls();
+	const locations = new MapLocations();
 	let history = $state.raw(emptyHistory());
 	// Zuletzt gesehener Stand; Änderungen dagegen landen im Verlauf.
 	let currentSnapshot = layoutSnapshot(layoutStore.layouts);
@@ -46,14 +52,16 @@
 	const selected = $derived(layout.objects.find((object) => object.id === selectedId) ?? null);
 	const availableSlots = $derived(new Set(SIGNATURE_SLOTS.filter((slot) => layoutStore.images[slot] !== null)));
 	const values = $derived(sampleValues(variant, settingsStore.settings.event));
+	const map = $derived(locations.mapData(participantNames(session.results, session.registration)));
 	const ops = $derived(
-		fonts.metrics ? previewOps(layout, values, { withMemberNames, availableSlots }, fonts.metrics) : []
+		fonts.metrics ? previewOps(layout, values, { withMemberNames, availableSlots, map }, fonts.metrics) : []
 	);
 	const dirty = $derived(layoutSnapshot(layoutStore.layouts) !== savedSnapshot || settingsStore.dirty);
 	const backgroundOpacity = $derived(backgroundVisible ? opacityPercent / PERCENT : null);
 
 	onMount(() => {
 		void fonts.load();
+		void locations.load();
 		return images.track(() => layoutStore.images);
 	});
 
@@ -83,6 +91,12 @@
 	function commit(object: LayoutObject) {
 		changeKey = `${variant}:${object.id}`;
 		layoutStore.layouts[variant] = replaceObject(layout, object);
+	}
+
+	function toggleMap(enabled: boolean) {
+		changeKey = "map";
+		layoutStore.layouts[variant] = setMapEnabled(layout, enabled);
+		if (!enabled && selected?.kind === "map") selectedId = null;
 	}
 
 	function patchSelected(patch: ObjectPatch) {
@@ -128,6 +142,13 @@
 				<PreviewOptions bind:withMemberNames bind:zoom />
 				<Separator />
 				<BackgroundControls bind:visible={backgroundVisible} bind:opacityPercent />
+				<Separator />
+				<MapControls
+					enabled={isMapEnabled(layout)}
+					locationsAvailable={!locations.loaded || locations.available}
+					pointCount={map?.markers.length ?? 0}
+					onchange={toggleMap}
+				/>
 				<Separator />
 				<ObjectList
 					objects={layout.objects}

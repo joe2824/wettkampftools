@@ -2,7 +2,8 @@
 	import type { Snippet } from "svelte";
 	import type { SVGAttributes } from "svelte/elements";
 	import { PAGE_HEIGHT_MM, PAGE_WIDTH_MM, ptToMm, type FontWeight } from "$lib/certificates/layout";
-	import type { DrawOp } from "$lib/certificates/render";
+	import { grayCss, type DrawOp } from "$lib/certificates/render";
+	import { ringsPath } from "$lib/maps/shapes";
 	import type { ImageUrlMap } from "./imageUrls.svelte";
 
 	// Eine Urkundenseite aus denselben Zeichenbefehlen wie im PDF, als SVG in Millimetern.
@@ -55,8 +56,26 @@
 				height={op.heightMm}
 				preserveAspectRatio="xMidYMid meet"
 			/>
-		{:else}
+		{:else if op.kind === "line"}
 			<line x1={op.x1Mm} y1={op.y1Mm} x2={op.x2Mm} y2={op.y2Mm} stroke="black" stroke-width={op.thicknessMm} />
+		{:else if op.kind === "path"}
+			<path
+				d={ringsPath(op.rings)}
+				fill={grayCss(op.fillGray)}
+				fill-rule="evenodd"
+				stroke={grayCss(op.strokeGray)}
+				stroke-width={op.strokeMm}
+				stroke-linejoin="round"
+			/>
+		{:else}
+			<circle
+				cx={op.cxMm}
+				cy={op.cyMm}
+				r={op.rMm}
+				fill={grayCss(op.fillGray)}
+				stroke={grayCss(op.strokeGray)}
+				stroke-width={op.strokeMm}
+			/>
 		{/if}
 	{/each}
 

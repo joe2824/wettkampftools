@@ -28,7 +28,7 @@
 	});
 </script>
 
-<div class="mx-auto flex max-w-4xl flex-col gap-6">
+<div class="page-width flex flex-col gap-6">
 	<header class="flex flex-col gap-1">
 		<h1 class="text-2xl font-bold">Einstellungen</h1>
 		<p class="text-muted-foreground">

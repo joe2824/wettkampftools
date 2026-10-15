@@ -10,6 +10,7 @@ import {
 } from "./certificatePdf";
 import { createMetrics, loadFontBytes } from "./fonts";
 import { defaultLayouts } from "./layoutDefaults";
+import { setMapEnabled } from "./mapObject";
 import type { CertificatePage } from "./model";
 import type { DrawOp } from "./render";
 
@@ -20,7 +21,7 @@ function page(name: string, copyIndex = 0, mitglied = ""): CertificatePage {
 	return {
 		entryId: `row-${name}`,
 		copyIndex,
-		values: { name, mitglied, platz: "1", altersklasse: "AK 12", wertung: "Rettungswertung" }
+		values: { name, gliederung: name, mitglied, platz: "1", altersklasse: "AK 12", wertung: "Rettungswertung" }
 	};
 }
 
@@ -40,6 +41,23 @@ const texts = (ops: DrawOp[]): string[] => ops.flatMap((op) => (op.kind === "tex
 const imageSlots = (ops: DrawOp[]): string[] => ops.flatMap((op) => (op.kind === "image" ? [op.slot] : []));
 
 describe("certificatePageOps", () => {
+	it("zeichnet die Karte mit den teilnehmenden Gliederungen und hebt die eigene hervor", () => {
+		const layout = setMapEnabled(defaultLayouts().team, true);
+		const highlighted = {
+			...layout,
+			objects: layout.objects.map((o) => (o.kind === "map" ? { ...o, highlightOwn: true } : o))
+		};
+		const markers = [
+			{ name: "Musterstadt", position: { lat: 53.55, lon: 9.99 } },
+			{ name: "Beispielhausen", position: { lat: 48.14, lon: 11.58 } }
+		];
+		const pages = certificatePageOps(input({ layout: highlighted, map: { markers } }), metrics);
+		const radii = (ops: DrawOp[]) => ops.flatMap((op) => (op.kind === "circle" ? [op.rMm] : []));
+		expect(radii(pages[0])).toHaveLength(2);
+		expect(radii(pages[0])[1]).toBeGreaterThan(radii(pages[0])[0]);
+		expect(pages[0].filter((op) => op.kind === "image")).toEqual([]);
+	});
+
 	it("liefert je Urkunde eine Seite mit deren Werten", () => {
 		const pages = certificatePageOps(input(), metrics);
 		expect(pages).toHaveLength(2);

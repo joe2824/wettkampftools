@@ -3,6 +3,7 @@ import { PDFDocument } from "@cantoo/pdf-lib";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { loadFontBytes } from "$lib/certificates/fonts";
 import { defaultLayouts } from "$lib/certificates/layoutDefaults";
+import { setMapEnabled } from "$lib/certificates/mapObject";
 import { eligibleEntries } from "$lib/certificates/model";
 import { setWorkbookAdapter, type Sheet } from "$lib/platform/workbook";
 import { defaultSettings, type Settings } from "$lib/settings/settings";
@@ -82,6 +83,16 @@ describe("createCertificatesPdf", () => {
 		expect(request.filters).toEqual([{ name: "PDF-Datei", extensions: ["pdf"] }]);
 		expect((await PDFDocument.load(savedBytes())).getPageCount()).toBe(15);
 		expect(outputMock.openOutputFile).toHaveBeenCalledWith("/tmp/Urkunden.pdf");
+	});
+
+	it("zeichnet die Punkte der Deutschlandkarte, wenn Standortdaten übergeben werden", async () => {
+		const layouts = defaultLayouts();
+		layouts.team = setMapEnabled(layouts.team, true);
+		const markers = [{ name: "Musterstadt", position: { lat: 53.55, lon: 9.99 } }];
+		await createCertificatesPdf(job({ layouts }), NOW);
+		await createCertificatesPdf(job({ layouts, map: { markers } }), NOW);
+		const [withoutDots, withDots] = filesMock.saveFile.mock.calls.map((call) => call[0].bytes.length);
+		expect(withDots).toBeGreaterThan(withoutDots);
 	});
 
 	it("nimmt im Einzelwettkampf die Anzahl je Person", async () => {

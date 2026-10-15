@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PAGE_HEIGHT_MM, PAGE_WIDTH_MM, ptToMm, type ImageObject, type TextObject } from "./layout";
+import { PAGE_HEIGHT_MM, PAGE_WIDTH_MM, ptToMm, type ImageObject, type MapObject, type TextObject } from "./layout";
 import { defaultLayouts } from "./layoutDefaults";
 import {
 	hitBox,
@@ -42,6 +42,20 @@ function image(overrides: Partial<ImageObject> = {}): ImageObject {
 		yMm: 250,
 		widthMm: 30,
 		heightMm: 20,
+		...overrides
+	};
+}
+
+function map(overrides: Partial<MapObject> = {}): MapObject {
+	return {
+		id: "map",
+		kind: "map",
+		label: "Deutschlandkarte",
+		xMm: 150,
+		yMm: 40,
+		widthMm: 45,
+		heightMm: 55,
+		highlightOwn: false,
 		...overrides
 	};
 }
@@ -218,5 +232,26 @@ describe("objectAt", () => {
 		const member = [text({ visibleWhen: "withMemberNames" })];
 		expect(objectAt(member, { x: 30, y: 99 }, false)).toBeNull();
 		expect(objectAt(member, { x: 30, y: 99 }, true)).not.toBeNull();
+	});
+});
+
+describe("Kartenobjekt im Editor", () => {
+	it("bleibt beim Verschieben vollständig auf der Seite", () => {
+		const moved = moveObject(map(), { x: 500, y: 500 }, true);
+		expect(moved.xMm).toBe(PAGE_WIDTH_MM - 45);
+		expect(moved.yMm).toBe(PAGE_HEIGHT_MM - 55);
+	});
+
+	it("übernimmt Größe und Hervorhebung, begrenzt auf die Seite", () => {
+		const updated = updateObject(map(), { widthMm: 500, heightMm: 30, highlightOwn: true });
+		expect(updated).toEqual(map({ widthMm: PAGE_WIDTH_MM - 150, heightMm: 30, highlightOwn: true }));
+		expect(updateObject(map({ highlightOwn: true }), { xMm: 10 }).highlightOwn).toBe(true);
+	});
+
+	it("hat ihr Rechteck als Klickfläche und ist ausgeschaltet unsichtbar", () => {
+		expect(hitBox(map())).toEqual({ xMm: 150, yMm: 40, widthMm: 45, heightMm: 55 });
+		expect(isShown(map(), false)).toBe(true);
+		expect(isShown(map({ visible: false }), true)).toBe(false);
+		expect(objectAt([map({ visible: false })], { x: 160, y: 50 }, true)).toBeNull();
 	});
 });

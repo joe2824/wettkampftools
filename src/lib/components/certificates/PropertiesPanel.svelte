@@ -61,7 +61,7 @@
 				step={POSITION_STEP_MM}
 				onvalue={(widthMm) => onchange({ widthMm })}
 			/>
-			{#if object.kind === "image"}
+			{#if object.kind !== "text"}
 				<NumberField
 					id="prop-height"
 					label="Höhe"
@@ -71,6 +71,20 @@
 				/>
 			{/if}
 		</div>
+
+		{#if object.kind === "map"}
+			<div class="flex items-center justify-between gap-3">
+				<Label for="prop-highlight-own">Eigene Gliederung hervorheben</Label>
+				<Switch
+					id="prop-highlight-own"
+					checked={object.highlightOwn}
+					onCheckedChange={(highlightOwn) => onchange({ highlightOwn })}
+				/>
+			</div>
+			<p class="-mt-2 text-xs text-muted-foreground">
+				Die Gliederung der jeweiligen Urkunde erscheint als größerer, dunkler Punkt.
+			</p>
+		{/if}
 
 		{#if object.kind === "text"}
 			<div class="flex flex-col gap-1.5">

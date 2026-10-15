@@ -1,6 +1,7 @@
 <script lang="ts">
 	import EyeOffIcon from "@lucide/svelte/icons/eye-off";
 	import ImageIcon from "@lucide/svelte/icons/image";
+	import MapIcon from "@lucide/svelte/icons/map";
 	import TypeIcon from "@lucide/svelte/icons/type";
 	import { isShown } from "$lib/certificates/editorOps";
 	import type { LayoutObject } from "$lib/certificates/layout";
@@ -19,6 +20,7 @@
 
 	function hint(object: LayoutObject): string | null {
 		if (object.kind === "image") return availableSlots.has(object.slot) ? null : "kein Bild hinterlegt";
+		if (object.kind === "map") return object.visible === false ? "ausgeschaltet" : null;
 		if (object.visibleWhen === "withMemberNames") return "nur mit Mitgliedernamen";
 		return null;
 	}
@@ -45,6 +47,8 @@
 						<ImageIcon class="mt-0.5 size-4 shrink-0" aria-hidden="true" />
 					{:else if hidden}
 						<EyeOffIcon class="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+					{:else if object.kind === "map"}
+						<MapIcon class="mt-0.5 size-4 shrink-0" aria-hidden="true" />
 					{:else}
 						<TypeIcon class="mt-0.5 size-4 shrink-0" aria-hidden="true" />
 					{/if}

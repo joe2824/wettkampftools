@@ -12,6 +12,13 @@
 @custom-variant data-horizontal (&[data-orientation="horizontal"]);
 @custom-variant data-vertical (&[data-orientation="vertical"]);
 
+/* Gemeinsame Seitenbreite: nutzt große Fenster, ohne Zeilen über die volle Breite zu ziehen. */
+@utility page-width {
+	width: 100%;
+	max-width: 96rem;
+	margin-inline: auto;
+}
+
 @font-face {
 	font-family: "Nunito";
 	font-style: normal;

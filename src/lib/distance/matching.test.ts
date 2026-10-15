@@ -22,6 +22,11 @@ describe("distancesToBadNauheim", () => {
 		expect(result.ambiguous).toEqual([]);
 	});
 
+	it("liefert die Position der zugeordneten Gliederung", () => {
+		const result = distancesToBadNauheim(["Musterstadt e.V."], orgs);
+		expect(result.matched[0].position).toEqual(FRANKFURT);
+	});
+
 	it("ordnet Namen mit doppelten Leerzeichen zu", () => {
 		const doubled = [{ name: "Musterstadt  e.V.", lat: 50.34, lon: 8.79 }];
 		expect(distancesToBadNauheim(["Musterstadt"], doubled).matched.map((m) => m.name)).toEqual(["Musterstadt"]);
@@ -66,8 +71,18 @@ describe("gleichnamige Gliederungen", () => {
 			{
 				name: "Musterstadt",
 				candidates: [
-					{ id: "2", label: "Musterstadt – 65843 Musterstadt am Taunus (Ortsgruppe)", km: roundKm(taunus) },
-					{ id: "1", label: "Musterstadt – 66280 Musterstadt (Ortsgruppe)", km: roundKm(saar) }
+					{
+						id: "2",
+						label: "Musterstadt – 65843 Musterstadt am Taunus (Ortsgruppe)",
+						km: roundKm(taunus),
+						position: { lat: 50.13, lon: 8.53 }
+					},
+					{
+						id: "1",
+						label: "Musterstadt – 66280 Musterstadt (Ortsgruppe)",
+						km: roundKm(saar),
+						position: { lat: 49.3, lon: 7.05 }
+					}
 				]
 			}
 		]);
@@ -75,7 +90,7 @@ describe("gleichnamige Gliederungen", () => {
 
 	it("zählt mehrere Orte derselben Gliederung nicht als mehrdeutig", () => {
 		const result = distancesToBadNauheim(["Musterstadt"], [taunus, taunusSecondSite]);
-		expect(result.matched).toEqual([{ name: "Musterstadt", km: roundKm(taunus) }]);
+		expect(result.matched).toEqual([{ name: "Musterstadt", km: roundKm(taunus), position: { lat: 50.13, lon: 8.53 } }]);
 		expect(result.ambiguous).toEqual([]);
 	});
 
@@ -86,6 +101,7 @@ describe("gleichnamige Gliederungen", () => {
 			{
 				name: "MUSTERSTADT",
 				km: roundKm(saar),
+				position: { lat: 49.3, lon: 7.05 },
 				choice: { selectedId: "1", automatic: false, candidates: expect.any(Array) }
 			}
 		]);

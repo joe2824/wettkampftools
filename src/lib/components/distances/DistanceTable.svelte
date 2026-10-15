@@ -7,16 +7,19 @@
 	import * as Table from "$lib/components/ui/table";
 	import type { DistanceResult } from "$lib/distance/matching";
 	import { cn } from "$lib/utils.js";
-	import { distanceSummary, distanceTableText, formatKm } from "$lib/workflows/distances";
+	import { distanceRowId, distanceSummary, distanceTableText, formatKm } from "$lib/workflows/distances";
 	import AmbiguousList from "./AmbiguousList.svelte";
 	import ChoiceSelect from "./ChoiceSelect.svelte";
 
 	interface Props {
 		result: DistanceResult;
 		onchoose: (name: string, id: string) => void;
+		/** Mit der Karte verknüpft: hervorgehobene Gliederung */
+		highlighted?: string | null;
+		onhighlight?: (name: string | null) => void;
 	}
 
-	let { result, onchoose }: Props = $props();
+	let { result, onchoose, highlighted = null, onhighlight }: Props = $props();
 
 	async function copy() {
 		try {
@@ -52,7 +55,15 @@
 			</Table.Header>
 			<Table.Body>
 				{#each result.matched as row, index (row.name)}
-					<Table.Row class={cn(row.choice && "bg-muted/60")}>
+					<Table.Row
+						id={distanceRowId(row.name)}
+						class={cn(
+							row.choice && "bg-muted/60",
+							row.name === highlighted && "bg-accent ring-2 ring-ring/50 ring-inset"
+						)}
+						onpointerenter={() => onhighlight?.(row.name)}
+						onpointerleave={() => onhighlight?.(null)}
+					>
 						<Table.Cell class="text-right tabular-nums">{index + 1}</Table.Cell>
 						<Table.Cell>
 							{#if row.choice}

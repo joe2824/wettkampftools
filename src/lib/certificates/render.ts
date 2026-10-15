@@ -2,6 +2,7 @@
 import type { TextMetrics } from "./fonts";
 import type { FontWeight, ImageObject, Layout, SignatureSlot, TextObject } from "./layout";
 import { fillTemplate, placeholderKeysIn, type PlaceholderValues } from "./layoutTemplate";
+import { mapOps, type CertificateMapData } from "./mapRender";
 
 export interface TextOp {
 	kind: "text";
@@ -30,17 +31,39 @@ export interface LineOp {
 	thicknessMm: number;
 }
 
-export type DrawOp = TextOp | ImageOp | LineOp;
-
 export interface OffsetMm {
 	x: number;
 	y: number;
 }
 
+/** Grauwerte: 0 schwarz, 1 weiß; null zeichnet nicht. */
+export interface PathOp {
+	kind: "path";
+	/** Geschlossene Ringe; Löcher nach der Gerade-Ungerade-Regel */
+	rings: OffsetMm[][];
+	fillGray: number | null;
+	strokeGray: number | null;
+	strokeMm: number;
+}
+
+export interface CircleOp {
+	kind: "circle";
+	cxMm: number;
+	cyMm: number;
+	rMm: number;
+	fillGray: number;
+	strokeGray: number | null;
+	strokeMm: number;
+}
+
+export type DrawOp = TextOp | ImageOp | LineOp | PathOp | CircleOp;
+
 export interface RenderOptions {
 	withMemberNames: boolean;
 	offsetMm: OffsetMm;
 	availableSlots: ReadonlySet<SignatureSlot>;
+	/** Teilnehmende Gliederungen für die Karte; fehlt, wenn keine Standortdaten vorliegen. */
+	map?: CertificateMapData;
 }
 
 const SHRINK_STEP_PT = 0.5;
@@ -68,6 +91,10 @@ export function shiftOp(op: DrawOp, offset: OffsetMm): DrawOp {
 				x2Mm: op.x2Mm + offset.x,
 				y2Mm: op.y2Mm + offset.y
 			};
+		case "path":
+			return { ...op, rings: op.rings.map((ring) => ring.map((p) => ({ x: p.x + offset.x, y: p.y + offset.y }))) };
+		case "circle":
+			return { ...op, cxMm: op.cxMm + offset.x, cyMm: op.cyMm + offset.y };
 	}
 }
 
@@ -149,8 +176,19 @@ export function layoutPage(
 ): DrawOp[] {
 	const ops = layout.objects.flatMap((object): DrawOp[] => {
 		if (object.kind === "image") return imageOps(object, options);
+		if (object.kind === "map")
+			return object.visible === false ? [] : mapOps(object, options.map, values.gliederung ?? "");
 		if (object.visibleWhen === "withMemberNames" && !options.withMemberNames) return [];
 		return textOps(object, values, metrics);
 	});
 	return ops.map((op) => shiftOp(op, options.offsetMm));
+}
+
+const MAX_CHANNEL = 255;
+
+/** Grauwert (0 schwarz, 1 weiß) als CSS-Farbe für die SVG-Vorschau */
+export function grayCss(gray: number | null): string {
+	if (gray === null) return "none";
+	const channel = Math.round(gray * MAX_CHANNEL);
+	return `rgb(${channel} ${channel} ${channel})`;
 }

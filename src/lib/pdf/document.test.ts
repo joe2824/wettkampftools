@@ -128,6 +128,51 @@ describe("renderPdf – Bilder", () => {
 	});
 });
 
+describe("renderPdf – Vektorgrafik", () => {
+	const square: DrawOp = {
+		kind: "path",
+		rings: [
+			[
+				{ x: 10, y: 20 },
+				{ x: 30, y: 20 },
+				{ x: 30, y: 40 }
+			]
+		],
+		fillGray: 0.9,
+		strokeGray: 0.6,
+		strokeMm: 0.2
+	};
+	const dot: DrawOp = { kind: "circle", cxMm: 50, cyMm: 60, rMm: 1, fillGray: 0.3, strokeGray: 1, strokeMm: 0.1 };
+
+	it("zeichnet Flächen und Punkte als Pfade, nicht als Bilder", async () => {
+		const pdf = await load(await renderPdf([[square, dot]], { fonts, images: {} }, META));
+		const content = pageContent(pdf);
+		expect(countByName(pdf, "Subtype", "Image")).toBe(0);
+		expect(content).toMatch(/ l\n/);
+		expect(content).toMatch(/ c\n/);
+		expect(content).toMatch(/0\.9 g/);
+		expect(content).toMatch(/0\.6 G/);
+	});
+
+	it("rechnet Pfadpunkte von der Oberkante in PDF-Punkte um", async () => {
+		const pdf = await load(await renderPdf([[square]], { fonts, images: {} }, META));
+		const [moveX, moveY] = numbersBefore(pageContent(pdf), "m");
+		expect(pageContent(pdf)).not.toMatch(/\.\d{3,} [ml]\n/);
+		expect(moveX).toBeCloseTo(mmToPt(10), 1);
+		expect(moveY).toBeCloseTo(A4_HEIGHT_PT - mmToPt(20), 1);
+	});
+
+	it("legt auf Wunsch Seiten im Querformat an", async () => {
+		const landscape = { widthMm: 297, heightMm: 210 };
+		const pdf = await load(await renderPdf([[square]], { fonts, images: {} }, { ...META, pageSize: landscape }));
+		const box = pdf.getPage(0).getMediaBox();
+		expect(box.width).toBeCloseTo(A4_HEIGHT_PT, 1);
+		expect(box.height).toBeCloseTo(A4_WIDTH_PT, 1);
+		const [, moveY] = numbersBefore(pageContent(pdf), "m");
+		expect(moveY).toBeCloseTo(A4_WIDTH_PT - mmToPt(20), 1);
+	});
+});
+
 describe("renderPdf – Geschwindigkeit", () => {
 	it(`setzt ${PERFORMANCE_PAGES} Seiten in unter fünf Sekunden`, async () => {
 		const page: DrawOp[] = Array.from({ length: OPS_PER_PAGE }, (_, index) =>

@@ -4,12 +4,16 @@
 	import StepHeader from "$lib/components/StepHeader.svelte";
 	import * as Card from "$lib/components/ui/card";
 	import DataStep from "$lib/components/distances/DataStep.svelte";
+	import DistanceMap from "$lib/components/distances/DistanceMap.svelte";
+	import DistanceOverview from "$lib/components/distances/DistanceOverview.svelte";
 	import DistanceTable from "$lib/components/distances/DistanceTable.svelte";
+	import MapSaveButtons from "$lib/components/distances/MapSaveButtons.svelte";
 	import SourceStep from "$lib/components/distances/SourceStep.svelte";
 	import type { ChoiceMap } from "$lib/distance/matching";
 	import { settingsStore } from "$lib/settings/settingsStore.svelte";
 	import {
 		computeDistances,
+		distanceRowId,
 		loadChoices,
 		loadOrganisations,
 		saveChoice,
@@ -22,6 +26,7 @@
 	let sourceLabel = $state<string | null>(null);
 	let organisations = $state.raw<OrganisationData | null>(null);
 	let loading = $state(false);
+	let highlighted = $state<string | null>(null);
 
 	const result = $derived(
 		source && organisations?.data
@@ -52,6 +57,11 @@
 		} catch {
 			toast.error("Die Zuordnung konnte nicht gespeichert werden.");
 		}
+	}
+
+	function showRow(name: string) {
+		highlighted = name;
+		document.getElementById(distanceRowId(name))?.scrollIntoView({ block: "center", behavior: "smooth" });
 	}
 
 	onMount(() => {
@@ -96,13 +106,39 @@
 		</Card.Content>
 	</Card.Root>
 
+	{#if result && result.matched.length > 0}
+		<Card.Root>
+			<Card.Header>
+				<Card.Title>Karte</Card.Title>
+				<Card.Description>
+					Punkt anklicken, um die Gliederung in der Tabelle zu zeigen. Der Stern markiert Bad Nauheim.
+				</Card.Description>
+			</Card.Header>
+			<Card.Content class="grid gap-6 md:grid-cols-[minmax(0,1fr)_16rem]">
+				<DistanceMap
+					rows={result.matched}
+					{highlighted}
+					onhighlight={(name) => (highlighted = name)}
+					onselect={showRow}
+				/>
+				<div class="flex flex-col gap-4">
+					<DistanceOverview rows={result.matched} />
+					<MapSaveButtons rows={result.matched} />
+					<p class="text-xs text-muted-foreground">
+						Kartengrundlage: Natural Earth (gemeinfrei). Funktioniert ohne Internet.
+					</p>
+				</div>
+			</Card.Content>
+		</Card.Root>
+	{/if}
+
 	<Card.Root>
 		<Card.Header>
 			<StepHeader step={3} title="Ergebnis" description="Sortiert nach Entfernung, die weiteste Anreise zuerst." />
 		</Card.Header>
 		<Card.Content>
 			{#if result}
-				<DistanceTable {result} onchoose={choose} />
+				<DistanceTable {result} onchoose={choose} {highlighted} onhighlight={(name) => (highlighted = name)} />
 			{:else}
 				<p class="text-sm text-muted-foreground">
 					{source === null ? "Zuerst die Gliederungen wählen." : "Es fehlen noch die Standortdaten."}

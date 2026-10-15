@@ -11,6 +11,7 @@ import {
 	candidateText,
 	CHOICES_FILE,
 	computeDistances,
+	distanceRowId,
 	distanceSummary,
 	distanceTableText,
 	fetchPoiJson,
@@ -26,6 +27,7 @@ import {
 } from "./distances";
 
 let fs: FakeStore;
+const HERE = { lat: 50.3, lon: 8.7 };
 const now = new Date("2026-10-14T08:00:00.000Z");
 const cached: GldCache = {
 	fetchedAt: "2026-09-01T10:00:00.000Z",
@@ -247,19 +249,26 @@ describe("gemerkte Zuordnungen", () => {
 describe("distanceSummary", () => {
 	it("zählt gefundene, mehrdeutige und fehlende Gliederungen", () => {
 		const candidates = [
-			{ id: "1", label: "A", km: 1 },
-			{ id: "2", label: "B", km: 2 }
+			{ id: "1", label: "A", km: 1, position: HERE },
+			{ id: "2", label: "B", km: 2, position: HERE }
 		];
 		const summary = distanceSummary({
 			matched: [
-				{ name: "Musterstadt", km: 1 },
-				{ name: "Beispielhausen", km: 2, choice: { candidates, selectedId: "1", automatic: false } },
-				{ name: "Musterdorf", km: 2, choice: { candidates, selectedId: "2", automatic: true } }
+				{ name: "Musterstadt", km: 1, position: HERE },
+				{ name: "Beispielhausen", km: 2, position: HERE, choice: { candidates, selectedId: "1", automatic: false } },
+				{ name: "Musterdorf", km: 2, position: HERE, choice: { candidates, selectedId: "2", automatic: true } }
 			],
 			ambiguous: [{ name: "Beispieldorf", candidates }],
 			unmatched: ["Nirgendwo"]
 		});
 		expect(summary).toBe("2 gefunden · 2 mehrdeutig · 1 nicht gefunden");
+	});
+});
+
+describe("distanceRowId", () => {
+	it("bildet eine Kennung ohne Leerzeichen, gleich für gleiche Namen", () => {
+		expect(distanceRowId("Bad  Muster Stadt")).toBe("distance-row-bad-muster-stadt");
+		expect(distanceRowId("Bad Muster Stadt")).toBe(distanceRowId(" bad muster stadt "));
 	});
 });
 
@@ -274,16 +283,16 @@ describe("Formatierung", () => {
 	});
 
 	it("beschreibt eine Gliederung zur Auswahl mit Entfernung", () => {
-		expect(candidateText({ id: "1", label: "Musterstadt – 12345 Musterstadt (Ortsgruppe)", km: 28.8 })).toBe(
-			"Musterstadt – 12345 Musterstadt (Ortsgruppe) · 28,80 km"
-		);
+		expect(
+			candidateText({ id: "1", label: "Musterstadt – 12345 Musterstadt (Ortsgruppe)", km: 28.8, position: HERE })
+		).toBe("Musterstadt – 12345 Musterstadt (Ortsgruppe) · 28,80 km");
 	});
 
 	it("baut die Tabelle als Text zum Einfügen", () => {
 		const text = distanceTableText({
 			matched: [
-				{ name: "Beispielhausen", km: 40.5 },
-				{ name: "Musterstadt", km: 12 }
+				{ name: "Beispielhausen", km: 40.5, position: HERE },
+				{ name: "Musterstadt", km: 12, position: HERE }
 			],
 			ambiguous: [],
 			unmatched: []

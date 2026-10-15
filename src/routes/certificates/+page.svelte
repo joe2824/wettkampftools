@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from "svelte";
 	import { layoutStore } from "$lib/certificates/layoutStore.svelte";
 	import { buildCertificatePages, eligibleEntries } from "$lib/certificates/model";
 	import CertificateActions from "$lib/components/certificates/CertificateActions.svelte";
@@ -7,6 +8,7 @@
 	import { certificateSteps } from "$lib/components/certificates/certificateSteps";
 	import EntryFilters from "$lib/components/certificates/EntryFilters.svelte";
 	import EntryTable from "$lib/components/certificates/EntryTable.svelte";
+	import { MapLocations } from "$lib/components/certificates/mapLocations.svelte";
 	import MissingDateAlert from "$lib/components/MissingDateAlert.svelte";
 	import ResultsSource from "$lib/components/ResultsSource.svelte";
 	import { filterOptions, groupEntries, selectedEntries, visibleEntries } from "$lib/certificates/selection";
@@ -14,6 +16,7 @@
 	import Stepper from "$lib/components/stepper/Stepper.svelte";
 	import { session } from "$lib/session.svelte";
 	import { settingsStore } from "$lib/settings/settingsStore.svelte";
+	import { participantNames } from "$lib/workflows/certificateMap";
 	import { needsYearConfirmation } from "$lib/workflows/results";
 	import { buildAgeGroupOrder } from "$lib/wwk/ageGroups";
 
@@ -25,6 +28,11 @@
 	const visible = $derived(visibleEntries(entries, selection.hidden));
 	const selected = $derived(selectedEntries(visible, selection.excluded));
 	const preview = $derived(buildCertificatePages(selected, { competition, ...settings.certificates }, settings.event));
+	const locations = new MapLocations();
+	// Alle Gliederungen der Ergebnisdatei, nicht nur die ausgewählten Urkunden.
+	const map = $derived(locations.mapData(participantNames(results, null)));
+
+	onMount(() => void locations.load());
 
 	const steps = $derived(
 		certificateSteps({
@@ -39,7 +47,7 @@
 	$effect.pre(() => selection.attach(results?.workbook ?? null));
 </script>
 
-<div class="mx-auto flex max-w-5xl flex-col gap-6">
+<div class="page-width flex flex-col gap-6">
 	<header class="flex flex-col gap-1">
 		<h1 class="text-2xl font-bold">Urkunden</h1>
 		<p class="text-muted-foreground">
@@ -74,6 +82,7 @@
 					pages={preview.pages}
 					layout={layoutStore.layouts[competition]}
 					withMemberNames={settings.certificates.withMemberNames}
+					{map}
 				/>
 			{:else if step.id === "print"}
 				<CertificateActions
@@ -81,6 +90,7 @@
 					{competition}
 					pageCount={preview.pages.length}
 					locked={needsYearConfirmation(results)}
+					{map}
 				/>
 			{/if}
 		{/snippet}

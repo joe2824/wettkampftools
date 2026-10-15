@@ -13,6 +13,7 @@ import {
 	type ImageObject,
 	type Layout,
 	type LayoutObject,
+	type MapObject,
 	type TextObject
 } from "./layout";
 
@@ -35,7 +36,8 @@ export interface BoxMm {
 	heightMm: number;
 }
 
-export type ObjectPatch = Partial<Omit<TextObject, "id" | "kind" | "label">> & Partial<Pick<ImageObject, "heightMm">>;
+export type ObjectPatch = Partial<Omit<TextObject, "id" | "kind" | "label">> &
+	Partial<Pick<MapObject, "heightMm" | "highlightOwn">>;
 
 const NUDGE_DIRECTIONS: Record<string, DeltaMm> = {
 	ArrowLeft: { x: -1, y: 0 },
@@ -100,7 +102,7 @@ function updateText(object: TextObject, patch: ObjectPatch): TextObject {
 	};
 }
 
-function updateImage(object: ImageObject, patch: ObjectPatch): ImageObject {
+function updateBox<T extends ImageObject | MapObject>(object: T, patch: ObjectPatch): T {
 	const xMm = clamp(finiteOr(patch.xMm, object.xMm), 0, PAGE_WIDTH_MM - MIN_EXTENT_MM);
 	const yMm = clamp(finiteOr(patch.yMm, object.yMm), 0, PAGE_HEIGHT_MM - MIN_EXTENT_MM);
 	return {
@@ -112,9 +114,20 @@ function updateImage(object: ImageObject, patch: ObjectPatch): ImageObject {
 	};
 }
 
+function updateMap(object: MapObject, patch: ObjectPatch): MapObject {
+	return { ...updateBox(object, patch), highlightOwn: patch.highlightOwn ?? object.highlightOwn };
+}
+
 /** Übernimmt geprüfte Werte; Ungültiges behält den alten Wert, Zahlen werden auf die Seite begrenzt. */
 export function updateObject<T extends LayoutObject>(object: T, patch: ObjectPatch): T {
-	return (object.kind === "text" ? updateText(object, patch) : updateImage(object, patch)) as T;
+	switch (object.kind) {
+		case "text":
+			return updateText(object, patch) as T;
+		case "image":
+			return updateBox(object, patch) as T;
+		case "map":
+			return updateMap(object, patch) as T;
+	}
 }
 
 export function replaceObject(layout: Layout, object: LayoutObject): Layout {
@@ -140,9 +153,9 @@ const FONT_ASCENT_EM = 1.011;
 const FONT_DESCENT_EM = 0.353;
 const BOX_PADDING_MM = 0.5;
 
-/** Klickfläche: Textrahmen über die volle Schrifthöhe, Bilder als Rechteck. */
+/** Klickfläche: Textrahmen über die volle Schrifthöhe, Bilder und Karte als Rechteck. */
 export function hitBox(object: LayoutObject): BoxMm {
-	if (object.kind === "image") {
+	if (object.kind !== "text") {
 		const { xMm, yMm, widthMm, heightMm } = object;
 		return { xMm, yMm, widthMm, heightMm };
 	}
@@ -153,6 +166,7 @@ export function hitBox(object: LayoutObject): BoxMm {
 }
 
 export function isShown(object: LayoutObject, withMemberNames: boolean): boolean {
+	if (object.kind === "map") return object.visible !== false;
 	return object.kind === "image" || object.visibleWhen === "always" || withMemberNames;
 }
 

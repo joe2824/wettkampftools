@@ -59,7 +59,23 @@ export interface ImageObject {
 	heightMm: number;
 }
 
-export type LayoutObject = TextObject | ImageObject;
+/** Deutschlandkarte mit den teilnehmenden Gliederungen; nur auf Wunsch im Layout. */
+export interface MapObject {
+	id: string;
+	kind: "map";
+	label: string;
+	xMm: number;
+	/** Obere Kante */
+	yMm: number;
+	widthMm: number;
+	heightMm: number;
+	/** Gliederung der Urkunde größer zeichnen */
+	highlightOwn: boolean;
+	/** Ausgeschaltet bleibt die Karte im Layout, wird aber nicht gezeichnet. */
+	visible?: boolean;
+}
+
+export type LayoutObject = TextObject | ImageObject | MapObject;
 
 export interface Layout {
 	schemaVersion: typeof LAYOUT_SCHEMA_VERSION;
@@ -95,6 +111,18 @@ export const IMAGE_OBJECT_KEYS = [
 	"widthMm",
 	"heightMm"
 ] as const satisfies readonly (keyof ImageObject)[];
+
+export const MAP_OBJECT_KEYS = [
+	"id",
+	"kind",
+	"label",
+	"xMm",
+	"yMm",
+	"widthMm",
+	"heightMm",
+	"highlightOwn",
+	"visible"
+] as const satisfies readonly (keyof MapObject)[];
 
 export const LAYOUT_KEYS = ["schemaVersion", "variant", "objects"] as const satisfies readonly (keyof Layout)[];
 

@@ -126,7 +126,7 @@
 	}
 </script>
 
-<div class="mx-auto flex max-w-5xl flex-col gap-6">
+<div class="page-width flex flex-col gap-6">
 	<header class="flex flex-wrap items-end justify-between gap-4">
 		<div class="flex flex-col gap-1">
 			<h1 class="text-2xl font-bold">Rec-Werte</h1>

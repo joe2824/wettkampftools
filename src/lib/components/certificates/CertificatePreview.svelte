@@ -2,6 +2,7 @@
 	import { onMount } from "svelte";
 	import { SIGNATURE_SLOTS, type Layout } from "$lib/certificates/layout";
 	import { layoutStore } from "$lib/certificates/layoutStore.svelte";
+	import type { CertificateMapData } from "$lib/certificates/mapRender";
 	import type { CertificatePage } from "$lib/certificates/model";
 	import { Label } from "$lib/components/ui/label";
 	import { Skeleton } from "$lib/components/ui/skeleton";
@@ -19,9 +20,11 @@
 		/** Layout für die Art des Wettkampfs (Mannschaft oder Einzel). */
 		layout: Layout;
 		withMemberNames: boolean;
+		/** Punkte der Deutschlandkarte; fehlt ohne Standortdaten. */
+		map?: CertificateMapData;
 	}
 
-	let { pages, layout, withMemberNames }: Props = $props();
+	let { pages, layout, withMemberNames, map }: Props = $props();
 
 	const BACKGROUND_OPACITY = 0.5;
 
@@ -35,7 +38,9 @@
 	const availableSlots = $derived(new Set(SIGNATURE_SLOTS.filter((slot) => layoutStore.images[slot] !== null)));
 	// Nur die aktuelle Seite berechnen; ohne Druckversatz.
 	const ops = $derived(
-		fonts.metrics && page ? previewOps(layout, page.values, { withMemberNames, availableSlots }, fonts.metrics) : []
+		fonts.metrics && page
+			? previewOps(layout, page.values, { withMemberNames, availableSlots, map }, fonts.metrics)
+			: []
 	);
 	const caption = $derived(pageCaption(pages, index));
 	const hasBackground = $derived(images.urls.background !== undefined);

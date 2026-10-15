@@ -63,3 +63,6 @@ schneller und mit allem, was die bisherige Version konnte.
 - Entfernungen: Gibt es mehrere DLRG-Gliederungen gleichen Namens, werden sie markiert und lassen sich zuordnen; ein Zusatz im Mannschaftsnamen (z. B. „Saar“) führt zu einem Vorschlag zum Prüfen. Gliederungen wie Dorheim, die zusammen mit ihrer Jugend eingetragen sind, werden jetzt gefunden.
 - Projektdateien (.wwkprojekt) lassen sich per Doppelklick im Explorer öffnen: Wettkampftools startet bzw. holt das offene Fenster nach vorn und fragt vor dem Ersetzen des aktuellen Stands nach.
 - Neues Menü „Datei“ oben links: Neuer Wettkampf (Strg+N), Projekt öffnen (Strg+O) und Projekt speichern (Strg+S), auf dem Mac mit ⌘.
+- Entfernungen: Deutschlandkarte mit allen Gliederungen und Bad Nauheim, Übersicht (Anzahl, weiteste Anreise, Durchschnitt, Bundesländer), als PNG oder PDF speicherbar – ohne Internet (Kartendaten: Natural Earth, gemeinfrei).
+- Urkunden-Layout: optional eine Deutschlandkarte mit allen teilnehmenden Gliederungen auf der Urkunde.
+- Die Seiten nutzen breite Fenster besser aus.
