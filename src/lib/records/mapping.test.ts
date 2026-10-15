@@ -14,6 +14,7 @@ describe("DEFAULT_REC_MAPPING", () => {
 	it("ordnet AK 10 den Werten der AK 12 zu und kennt die Rückenlage", () => {
 		expect(DEFAULT_REC_MAPPING.ageGroups["AK 10"]).toBe("AK 12");
 		expect(DEFAULT_REC_MAPPING.ageGroups["AK offen"]).toBe("AK Offen");
+		expect(DEFAULT_REC_MAPPING.ageGroups["AK Senioren"]).toBe("AK 100");
 		expect(DEFAULT_REC_MAPPING.disciplineAliases["4*25m RLB"]).toBe("4*25m Rückenlage ohne Armtätigkeit");
 	});
 });

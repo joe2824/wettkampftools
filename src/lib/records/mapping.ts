@@ -13,8 +13,8 @@ export interface RecMapping {
  * - Alle Rettungswerte bis AK offen stimmen mit „DLRG 2025.rwm“ überein (das Regelwerk des
  *   Wettkampfjahrs trägt die Rec-Werte des Vorjahrs).
  * - AK 10 nutzt die Werte der AK 12; „4*25m RLB“ heißt offiziell „4*25m Rückenlage ohne Armtätigkeit“.
- * - AK Senioren passt zu keiner offiziellen AK (Werte teils aus AK 100, teils AK 140, teils ohne
- *   Treffer) und bleibt daher ohne Zuordnung; die Wellendisziplinen sind vereinseigen.
+ * - AK Senioren passte zu keiner offiziellen AK eindeutig; festgelegt ist AK 100 (Entscheidung des Vereins).
+ *   Die Wellendisziplinen sind vereinseigen.
  */
 export const DEFAULT_REC_MAPPING: RecMapping = {
 	ageGroups: {
@@ -23,7 +23,8 @@ export const DEFAULT_REC_MAPPING: RecMapping = {
 		"AK 13/14": "AK 13/14",
 		"AK 15/16": "AK 15/16",
 		"AK 17/18": "AK 17/18",
-		"AK offen": "AK Offen"
+		"AK offen": "AK Offen",
+		"AK Senioren": "AK 100"
 	},
 	disciplineAliases: {
 		"4*25m RLB": "4*25m Rückenlage ohne Armtätigkeit"

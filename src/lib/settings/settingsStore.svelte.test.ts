@@ -128,6 +128,21 @@ describe("SettingsStore Änderungen", () => {
 		expect(store.dirty).toBe(true);
 		expect(savedFile().ageGroups).toEqual(["AK 10", "AK 12", "AK 13/14"]);
 	});
+
+	it("behält beim Zurücksetzen Mannschaftsnamen, Veranstaltung und Regelwerk", async () => {
+		const store = new SettingsStore({ readLegacy: async () => null });
+		await store.load();
+		const rulebook = { name: "Beispiel-Regelwerk", ageGroups: [{ name: "AK 12", minMembers: 4, maxMembers: 5 }] };
+		store.settings.teamNameOverrides = { Musterstadt: "Musterstadt / Saar" };
+		store.settings.event = { ...store.settings.event, number: "39", date: "2026-11-14" };
+		store.settings.rulebook = rulebook;
+		store.settings.waveStartAgeGroup = "AK 15/16";
+		store.resetToDefaults();
+		expect(store.settings.teamNameOverrides).toEqual({ Musterstadt: "Musterstadt / Saar" });
+		expect(store.settings.event.number).toBe("39");
+		expect(store.settings.rulebook).toEqual(rulebook);
+		expect(store.settings.waveStartAgeGroup).toBe(defaultSettings().waveStartAgeGroup);
+	});
 });
 
 describe("SettingsStore Export und Import", () => {

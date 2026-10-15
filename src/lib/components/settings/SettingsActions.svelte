@@ -38,12 +38,12 @@
 	<div class="ms-auto flex flex-wrap gap-2">
 		<ConfirmDialog
 			triggerLabel="Auf Standard zurücksetzen"
-			title="Alle Einstellungen zurücksetzen?"
+			title="Einstellungen zurücksetzen?"
 			confirmLabel="Zurücksetzen"
 			onconfirm={reset}
 		>
-			Altersklassen, Veranstaltung und Urkunden-Einstellungen bekommen wieder die Standardwerte. Unterschriften bleiben
-			erhalten. Übernommen wird erst beim Speichern.
+			Altersklassen, Wellen- und Urkunden-Einstellungen bekommen wieder die Standardwerte. Veranstaltung,
+			Unterschriften, eigene Mannschaftsnamen und Regelwerk bleiben erhalten. Übernommen wird erst beim Speichern.
 		</ConfirmDialog>
 		<Button variant="outline" onclick={exportFile}>
 			<DownloadIcon data-icon="inline-start" />

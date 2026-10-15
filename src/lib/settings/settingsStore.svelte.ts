@@ -81,9 +81,13 @@ export class SettingsStore {
 		this.#savedJson = savedJson;
 	}
 
-	/** Nur im Speicher; bleibt ungespeichert, bis gespeichert wird. */
+	/**
+	 * Nur Altersklassen und Optionen; Mannschaftsnamen, Veranstaltung und Regelwerk bleiben erhalten.
+	 * Wirkt nur im Speicher, bis gespeichert wird.
+	 */
 	resetToDefaults(): void {
-		this.settings = { ...defaultSettings(), legacyMigrated: this.settings.legacyMigrated };
+		const { teamNameOverrides, event, rulebook, legacyMigrated } = this.settings;
+		this.settings = { ...defaultSettings(), teamNameOverrides, event, rulebook, legacyMigrated };
 	}
 
 	exportJson(): Uint8Array {
