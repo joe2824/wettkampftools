@@ -70,3 +70,4 @@ schneller und mit allem, was die bisherige Version konnte.
 - Die Seiten nutzen breite Fenster besser aus.
 - Urkunden-Layout: Hilfslinien mit Einrasten (Kanten, Mitten, Grundlinien, gleiche Abstände mit Anzeige), Größe über Anfasser ändern, Elemente hinzufügen, entfernen und duplizieren, Mehrfachauswahl per Rahmen, Ausrichten, gleichmäßig Verteilen und Gruppieren.
 - Info → „Lizenzen und Quellen“ listet die Schrift Nunito, die Kartendaten, die Datenquellen und alle mitgelieferten Bibliotheken samt Lizenztexten.
+- Das Urkunden-Layout speichert automatisch; Auswahlrahmen lassen sich aufziehen (auch neben Texten, mit Umschalt/Strg zum Ergänzen); die Einstellungen fragen beim Verlassen mit ungespeicherten Änderungen in einem eigenen Dialog nach.

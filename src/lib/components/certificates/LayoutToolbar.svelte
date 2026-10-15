@@ -7,20 +7,22 @@
 	import { layoutStore } from "$lib/certificates/layoutStore.svelte";
 	import LayoutImportDialog from "$lib/components/layoutEditor/LayoutImportDialog.svelte";
 	import PrintCalibration from "$lib/components/layoutEditor/PrintCalibration.svelte";
+	import type { AutosaveStatus as Status } from "$lib/autosave.svelte";
+	import AutosaveStatus from "$lib/components/AutosaveStatus.svelte";
 	import ConfirmDialog from "$lib/components/ConfirmDialog.svelte";
-	import SaveButton from "$lib/components/SaveButton.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import * as ToggleGroup from "$lib/components/ui/toggle-group";
 	import { exportLayout } from "$lib/workflows/layoutEditor";
 
 	interface Props {
 		variant: LayoutVariant;
-		dirty: boolean;
-		onsave: () => Promise<void>;
+		autosaveStatus: Status;
+		/** Tastenkürzel für Rückgängig, z. B. „Strg+Z“ */
+		undoShortcut: string;
 		onreset: () => void;
 	}
 
-	let { variant = $bindable(), dirty, onsave, onreset }: Props = $props();
+	let { variant = $bindable(), autosaveStatus, undoShortcut, onreset }: Props = $props();
 
 	const VARIANT_LABELS: Record<LayoutVariant, string> = { team: "Mannschaft", individual: "Einzel" };
 
@@ -47,12 +49,7 @@
 		{/each}
 	</ToggleGroup.Root>
 
-	<SaveButton
-		{dirty}
-		{onsave}
-		successMessage="Layout gespeichert"
-		errorMessage="Das Layout konnte nicht gespeichert werden. Bitte erneut versuchen."
-	/>
+	<AutosaveStatus status={autosaveStatus} idleText="Änderungen werden automatisch gespeichert." />
 
 	<div class="ms-auto flex flex-wrap gap-2">
 		<Button variant="outline" onclick={() => (calibrationOpen = true)}>
@@ -66,7 +63,7 @@
 			onconfirm={onreset}
 		>
 			Alle Elemente bekommen wieder Position, Text und Schrift der Word-Vorlage. Das andere Layout bleibt unverändert.
-			Übernommen wird erst beim Speichern.
+			Die Änderung wird sofort gespeichert und lässt sich mit {undoShortcut} rückgängig machen.
 		</ConfirmDialog>
 		<Button variant="outline" onclick={exportFile}>
 			<DownloadIcon data-icon="inline-start" />

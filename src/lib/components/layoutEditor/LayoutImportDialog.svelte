@@ -12,7 +12,7 @@
 	function handleFile(file: CheckedFile) {
 		issues = importLayout(layoutStore, file.bytes);
 		if (issues.length > 0) return;
-		toast.success("Layout übernommen", { description: "Zum Behalten bitte speichern." });
+		toast.success("Layout übernommen", { description: "Wird automatisch gespeichert." });
 		open = false;
 	}
 </script>

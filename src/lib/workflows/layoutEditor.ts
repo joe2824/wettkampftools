@@ -1,4 +1,4 @@
-// Abläufe des Layout-Editors: Vorschau mit Beispieldaten, Export/Import, Hintergrund, Kalibrierung, Speichern.
+// Abläufe des Layout-Editors: Vorschau mit Beispieldaten, Export/Import, Hintergrund, Kalibrierung.
 import { loadAppFonts } from "$lib/certificates/appFonts";
 import { buildCalibrationPdf } from "$lib/certificates/certificatePdf";
 import type { TextMetrics } from "$lib/certificates/fonts";
@@ -151,16 +151,7 @@ export async function storeBackground(
 	}
 }
 
-/** Layout immer, Einstellungen (Druckversatz) nur bei Änderungen. */
-export async function saveLayoutEditor(
-	layouts: { save(): Promise<void> },
-	settings: { dirty: boolean; save(): Promise<void> }
-): Promise<void> {
-	await layouts.save();
-	if (settings.dirty) await settings.save();
-}
-
-/** Vergleichswert für „ungespeicherte Änderungen“. */
+/** Vergleichswert, um Layout-Änderungen zu erkennen. */
 export function layoutSnapshot(layouts: LayoutSet): string {
 	return JSON.stringify(layouts);
 }

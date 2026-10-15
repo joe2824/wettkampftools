@@ -207,3 +207,19 @@ describe("SettingsStore.saveFields", () => {
 		expect(store.dirty).toBe(false);
 	});
 });
+
+describe("SettingsStore.discardChanges", () => {
+	it("setzt auf den gespeicherten Stand zurück, ohne zu schreiben", async () => {
+		const store = new SettingsStore({ readLegacy: async () => null });
+		await store.load();
+		store.settings.waveStartAgeGroup = "AK 15/16";
+		await store.saveFields({ teamNameOverrides: { Musterstadt: "Musterstadt / Süd" } });
+		const write = vi.spyOn(fs, "writeText");
+		expect(store.dirty).toBe(true);
+		store.discardChanges();
+		expect(store.dirty).toBe(false);
+		expect(store.settings.waveStartAgeGroup).toBe(defaultSettings().waveStartAgeGroup);
+		expect(store.settings.teamNameOverrides).toEqual({ Musterstadt: "Musterstadt / Süd" });
+		expect(write).not.toHaveBeenCalled();
+	});
+});

@@ -10,7 +10,7 @@ import {
 	type TextObject
 } from "./layout";
 import { defaultLayouts } from "./layoutDefaults";
-import { grayCss, layoutPage, type DrawOp, type RenderOptions, type TextOp } from "./render";
+import { grayCss, layoutPage, textSpans, type DrawOp, type RenderOptions, type TextOp } from "./render";
 
 const metrics = createMetrics(await loadFontBytes(async (path) => new Uint8Array(await readFile(`static${path}`))));
 
@@ -249,5 +249,23 @@ describe("grayCss", () => {
 		expect(grayCss(1)).toBe("rgb(255 255 255)");
 		expect(grayCss(0.5)).toBe("rgb(128 128 128)");
 		expect(grayCss(null)).toBe("none");
+	});
+});
+
+describe("textSpans", () => {
+	it("liefert die waagrechte Ausdehnung des gezeichneten Texts je Textobjekt", () => {
+		const layout = page([text(), text({ id: "empty", template: "({gliederung})" }), image]);
+		const values = { name: "Anna Meier", gliederung: "" };
+		const spans = textSpans(layout, values, true, metrics);
+		const { left, right } = lineExtent(textOps(layoutPage(page([text()]), values, OPTIONS, metrics)));
+		expect(spans.get("t")?.xMm).toBeCloseTo(left, 6);
+		expect(spans.get("t")?.widthMm).toBeCloseTo(right - left, 6);
+		expect(spans.has("empty")).toBe(false);
+		expect(spans.has("signature1")).toBe(false);
+	});
+
+	it("lässt ausgeblendete Mitgliedernamen weg", () => {
+		const layout = page([text({ visibleWhen: "withMemberNames" })]);
+		expect(textSpans(layout, { name: "Anna Meier" }, false, metrics).size).toBe(0);
 	});
 });

@@ -25,7 +25,6 @@ import {
 	previewOps,
 	printCalibration,
 	sampleValues,
-	saveLayoutEditor,
 	storeBackground
 } from "./layoutEditor";
 
@@ -159,22 +158,6 @@ describe("storeBackground", () => {
 		expect(await storeBackground(broken, new Uint8Array())).toBe(
 			"Der Hintergrund-Scan konnte nicht gespeichert werden. Bitte erneut versuchen."
 		);
-	});
-});
-
-describe("saveLayoutEditor", () => {
-	it("speichert das Layout und geänderte Einstellungen", async () => {
-		const layouts = { save: vi.fn(async () => undefined) };
-		const settings = { dirty: true, save: vi.fn(async () => undefined) };
-		await saveLayoutEditor(layouts, settings);
-		expect(layouts.save).toHaveBeenCalledOnce();
-		expect(settings.save).toHaveBeenCalledOnce();
-	});
-
-	it("lässt unveränderte Einstellungen in Ruhe", async () => {
-		const settings = { dirty: false, save: vi.fn(async () => undefined) };
-		await saveLayoutEditor({ save: async () => undefined }, settings);
-		expect(settings.save).not.toHaveBeenCalled();
 	});
 });
 

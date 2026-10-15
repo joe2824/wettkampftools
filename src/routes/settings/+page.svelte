@@ -1,15 +1,19 @@
 <script lang="ts">
-	import { beforeNavigate } from "$app/navigation";
+	import { beforeNavigate, goto } from "$app/navigation";
+	import { toast } from "svelte-sonner";
 	import * as Tabs from "$lib/components/ui/tabs";
 	import AgeGroupsTab from "$lib/components/settings/AgeGroupsTab.svelte";
 	import CertificatesTab from "$lib/components/settings/CertificatesTab.svelte";
 	import RulebookTab from "$lib/components/settings/RulebookTab.svelte";
 	import SeniorsTab from "$lib/components/settings/SeniorsTab.svelte";
 	import SettingsActions from "$lib/components/settings/SettingsActions.svelte";
+	import UnsavedChangesDialog from "$lib/components/UnsavedChangesDialog.svelte";
 	import WaveTab from "$lib/components/settings/WaveTab.svelte";
+	import { LeaveGuard, type LeaveChoice } from "$lib/leaveGuard.svelte";
 	import { settingsStore } from "$lib/settings/settingsStore.svelte";
+	import { saveSettings } from "$lib/workflows/settings";
 
-	const LEAVE_QUESTION = "Es gibt ungespeicherte Änderungen. Seite trotzdem verlassen?";
+	const SAVE_FAILED = "Die Einstellungen konnten nicht gespeichert werden. Bitte erneut versuchen.";
 
 	const tabs = [
 		{ value: "wave", label: "Wellenwettkampf", component: WaveTab },
@@ -20,12 +24,25 @@
 	];
 
 	let active = $state("wave");
+	const guard = new LeaveGuard();
 
 	// Schließen des Fensters ist ausgenommen: dort gibt es keine eigene Rückfrage.
-	beforeNavigate(({ cancel, type }) => {
-		if (type === "leave" || !settingsStore.dirty) return;
-		if (!confirm(LEAVE_QUESTION)) cancel();
+	beforeNavigate(({ cancel, type, to }) => {
+		if (type === "leave") return;
+		if (guard.intercept(to?.url ?? null, settingsStore.dirty)) cancel();
 	});
+
+	async function leave(choice: LeaveChoice) {
+		try {
+			await guard.choose(choice, {
+				save: () => saveSettings(settingsStore),
+				discard: () => settingsStore.discardChanges(),
+				goto: (target) => goto(target)
+			});
+		} catch {
+			toast.error(SAVE_FAILED);
+		}
+	}
 </script>
 
 <div class="page-width flex flex-col gap-6">
@@ -52,3 +69,5 @@
 
 	<SettingsActions />
 </div>
+
+<UnsavedChangesDialog open={guard.open} onchoose={leave} />

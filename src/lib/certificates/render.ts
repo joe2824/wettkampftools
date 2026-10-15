@@ -184,6 +184,31 @@ export function layoutPage(
 	return ops.map((op) => shiftOp(op, options.offsetMm));
 }
 
+/** Waagrechte Ausdehnung des gezeichneten Texts */
+export interface TextSpan {
+	xMm: number;
+	widthMm: number;
+}
+
+/** Je sichtbarem Textobjekt mit Inhalt die gezeichnete Breite; leere Texte fehlen. */
+export function textSpans(
+	layout: Layout,
+	values: PlaceholderValues,
+	withMemberNames: boolean,
+	metrics: TextMetrics
+): Map<string, TextSpan> {
+	const spans = new Map<string, TextSpan>();
+	for (const object of layout.objects) {
+		if (object.kind !== "text" || (object.visibleWhen === "withMemberNames" && !withMemberNames)) continue;
+		const ops = textOps(object, values, metrics);
+		if (ops.length === 0) continue;
+		const last = ops[ops.length - 1];
+		const rightMm = last.xMm + metrics.widthMm(last.text, last.font, last.sizePt);
+		spans.set(object.id, { xMm: ops[0].xMm, widthMm: rightMm - ops[0].xMm });
+	}
+	return spans;
+}
+
 const MAX_CHANNEL = 255;
 
 /** Grauwert (0 schwarz, 1 weiß) als CSS-Farbe für die SVG-Vorschau */

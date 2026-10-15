@@ -87,6 +87,11 @@ export class SettingsStore {
 		this.#savedJson = savedJson;
 	}
 
+	/** Verwirft ungespeicherte Änderungen; es wird nichts geschrieben. */
+	discardChanges(): void {
+		this.settings = JSON.parse(this.#savedJson) as Settings;
+	}
+
 	/**
 	 * Nur Altersklassen und Optionen; Mannschaftsnamen, Veranstaltung und Regelwerk bleiben erhalten.
 	 * Wirkt nur im Speicher, bis gespeichert wird.

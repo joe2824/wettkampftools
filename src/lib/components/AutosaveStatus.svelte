@@ -1,6 +1,6 @@
 <script lang="ts">
 	import CheckIcon from "@lucide/svelte/icons/check";
-	import type { AutosaveStatus } from "$lib/settings/fieldAutosave.svelte";
+	import type { AutosaveStatus } from "$lib/autosave.svelte";
 
 	interface Props {
 		status: AutosaveStatus;

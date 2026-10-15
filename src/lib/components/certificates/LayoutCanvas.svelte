@@ -7,15 +7,25 @@
 
 <script lang="ts">
 	import { dragObjects, type ObjectDrag } from "$lib/certificates/canvasDrag";
+	import {
+		marqueeEnd,
+		marqueePreview,
+		pickObjectAt,
+		pointerStart,
+		visibleBox,
+		type MarqueeStart,
+		type TextSpans
+	} from "$lib/certificates/canvasHit";
 	import { gestureKey } from "$lib/certificates/editHistory";
-	import { hitBox, isShown, objectAt, type PointMm } from "$lib/certificates/editorOps";
+	import { hitBox, isShown, type PointMm } from "$lib/certificates/editorOps";
 	import { editorShortcut, type EditorShortcut } from "$lib/certificates/editorShortcuts";
 	import { PAGE_WIDTH_MM, type Layout, type LayoutObject } from "$lib/certificates/layout";
 	import { HANDLE_SIDES, resizeHandles, type ResizeHandle } from "$lib/certificates/objectResize";
-	import { boxFromPoints, clickSelection, marqueeSelection, selectionBox } from "$lib/certificates/objectSelection";
+	import { boxFromPoints, selectionBox } from "$lib/certificates/objectSelection";
 	import type { Guide, SpacingMark } from "$lib/certificates/snapping";
 	import type { DrawOp } from "$lib/certificates/render";
 	import GuidesOverlay from "$lib/components/layoutEditor/GuidesOverlay.svelte";
+	import MarqueeOverlay from "$lib/components/layoutEditor/MarqueeOverlay.svelte";
 	import SelectionOverlay, { HANDLE_CURSORS } from "$lib/components/layoutEditor/SelectionOverlay.svelte";
 	import { isApplePlatform } from "$lib/components/shell/fileShortcuts";
 	import { cn } from "$lib/utils.js";
@@ -25,6 +35,8 @@
 	interface Props {
 		layout: Layout;
 		ops: DrawOp[];
+		/** Gezeichnete Textbreiten; Texte sind nur dort greifbar. */
+		textSpans?: TextSpans;
 		/** Blob-Adressen der Unterschriften und des Hintergrund-Scans. */
 		imageUrls: ImageUrlMap;
 		backgroundOpacity: number | null;
@@ -42,6 +54,7 @@
 	let {
 		layout,
 		ops,
+		textSpans = null,
 		imageUrls,
 		backgroundOpacity,
 		withMemberNames,
@@ -58,7 +71,7 @@
 
 	let svg = $state<SVGSVGElement | null>(null);
 	let drag = $state.raw<(ObjectDrag & { pointerId: number; gesture: number }) | null>(null);
-	let marquee = $state.raw<{ pointerId: number; start: PointMm; end: PointMm; base: string[] } | null>(null);
+	let marquee = $state.raw<{ pointerId: number; start: PointMm; end: PointMm; origin: MarqueeStart } | null>(null);
 	let guides = $state.raw<Guide[]>([]);
 	let spacings = $state.raw<SpacingMark[]>([]);
 
@@ -70,6 +83,11 @@
 		layout.objects.filter((object) => object.kind === "image" && imageUrls[object.slot] === undefined)
 	);
 	const marqueeBox = $derived(marquee && boxFromPoints(marquee.start, marquee.end));
+	const marked = $derived.by(() => {
+		if (!marqueeBox) return [];
+		const ids = new Set(marqueePreview(layout.objects, marqueeBox, withMemberNames, textSpans));
+		return layout.objects.filter((object) => ids.has(object.id)).map((object) => visibleBox(object, textSpans));
+	});
 
 	function dragCursor(mode: ObjectDrag["mode"] | undefined): string {
 		if (mode === undefined) return "cursor-default";
@@ -95,22 +113,21 @@
 		if (event.button !== 0) return;
 		svg?.focus();
 		const start = toMm(event);
-		const hit = objectAt(layout.objects, start, withMemberNames);
-		const ids = clickSelection(layout.objects, selectedIds, hit?.id ?? null, {
-			additive: event.shiftKey,
-			single: event.altKey
-		});
-		onselect(ids);
-		if (hit === null) {
-			svg?.setPointerCapture(event.pointerId);
-			marquee = { pointerId: event.pointerId, start, end: start, base: event.shiftKey ? ids : [] };
-		} else if (!event.shiftKey && ids.includes(hit.id)) {
+		const mode = { additive: event.shiftKey || event.ctrlKey || event.metaKey, single: event.altKey };
+		const hitId = pickObjectAt(layout.objects, start, withMemberNames, textSpans, selectedIds)?.id ?? null;
+		const action = pointerStart(layout.objects, selectedIds, hitId, mode);
+		if (action.kind === "drag") {
+			onselect(action.ids);
 			beginDrag(
 				"move",
 				event,
-				layout.objects.filter((object) => ids.includes(object.id))
+				layout.objects.filter((object) => action.ids.includes(object.id))
 			);
+			return;
 		}
+		if (!mode.additive) onselect([]);
+		svg?.setPointerCapture(event.pointerId);
+		marquee = { pointerId: event.pointerId, start, end: start, origin: { base: action.base, hitId, mode } };
 	}
 
 	function handlePointerMove(event: PointerEvent) {
@@ -124,8 +141,7 @@
 
 	function handlePointerUp(event: PointerEvent) {
 		if (marquee?.pointerId === event.pointerId && marqueeBox) {
-			const inside = marqueeSelection(layout.objects, marqueeBox, withMemberNames);
-			onselect([...new Set([...marquee.base, ...inside])]);
+			onselect(marqueeEnd(layout.objects, marquee.origin, marqueeBox, withMemberNames, textSpans));
 		}
 		if (marquee?.pointerId === event.pointerId) marquee = null;
 		if (drag?.pointerId !== event.pointerId) return;
@@ -136,7 +152,7 @@
 
 	/** Doppelklick wählt ein einzelnes Gruppenmitglied. */
 	function handleDoubleClick(event: MouseEvent) {
-		const hit = objectAt(layout.objects, toMm(event), withMemberNames);
+		const hit = pickObjectAt(layout.objects, toMm(event), withMemberNames, textSpans, selectedIds);
 		if (hit) onselect([hit.id]);
 	}
 
@@ -156,7 +172,7 @@
 		{imageUrls}
 		{backgroundOpacity}
 		role="application"
-		aria-label="Urkunden-Vorschau. Element anklicken und ziehen oder mit den Pfeiltasten verschieben, Umschalt für 5 mm. Anfasser ändern die Größe. Rahmen aufziehen wählt mehrere Elemente. Entf löscht."
+		aria-label="Urkunden-Vorschau. Element anklicken und ziehen oder mit den Pfeiltasten verschieben, Umschalt für 5 mm. Anfasser ändern die Größe. Rahmen aufziehen wählt mehrere Elemente, mit Umschalt oder Strg zusätzlich. Entf löscht."
 		tabindex={0}
 		class={cn(
 			"mx-auto block touch-none rounded-sm shadow-md outline-none select-none focus-visible:ring-3 focus-visible:ring-ring/50",
@@ -202,14 +218,7 @@
 		<GuidesOverlay {guides} {spacings} />
 
 		{#if marqueeBox}
-			<rect
-				x={marqueeBox.xMm}
-				y={marqueeBox.yMm}
-				width={marqueeBox.widthMm}
-				height={marqueeBox.heightMm}
-				vector-effect="non-scaling-stroke"
-				class="pointer-events-none fill-primary/5 stroke-primary/60 [stroke-dasharray:3_2]"
-			/>
+			<MarqueeOverlay box={marqueeBox} {marked} />
 		{/if}
 	</CertificatePageView>
 </div>

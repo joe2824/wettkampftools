@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { beforeNavigate } from "$app/navigation";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 	import { updateObject, type ObjectPatch } from "$lib/certificates/editorOps";
@@ -7,6 +6,7 @@
 	import { SIGNATURE_SLOTS, type LayoutObject, type LayoutVariant } from "$lib/certificates/layout";
 	import { layoutStore } from "$lib/certificates/layoutStore.svelte";
 	import { missingSignatureSlots } from "$lib/certificates/layoutObjects";
+	import { textSpans } from "$lib/certificates/render";
 	import { isMapEnabled } from "$lib/certificates/mapObject";
 	import { canDistribute, type AlignReference } from "$lib/certificates/objectAlign";
 	import { canGroup, canUngroup, selectionUnits } from "$lib/certificates/objectGroups";
@@ -22,6 +22,7 @@
 	import AddObjectMenu from "$lib/components/layoutEditor/AddObjectMenu.svelte";
 	import BackgroundControls from "$lib/components/layoutEditor/BackgroundControls.svelte";
 	import { LayoutEditorSession } from "$lib/components/layoutEditor/editorSession.svelte";
+	import { LayoutAutosave } from "$lib/components/layoutEditor/layoutAutosave.svelte";
 	import MapControls from "$lib/components/layoutEditor/MapControls.svelte";
 	import PreviewOptions from "$lib/components/layoutEditor/PreviewOptions.svelte";
 	import SelectionActions from "$lib/components/layoutEditor/SelectionActions.svelte";
@@ -34,9 +35,8 @@
 	import { session as competition } from "$lib/session.svelte";
 	import { settingsStore } from "$lib/settings/settingsStore.svelte";
 	import { participantNames } from "$lib/workflows/certificateMap";
-	import { layoutSnapshot, previewOps, sampleValues, saveLayoutEditor } from "$lib/workflows/layoutEditor";
+	import { previewOps, sampleValues } from "$lib/workflows/layoutEditor";
 
-	const LEAVE_QUESTION = "Es gibt ungespeicherte Änderungen am Layout. Seite trotzdem verlassen?";
 	const VARIANT_NAMES: Record<LayoutVariant, string> = { team: "Mannschaft", individual: "Einzel" };
 	const PERCENT = 100;
 	const DEFAULT_OPACITY_PERCENT = 50;
@@ -45,6 +45,7 @@
 	const MODIFIER = typeof navigator !== "undefined" && isApplePlatform(navigator.userAgent) ? "⌘" : "Strg+";
 
 	const editor = new LayoutEditorSession();
+	const autosave = new LayoutAutosave();
 	let withMemberNames = $state(readStoredFlag(MEMBER_NAMES_KEY, true));
 	let zoom = $state<CanvasZoom>("fit");
 	let guides = $state(readStoredFlag(GUIDES_KEY, true));
@@ -52,7 +53,6 @@
 	let backgroundVisible = $state(true);
 	let opacityPercent = $state(DEFAULT_OPACITY_PERCENT);
 	const fonts = new PreviewFonts();
-	let savedSnapshot = $state(layoutSnapshot(layoutStore.layouts));
 	const images = new ImageUrls();
 	const locations = new MapLocations();
 
@@ -64,7 +64,7 @@
 	const ops = $derived(
 		fonts.metrics ? previewOps(layout, values, { withMemberNames, availableSlots, map }, fonts.metrics) : []
 	);
-	const dirty = $derived(layoutSnapshot(layoutStore.layouts) !== savedSnapshot || settingsStore.dirty);
+	const spans = $derived(fonts.metrics ? textSpans(layout, values, withMemberNames, fonts.metrics) : null);
 	const backgroundOpacity = $derived(backgroundVisible ? opacityPercent / PERCENT : null);
 
 	onMount(() => {
@@ -75,12 +75,6 @@
 
 	$effect(() => writeStoredFlag(GUIDES_KEY, guides));
 	$effect(() => writeStoredFlag(MEMBER_NAMES_KEY, withMemberNames));
-
-	// Schließen des Fensters ist ausgenommen: dort gibt es keine eigene Rückfrage.
-	beforeNavigate(({ cancel, type }) => {
-		if (type === "leave" || !dirty) return;
-		if (!confirm(LEAVE_QUESTION)) cancel();
-	});
 
 	function patchSelected(patch: ObjectPatch) {
 		const [object] = selected;
@@ -101,16 +95,11 @@
 		editor.select(additive ? toggleSelection(layout.objects, editor.selectedIds, ids) : ids);
 	}
 
-	async function save() {
-		await saveLayoutEditor(layoutStore, settingsStore);
-		savedSnapshot = layoutSnapshot(layoutStore.layouts);
-	}
-
 	function reset() {
 		layoutStore.resetVariant(editor.variant);
 		editor.select([]);
 		toast.info(`Standard für „${VARIANT_NAMES[editor.variant]}“ eingesetzt`, {
-			description: "Zum Übernehmen bitte speichern."
+			description: `Rückgängig mit ${MODIFIER}Z.`
 		});
 	}
 </script>
@@ -120,12 +109,17 @@
 		<h1 class="text-2xl font-bold">Urkunden-Layout</h1>
 		<p class="text-muted-foreground">
 			Texte und Unterschriften auf der Urkunde platzieren. Die Vorschau zeigt Beispieldaten genau so, wie sie gedruckt
-			werden.
+			werden. Änderungen werden automatisch gespeichert.
 		</p>
 	</header>
 
 	<div class="flex flex-wrap items-center justify-between gap-2">
-		<LayoutToolbar bind:variant={editor.variant} {dirty} onsave={save} onreset={reset} />
+		<LayoutToolbar
+			bind:variant={editor.variant}
+			autosaveStatus={autosave.status}
+			undoShortcut="{MODIFIER}Z"
+			onreset={reset}
+		/>
 		<UndoControls
 			canUndo={editor.canUndo}
 			canRedo={editor.canRedo}
@@ -174,6 +168,7 @@
 				<LayoutCanvas
 					{layout}
 					{ops}
+					textSpans={spans}
 					imageUrls={images.urls}
 					{backgroundOpacity}
 					{withMemberNames}

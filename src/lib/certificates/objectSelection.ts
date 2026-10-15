@@ -20,7 +20,8 @@ export function expandGroups(objects: readonly LayoutObject[], ids: readonly str
 		.map((object) => object.id);
 }
 
-const inLayoutOrder = (objects: readonly LayoutObject[], ids: ReadonlySet<string>): string[] =>
+/** Ids in der Reihenfolge des Layouts */
+export const inLayoutOrder = (objects: readonly LayoutObject[], ids: ReadonlySet<string>): string[] =>
 	objects.filter((object) => ids.has(object.id)).map((object) => object.id);
 
 /** Nimmt die Einheit heraus, wenn sie ganz gewählt ist, sonst hinzu. */
@@ -64,8 +65,13 @@ const inside = (inner: BoxMm, outer: BoxMm): boolean =>
 	inner.yMm + inner.heightMm <= outer.yMm + outer.heightMm;
 
 /** Sichtbare Objekte, die vollständig im Rahmen liegen, samt ihrer Gruppen */
-export function marqueeSelection(objects: readonly LayoutObject[], rect: BoxMm, withMemberNames: boolean): string[] {
-	const hits = objects.filter((object) => isShown(object, withMemberNames) && inside(hitBox(object), rect));
+export function marqueeSelection(
+	objects: readonly LayoutObject[],
+	rect: BoxMm,
+	withMemberNames: boolean,
+	boxOf: (object: LayoutObject) => BoxMm = hitBox
+): string[] {
+	const hits = objects.filter((object) => isShown(object, withMemberNames) && inside(boxOf(object), rect));
 	return expandGroups(
 		objects,
 		hits.map((object) => object.id)

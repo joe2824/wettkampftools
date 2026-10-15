@@ -221,11 +221,20 @@ export function unionBox(boxes: readonly BoxMm[]): BoxMm | null {
 const contains = (box: BoxMm, point: PointMm): boolean =>
 	point.x >= box.xMm && point.x <= box.xMm + box.widthMm && point.y >= box.yMm && point.y <= box.yMm + box.heightMm;
 
+/** Trefferfläche eines Objekts; null = nicht greifbar */
+export type BoxOf = (object: LayoutObject) => BoxMm | null;
+
 /** Oberstes sichtbares Objekt unter dem Punkt (später gezeichnete liegen oben). */
 export function objectAt(
 	objects: readonly LayoutObject[],
 	point: PointMm,
-	withMemberNames: boolean
+	withMemberNames: boolean,
+	boxOf: BoxOf = hitBox
 ): LayoutObject | null {
-	return objects.findLast((object) => isShown(object, withMemberNames) && contains(hitBox(object), point)) ?? null;
+	return (
+		objects.findLast((object) => {
+			const box = isShown(object, withMemberNames) ? boxOf(object) : null;
+			return box !== null && contains(box, point);
+		}) ?? null
+	);
 }
