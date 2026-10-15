@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
 	defaultSettings,
 	MAX_TEAM_NAME_LENGTH,
+	keepDeviceFields,
 	parseSettings,
 	serializeSettingsForExport,
 	SETTINGS_SCHEMA_VERSION
@@ -19,8 +20,10 @@ const SCHEMA_KEYS = [
 	"event",
 	"certificates",
 	"teamNameOverrides",
-	"legacyMigrated"
+	"legacyMigrated",
+	"betaUpdates"
 ];
+const DEVICE_KEYS = ["legacyMigrated", "betaUpdates"];
 
 describe("defaultSettings", () => {
 	it("entspricht den Standardwerten des Originals", () => {
@@ -51,6 +54,7 @@ describe("defaultSettings", () => {
 		expect(settings.excludeUnplacedTeams).toBe(true);
 		expect(settings.rulebook).toBeNull();
 		expect(settings.legacyMigrated).toBe(false);
+		expect(settings.betaUpdates).toBe(false);
 	});
 
 	it("enthält Veranstaltungs- und Urkundenstandards ohne echte Namen", () => {
@@ -99,6 +103,7 @@ describe("parseSettings", () => {
 		valid.rulebook = { name: "DLRG 2026", ageGroups: [{ name: "AK 12", minMembers: 4, maxMembers: 5 }] };
 		valid.teamNameOverrides = { Musterstadt: "Musterstadt / Süd" };
 		valid.legacyMigrated = true;
+		valid.betaUpdates = true;
 		expect(parseSettings(valid)).toEqual({ settings: valid, issues: [] });
 	});
 
@@ -138,6 +143,12 @@ describe("parseSettings", () => {
 			"certificates.withMemberNames.invalid",
 			"certificates.copiesPerTeam.invalid"
 		]);
+	});
+
+	it("ersetzt einen ungültigen Beta-Schalter durch Aus", () => {
+		const { settings, issues } = parseSettings({ betaUpdates: "ja" });
+		expect(settings.betaUpdates).toBe(false);
+		expect(issues).toEqual(["betaUpdates.invalid"]);
 	});
 
 	it("kürzt und entfernt Doppelte in Listen", () => {
@@ -243,9 +254,9 @@ describe("parseSettings", () => {
 });
 
 describe("serializeSettingsForExport", () => {
-	it("enthält genau die Schema-Schlüssel ohne Übernahme-Merker", () => {
-		const exported = serializeSettingsForExport(defaultSettings());
-		const expected = SCHEMA_KEYS.filter((key) => key !== "legacyMigrated");
+	it("enthält genau die Schema-Schlüssel ohne Geräte-Einstellungen", () => {
+		const exported = serializeSettingsForExport({ ...defaultSettings(), betaUpdates: true });
+		const expected = SCHEMA_KEYS.filter((key) => !DEVICE_KEYS.includes(key));
 		expect(Object.keys(exported).sort()).toEqual(expected.sort());
 	});
 
@@ -259,5 +270,13 @@ describe("serializeSettingsForExport", () => {
 
 	it("hat die aktuelle Schema-Version", () => {
 		expect(serializeSettingsForExport(defaultSettings()).schemaVersion).toBe(SETTINGS_SCHEMA_VERSION);
+	});
+});
+
+describe("keepDeviceFields", () => {
+	it("übernimmt alles außer Übernahme-Merker und Beta-Schalter dieses Geräts", () => {
+		const incoming = { ...defaultSettings(), excludeUnplacedTeams: false, legacyMigrated: false, betaUpdates: false };
+		const current = { ...defaultSettings(), legacyMigrated: true, betaUpdates: true };
+		expect(keepDeviceFields(incoming, current)).toEqual({ ...incoming, legacyMigrated: true, betaUpdates: true });
 	});
 });

@@ -182,6 +182,13 @@ describe("openProject", () => {
 		expect(fs.files.has(COMPETITION_RESULTS_PATH)).toBe(true);
 	});
 
+	it("behält den Beta-Schalter dieses Rechners", async () => {
+		await deps.settings.load();
+		await deps.settings.saveFields({ betaUpdates: true });
+		await openProject(await projectBytes(false), deps);
+		expect(deps.settings.settings.betaUpdates).toBe(true);
+	});
+
 	it("behält eigene Unterschriften, wenn das Projekt keine enthält", async () => {
 		await deps.settings.load();
 		await deps.layouts.setImage("signature2", jpegBytes());

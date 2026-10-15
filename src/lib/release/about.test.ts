@@ -6,7 +6,7 @@ vi.mock("@tauri-apps/plugin-opener", () => opener);
 const env = vi.hoisted(() => ({ isTauri: vi.fn(() => true) }));
 vi.mock("$lib/platform/env", () => env);
 
-import { openProjectPage, PROJECT_URL } from "./about";
+import { isPrerelease, openProjectPage, PROJECT_URL } from "./about";
 
 beforeEach(() => vi.clearAllMocks());
 
@@ -25,5 +25,15 @@ describe("openProjectPage", () => {
 		expect(open).toHaveBeenCalledWith(PROJECT_URL, "_blank", "noopener");
 		expect(opener.openUrl).not.toHaveBeenCalled();
 		vi.unstubAllGlobals();
+	});
+});
+
+describe("isPrerelease", () => {
+	it.each([
+		["2.1.0-beta.1", true],
+		["2.1.0", false],
+		["", false]
+	])("erkennt %s als Vorabversion: %s", (version, expected) => {
+		expect(isPrerelease(version)).toBe(expected);
 	});
 });

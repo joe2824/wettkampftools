@@ -3,7 +3,13 @@ import { appDataStore, readJsonOrSetAside, writeJson } from "$lib/platform/fs";
 import { readLegacySettings, type LegacySettings } from "$lib/platform/legacySettings";
 import { logError, logInfo } from "$lib/log";
 import { mergeLegacySettings } from "./legacyMerge";
-import { defaultSettings, parseSettings, serializeSettingsForExport, type Settings } from "./settings";
+import {
+	defaultSettings,
+	keepDeviceFields,
+	parseSettings,
+	serializeSettingsForExport,
+	type Settings
+} from "./settings";
 
 export const SETTINGS_FILE = "settings.json";
 const INVALID_FILE_ISSUE = "root.invalid";
@@ -86,8 +92,8 @@ export class SettingsStore {
 	 * Wirkt nur im Speicher, bis gespeichert wird.
 	 */
 	resetToDefaults(): void {
-		const { teamNameOverrides, event, rulebook, legacyMigrated } = this.settings;
-		this.settings = { ...defaultSettings(), teamNameOverrides, event, rulebook, legacyMigrated };
+		const { teamNameOverrides, event, rulebook } = this.settings;
+		this.settings = keepDeviceFields({ ...defaultSettings(), teamNameOverrides, event, rulebook }, this.settings);
 	}
 
 	exportJson(): Uint8Array {
@@ -100,7 +106,7 @@ export class SettingsStore {
 		const raw = parseJsonBytes(bytes);
 		if (!isObject(raw)) return [INVALID_FILE_ISSUE];
 		const { settings, issues } = parseSettings(raw);
-		this.settings = { ...settings, legacyMigrated: this.settings.legacyMigrated };
+		this.settings = keepDeviceFields(settings, this.settings);
 		return issues;
 	}
 

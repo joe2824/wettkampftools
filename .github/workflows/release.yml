@@ -1,11 +1,13 @@
 name: Release
 
 # Ein Tag, ein Gate, dann der Windows-Installer samt Update-Manifest.
+# Stabile Releases (v2.1.0) und Betas (v2.1.0-beta.1) laufen durch denselben Ablauf.
 on:
   push:
-    # Nur dreiteilige Versionen (v2.0.0); alte vierteilige Tags lösen nichts aus.
+    # Nur dreiteilige Versionen; alte vierteilige Tags lösen nichts aus.
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+-beta.[0-9]+"
   workflow_dispatch:
 
 permissions:
@@ -21,6 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       tag: ${{ steps.w.outputs.tag }}
+      stable: ${{ steps.w.outputs.stable }}
     steps:
       - name: Version bestimmen
         id: w
@@ -40,8 +43,17 @@ jobs:
             exit 1
           fi
 
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          echo "Release $TAG."
+          # Vorabversion? Erkennbar am Tag: v2.1.0-beta.1 gegenüber v2.1.0.
+          case "$TAG" in
+            *-beta.*) STABLE=false ;;
+            *)        STABLE=true  ;;
+          esac
+
+          {
+            echo "tag=$TAG"
+            echo "stable=$STABLE"
+          } >> "$GITHUB_OUTPUT"
+          echo "Release $TAG (stabil: $STABLE)."
 
   desktop:
     needs: [verify, target]
@@ -58,6 +70,7 @@ jobs:
         shell: bash
         env:
           TAG: ${{ needs.target.outputs.tag }}
+          STABLE: ${{ needs.target.outputs.stable }}
           COMPARE_BASE: ${{ github.server_url }}/${{ github.repository }}/compare
         run: |
           set -euo pipefail
@@ -76,7 +89,14 @@ jobs:
             esac
             body="$(cat RELEASE_NOTES.md)"$'\n\n'"Installer siehe Assets unten."
           else
-            PREV=$(git describe --tags --abbrev=0 --match 'v*' "${TAG}^" 2>/dev/null || echo "")
+            # Stabil: ab dem letzten stabilen Tag, sonst fehlte alles, was nur in
+            # Betas stand. Betas: ab dem direkten Vorgänger, egal welcher Kanal.
+            if [ "$STABLE" = "true" ]; then
+              MATCH=(--match 'v*' --exclude '*-beta.*')
+            else
+              MATCH=(--match 'v*')
+            fi
+            PREV=$(git describe --tags --abbrev=0 "${MATCH[@]}" "${TAG}^" 2>/dev/null || echo "")
             if [ -n "$PREV" ]; then RANGE="${PREV}..${TAG}"; else RANGE="${TAG}"; fi
             echo "Changelog-Bereich: ${RANGE}"
 
@@ -164,7 +184,9 @@ jobs:
           # Erst als Entwurf: sonst wäre das Release öffentlich, bevor
           # latest.json hochgeladen ist, und die Update-Prüfung bekäme 404.
           releaseDraft: true
-          # Nur der NSIS-Installer. Das Update-Artefakt (.nsis.zip + Signatur)
+          prerelease: ${{ needs.target.outputs.stable == 'false' }}
+          # Nur der NSIS-Installer, auch für Betas: MSI nimmt keine Vorabversionen
+          # wie "2.1.0-beta.1" an. Das Update-Artefakt (.nsis.zip + Signatur)
           # entsteht über createUpdaterArtifacts.
           args: "--bundles nsis"
 
@@ -173,9 +195,39 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ needs.target.outputs.tag }}
+          STABLE: ${{ needs.target.outputs.stable }}
         run: |
           set -euo pipefail
+          # Eine Beta darf nie `latest` werden - dort sieht der stabile Kanal nach.
+          if [ "$STABLE" = "true" ]; then
+            FLAGS=(--prerelease=false --latest)
+          else
+            FLAGS=(--prerelease --latest=false)
+          fi
           gh release view "$TAG" --json assets -q '.assets[].name' | grep -qx latest.json \
             || { echo "::error::latest.json fehlt an ${TAG} - Release bleibt Entwurf."; exit 1; }
-          gh release edit "$TAG" --draft=false --latest
+          gh release edit "$TAG" --draft=false "${FLAGS[@]}"
           echo "${TAG} ist veröffentlicht."
+
+      # Das Manifest des Beta-Kanals liegt am Release mit festem Tag `beta` und
+      # wird bei JEDEM Build überschrieben, auch bei einem stabilen. Wer Betas
+      # erhält, bekommt so immer den neuesten Stand. Erst nach dem
+      # Veröffentlichen: solange das Release ein Entwurf ist, liefern seine
+      # Installer-Adressen 404.
+      - name: Manifest des Beta-Kanals aktualisieren
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.target.outputs.tag }}
+        run: |
+          set -euo pipefail
+          gh release download "$TAG" --pattern latest.json --dir manifest --clobber
+          if ! gh release view beta >/dev/null 2>&1; then
+            gh release create beta \
+              --prerelease \
+              --latest=false \
+              --title "Beta-Kanal" \
+              --notes "Update-Manifest des Beta-Kanals. Die Installer hängen am jeweiligen Release, nicht hier."
+          fi
+          gh release upload beta manifest/latest.json --clobber
+          echo "Beta-Manifest zeigt jetzt auf ${TAG}."

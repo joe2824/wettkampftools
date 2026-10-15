@@ -1,12 +1,15 @@
 <script lang="ts">
 	import * as Alert from "$lib/components/ui/alert";
+	import { Badge } from "$lib/components/ui/badge";
 	import { Button } from "$lib/components/ui/button";
 	import * as Dialog from "$lib/components/ui/dialog";
 	import { Progress } from "$lib/components/ui/progress";
+	import { isPrerelease } from "$lib/release/about";
 	import { UNKNOWN_PROGRESS, updater } from "$lib/release/updater.svelte";
 
 	const downloading = $derived(updater.phase === "downloading");
 	const unknownSize = $derived(updater.progress === UNKNOWN_PROGRESS);
+	const prerelease = $derived(isPrerelease(updater.version ?? ""));
 
 	function handleOpenChange(open: boolean) {
 		if (!open && !downloading) updater.postpone();
@@ -16,9 +19,15 @@
 <Dialog.Root open={updater.dialogOpen && updater.version !== null} onOpenChange={handleOpenChange}>
 	<Dialog.Content class="sm:max-w-md">
 		<Dialog.Header>
-			<Dialog.Title>Neue Version verfügbar</Dialog.Title>
+			<Dialog.Title class="flex items-center gap-2">
+				Neue Version verfügbar
+				{#if prerelease}<Badge variant="outline">Beta</Badge>{/if}
+			</Dialog.Title>
 			<Dialog.Description>
 				Wettkampftools {updater.version} kann jetzt installiert werden. Die Anwendung startet danach neu.
+				{#if prerelease}
+					Das ist eine Vorabversion zum Ausprobieren; sie kann noch Fehler enthalten.
+				{/if}
 			</Dialog.Description>
 		</Dialog.Header>
 

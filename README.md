@@ -69,6 +69,10 @@ Gesamtwertung um den Pokal und erscheinen nie auf einer Urkunde.
   ausgeben.
 - Layout-Editor mit A4-Vorschau: Texte und Unterschriften frei positionieren,
   den Scan der vorbedruckten Urkunde zur Ausrichtung einblenden.
+- Im Layout-Editor: Hilfslinien mit Einrasten (Kanten, Mitten, Grundlinien,
+  gleiche Abstände), Größe über Anfasser ziehen, Elemente hinzufügen,
+  entfernen und duplizieren, Mehrfachauswahl per Rahmen, Ausrichten,
+  Verteilen und Gruppieren.
 - Kalibrierungsseite, um den Versatz des eigenen Druckers auszugleichen.
 - Auf Wunsch eine Deutschlandkarte auf der Urkunde (Schalter „Karte auf der
   Urkunde“ im Layout-Editor): alle teilnehmenden Gliederungen als Punkte, Bad
@@ -188,6 +192,49 @@ cd src-tauri && cargo test
 ```
 
 Aufbau, Konventionen und Regeln stehen in [`AGENTS.md`](AGENTS.md).
+
+## Release
+
+Ein Release entsteht aus einem Tag: `release.yml` prüft (`verify.yml`), baut
+unter Windows den NSIS-Installer samt Update-Manifest (`latest.json`) und
+veröffentlicht das GitHub-Release. Die Notes kommen aus den
+`Release-Note:`-Trailern der Commits (siehe [`AGENTS.md`](AGENTS.md)); liegt
+eine `RELEASE_NOTES.md` im Repo, ersetzt sie die Notes und muss in der ersten
+Zeile den Tag nennen – auch bei Betas.
+
+**Stabil** (aus `main`):
+
+```sh
+./scripts/release.sh --dry-run minor   # zeigt nur, was passieren würde
+./scripts/release.sh minor             # patch | minor | major | 2.1.0; ohne Angabe wird gefragt
+```
+
+**Beta** (aus `dev`; Tags wie `v2.1.0-beta.1`):
+
+```sh
+./scripts/release.sh --beta            # setzt eine offene Beta-Serie fort, sonst wird gefragt
+./scripts/release.sh --beta minor      # neue Serie, z. B. 2.1.0-beta.1
+```
+
+Alternativ auf GitHub: **Actions → „Beta aus dev“ → Run workflow** (optional mit
+Basisversion). Den Branch `dev` muss es dafür geben; fehlt er, bricht der Ablauf
+mit einem Hinweis ab. Unter Windows heißt das Skript `scripts\release.bat`, mit
+denselben Optionen.
+
+Die Skripte brechen ab, wenn nicht committete Änderungen vorliegen oder der
+falsche Branch ausgecheckt ist, und lassen vor dem Taggen alle Prüfungen laufen.
+Sie setzen die Version in `package.json`, `src-tauri/tauri.conf.json`,
+`src-tauri/Cargo.toml` und `src-tauri/Cargo.lock`, committen, taggen und pushen.
+
+Betas werden als Vorabversion veröffentlicht und nie zu „Latest“. Jeder Build –
+stabil oder Beta – lädt sein `latest.json` zusätzlich an das feste Release
+`beta`: Wer in der Anwendung unter **Info** „Beta-Versionen erhalten“
+einschaltet, sucht nach dem nächsten Start dort nach Updates und bekommt so auch
+stabile Versionen, sobald sie neuer sind.
+
+Benötigte Secrets im Repository: `TAURI_SIGNING_PRIVATE_KEY` und
+`TAURI_SIGNING_PRIVATE_KEY_PASSWORD` (Signatur der Updates; der öffentliche
+Schlüssel steht in `tauri.conf.json`). `GITHUB_TOKEN` stellt GitHub selbst.
 
 ## Lizenz
 

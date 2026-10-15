@@ -1,0 +1,91 @@
+name: Beta aus dev
+
+# Manuell ausgelöst: hebt die Version auf die nächste Beta, committet das auf
+# dev, taggt genau diesen Commit und startet release.yml für den Tag. Der Start
+# per workflow_dispatch ist nötig, weil ein Push mit GITHUB_TOKEN keine weiteren
+# Abläufe auslöst - der Tag allein baute nichts.
+#
+# Die Version muss in den Dateien stehen, nicht nur im Tag: der Updater
+# vergleicht die Version aus tauri.conf.json.
+
+on:
+  workflow_dispatch:
+    inputs:
+      base:
+        description: "Basisversion der Beta-Serie, z. B. 2.1.0 (leer = laufende Serie fortsetzen bzw. Patch nach dem letzten stabilen Release)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Branch dev prüfen
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if ! gh api "repos/${GITHUB_REPOSITORY}/branches/dev" --silent 2>/dev/null; then
+            echo "::error::Den Branch 'dev' gibt es noch nicht. Betas entstehen aus dev - zuerst anlegen: git switch -c dev main && git push -u origin dev"
+            exit 1
+          fi
+
+      - uses: actions/checkout@v5
+        with:
+          ref: dev
+          fetch-depth: 0
+
+      - name: Node.js einrichten
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      # Dieselbe Versionslogik wie scripts/release.sh: eine offene Beta-Serie
+      # wird fortgesetzt, sonst beginnt eine neue nach dem letzten stabilen
+      # Release (aus den Tags, nicht aus package.json - dev steht nach einem
+      # stabilen Release noch auf der alten Beta).
+      - name: Nächste Beta-Version bestimmen
+        id: next
+        shell: bash
+        env:
+          INPUT_BASE: ${{ inputs.base }}
+        run: |
+          set -euo pipefail
+          ARGS=(plan --beta --otherwise patch)
+          if [ -n "${INPUT_BASE}" ]; then
+            ARGS+=("${INPUT_BASE}")
+          fi
+          VERSION="$(node scripts/version.mjs "${ARGS[@]}" </dev/null)"
+          # Vor dem Taggen prüfen, was release.yml sonst erst nach dem Push bemängelt.
+          if [ -f RELEASE_NOTES.md ] && ! head -n1 RELEASE_NOTES.md | grep -qF "v${VERSION}"; then
+            echo "::error file=RELEASE_NOTES.md::Erste Zeile nennt v${VERSION} nicht. Auf dev anpassen oder löschen - dann übernimmt der Generator aus den Commits."
+            exit 1
+          fi
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Nächste Beta: ${VERSION}"
+
+      - name: Version setzen, committen und taggen
+        shell: bash
+        env:
+          VERSION: ${{ steps.next.outputs.version }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          node scripts/version.mjs apply "$VERSION"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json src-tauri/tauri.conf.json src-tauri/Cargo.toml src-tauri/Cargo.lock
+          git commit -m "chore: release v${VERSION}"
+          git tag -a "v${VERSION}" -m "v${VERSION}"
+          git push origin HEAD:dev
+          git push origin "v${VERSION}"
+          gh workflow run release.yml --ref "v${VERSION}"
+
+          echo "### Beta getaggt" >> "$GITHUB_STEP_SUMMARY"
+          echo "v${VERSION} (von dev, $(git rev-parse --short HEAD))" >> "$GITHUB_STEP_SUMMARY"

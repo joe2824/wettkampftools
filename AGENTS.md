@@ -19,6 +19,27 @@ npm run tauri dev                                       # Anwendung starten
 **Fertig heißt fertig:** erst wenn die ersten fünf ohne Befund durchlaufen, nicht
 vier davon. Schlägt etwas fehl: Ergebnis melden, Aussage nicht abschwächen.
 
+### Release
+
+```sh
+./scripts/release.sh --dry-run [--beta] [patch|minor|major|X.Y.Z]   # nur anzeigen, nichts ändern
+./scripts/release.sh [patch|minor|major|X.Y.Z]                      # stabil, nur aus main
+./scripts/release.sh --beta [patch|minor|major|X.Y.Z]               # Beta, nur aus dev
+```
+
+`scripts\release.bat` unter Windows mit denselben Optionen. Die Versionslogik
+(nächste Version, Schreiben in `package.json`, `tauri.conf.json`, `Cargo.toml`,
+`Cargo.lock`) steckt in `scripts/version.mjs` und wird auch von
+`.github/workflows/beta-from-dev.yml` genutzt — dort ändern, nicht in den
+Skripten. Agenten führen die Skripte **nie** ohne `--dry-run` aus: sie
+committen, taggen und pushen.
+
+Tags `vX.Y.Z` sind stabil, `vX.Y.Z-beta.N` Betas (Vorabversion, nie „Latest“).
+Jeder Build lädt sein `latest.json` auch an das feste Release `beta`. Der
+Rust-Teil (`update_channel`) liest beim Start `betaUpdates` aus `settings.json`
+und stellt den Updater dann auf das Beta-Manifest um, mit dem stabilen als
+Rückfall.
+
 ## Wo etwas hingehört
 
 Der Fachkern in `src/lib/` ist reines TypeScript und ohne Tauri testbar:
@@ -46,7 +67,8 @@ Rust bleibt schlank und kennt keine Fachlogik: `src-tauri/src/` mit `workbook`
 (Excel lesen/schreiben), `input` (gewählte oder abgelegte Dateien samt
 Erstellungsdatum lesen), `output` (Dateien schreiben), `legacy_settings`
 (Einstellungen der alten Version übernehmen), `file_check` (gemeinsame Pfad-
-und Endungsprüfung für `input` und `output`) und `logging`.
+und Endungsprüfung für `input` und `output`), `update_channel` (Update-Kanal
+stabil oder Beta) und `logging`.
 
 Der Test liegt **neben** seinem Modul (`foo.ts` → `foo.test.ts`), nicht in
 einem eigenen Baum: so wandert er beim Verschieben mit.

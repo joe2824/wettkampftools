@@ -137,7 +137,9 @@ describe("SettingsStore Änderungen", () => {
 		store.settings.event = { ...store.settings.event, number: "39", date: "2026-11-14" };
 		store.settings.rulebook = rulebook;
 		store.settings.waveStartAgeGroup = "AK 15/16";
+		store.settings.betaUpdates = true;
 		store.resetToDefaults();
+		expect(store.settings.betaUpdates).toBe(true);
 		expect(store.settings.teamNameOverrides).toEqual({ Musterstadt: "Musterstadt / Saar" });
 		expect(store.settings.event.number).toBe("39");
 		expect(store.settings.rulebook).toEqual(rulebook);
@@ -146,23 +148,27 @@ describe("SettingsStore Änderungen", () => {
 });
 
 describe("SettingsStore Export und Import", () => {
-	it("exportiert ohne Übernahme-Merker", async () => {
+	it("exportiert ohne Übernahme-Merker und Beta-Schalter", async () => {
 		const store = new SettingsStore({ readLegacy: async () => structuredClone(legacy) });
 		await store.load();
+		store.settings.betaUpdates = true;
 		const exported = JSON.parse(decoder.decode(store.exportJson()));
 		expect(exported.legacyMigrated).toBeUndefined();
+		expect(exported.betaUpdates).toBeUndefined();
 		expect(exported.ageGroups).toEqual(["AK 10", "AK 12", "AK 13/14"]);
 	});
 
-	it("importiert, behält den Übernahme-Merker und meldet Probleme", async () => {
+	it("importiert, behält Übernahme-Merker und Beta-Schalter und meldet Probleme", async () => {
 		const store = new SettingsStore({ readLegacy: async () => structuredClone(legacy) });
 		await store.load();
-		const data = { excludeUnplacedTeams: false, legacyMigrated: false, unbekannt: 1 };
+		store.settings.betaUpdates = true;
+		const data = { excludeUnplacedTeams: false, legacyMigrated: false, betaUpdates: false, unbekannt: 1 };
 		const issues = store.importJson(encoder.encode(JSON.stringify(data)));
 		expect(issues).toContain("unknownKeys.dropped");
 		expect(store.settings.excludeUnplacedTeams).toBe(false);
 		expect(store.settings.ageGroups).toEqual(defaultSettings().ageGroups);
 		expect(store.settings.legacyMigrated).toBe(true);
+		expect(store.settings.betaUpdates).toBe(true);
 		expect(store.dirty).toBe(true);
 	});
 

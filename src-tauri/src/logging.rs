@@ -59,6 +59,11 @@ fn install_panic_hook() {
     }));
 }
 
+/// Eine Info-Zeile; nur Codes, keine Inhalte.
+pub fn info(text: &str) {
+    log_line("INFO", text);
+}
+
 /// Protokoll einrichten: Ordner merken, Absturz-Hook setzen, Startzeile schreiben.
 pub fn init(app_data_dir: PathBuf) {
     if LOG_DIR.set(app_data_dir.join("logs")).is_err() {

@@ -70,9 +70,14 @@ export interface Settings {
 	/** Eigener Mannschaftsname je Gliederung (Schlüssel wie in der Meldedatei). */
 	teamNameOverrides: Record<string, string>;
 	legacyMigrated: boolean;
+	/** Vorabversionen über den Beta-Kanal; der Rust-Teil liest den Wert beim Start. */
+	betaUpdates: boolean;
 }
 
-export type ExportedSettings = Omit<Settings, "legacyMigrated">;
+/** Gilt nur für diesen Rechner: nie exportiert, beim Import und Projekt-Öffnen behalten. */
+type DeviceKey = "legacyMigrated" | "betaUpdates";
+
+export type ExportedSettings = Omit<Settings, DeviceKey>;
 
 export function defaultSettings(): Settings {
 	return {
@@ -102,7 +107,8 @@ export function defaultSettings(): Settings {
 			printOffsetMm: { x: 0, y: 0 }
 		},
 		teamNameOverrides: {},
-		legacyMigrated: false
+		legacyMigrated: false,
+		betaUpdates: false
 	};
 }
 
@@ -218,7 +224,7 @@ function parseCertificates(
 }
 
 type ListKey = "ageGroups" | "seniorTeamAgeGroups" | "seniorIndividualAgeGroups";
-type FlagKey = "simplifySeniorAgeGroups" | "excludeUnplacedTeams" | "legacyMigrated";
+type FlagKey = "simplifySeniorAgeGroups" | "excludeUnplacedTeams" | DeviceKey;
 
 /** Prüft Einstellungen beim Laden und Importieren; wirft nie. */
 export function parseSettings(input: unknown): { settings: Settings; issues: string[] } {
@@ -256,11 +262,17 @@ export function parseSettings(input: unknown): { settings: Settings; issues: str
 		checkStringMap(input.teamNameOverrides, MAX_TEAM_NAME_LENGTH, "teamNameOverrides")
 	);
 	settings.legacyMigrated = flag("legacyMigrated");
+	settings.betaUpdates = flag("betaUpdates");
 	return { settings, issues: collector.issues };
 }
 
-/** Für den Export: ohne Übernahme-Merker (Einstellungen enthalten keine Bilder). */
+/** Für den Export: ohne Geräte-Einstellungen (Einstellungen enthalten keine Bilder). */
 export function serializeSettingsForExport(settings: Settings): ExportedSettings {
-	const { legacyMigrated: _omitted, ...exported } = structuredClone(settings);
+	const { legacyMigrated: _migrated, betaUpdates: _beta, ...exported } = structuredClone(settings);
 	return exported;
+}
+
+/** Übernommene Einstellungen mit den Geräte-Einstellungen dieses Rechners. */
+export function keepDeviceFields(incoming: Settings, current: Settings): Settings {
+	return { ...incoming, legacyMigrated: current.legacyMigrated, betaUpdates: current.betaUpdates };
 }

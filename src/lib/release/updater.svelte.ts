@@ -1,4 +1,4 @@
-// Update-Suche und -Installation über GitHub-Releases (nur stabile Versionen).
+// Update-Suche und -Installation über GitHub-Releases; den Kanal (stabil oder Beta) wählt der Rust-Teil beim Start.
 import { check, type DownloadEvent, type Update } from "@tauri-apps/plugin-updater";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { isTauri } from "$lib/platform/env";

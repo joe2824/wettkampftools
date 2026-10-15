@@ -11,3 +11,8 @@ export async function openProjectPage(): Promise<void> {
 	if (isTauri()) await openUrl(PROJECT_URL);
 	else window.open(PROJECT_URL, "_blank", "noopener");
 }
+
+/** Vorabversion: Semver mit Vorabteil, etwa „2.1.0-beta.1“. */
+export function isPrerelease(version: string): boolean {
+	return version.includes("-");
+}

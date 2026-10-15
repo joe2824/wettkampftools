@@ -2,9 +2,11 @@
 	import ExternalLinkIcon from "@lucide/svelte/icons/external-link";
 	import RefreshCwIcon from "@lucide/svelte/icons/refresh-cw";
 	import { toast } from "svelte-sonner";
+	import UpdateChannelSwitch from "$lib/components/UpdateChannelSwitch.svelte";
+	import { Badge } from "$lib/components/ui/badge";
 	import { Button } from "$lib/components/ui/button";
 	import * as Dialog from "$lib/components/ui/dialog";
-	import { APP_NAME, AUTHOR, openProjectPage, PROJECT_URL } from "$lib/release/about";
+	import { APP_NAME, AUTHOR, isPrerelease, openProjectPage, PROJECT_URL } from "$lib/release/about";
 	import { updater } from "$lib/release/updater.svelte";
 	import { cn } from "$lib/utils.js";
 	import { APP_VERSION } from "$lib/version";
@@ -38,7 +40,10 @@
 		</Dialog.Header>
 		<dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
 			<dt class="text-muted-foreground">Version</dt>
-			<dd class="tabular-nums">{APP_VERSION}</dd>
+			<dd class="flex items-center gap-2 tabular-nums">
+				{APP_VERSION}
+				{#if isPrerelease(APP_VERSION)}<Badge variant="outline">Beta</Badge>{/if}
+			</dd>
 			<dt class="text-muted-foreground">Autor</dt>
 			<dd>{AUTHOR}</dd>
 			<dt class="text-muted-foreground">Projektseite</dt>
@@ -49,6 +54,7 @@
 				</button>
 			</dd>
 		</dl>
+		<UpdateChannelSwitch />
 		<Dialog.Footer>
 			<Button variant="outline" disabled={checking} onclick={searchUpdates}>
 				<RefreshCwIcon data-icon="inline-start" class={cn(checking && "animate-spin")} />

@@ -4,6 +4,7 @@ mod launch_file;
 mod legacy_settings;
 mod logging;
 mod output;
+mod update_channel;
 mod workbook;
 
 /// Holt das Hauptfenster nach vorn (zweiter Programmstart).
@@ -20,6 +21,13 @@ fn focus_main(app: &tauri::AppHandle) {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    #[allow(unused_mut)]
+    let mut context = tauri::generate_context!();
+    #[cfg(desktop)]
+    let beta_channel = update_channel::apply(&mut context);
+    #[cfg(not(desktop))]
+    let beta_channel = false;
+
     let mut builder = tauri::Builder::default();
 
     // Single-Instance muss als erstes Plugin registriert werden.
@@ -58,15 +66,16 @@ pub fn run() {
                 input::allow_dropped_paths(window.app_handle(), paths);
             }
         })
-        .setup(|app| {
+        .setup(move |app| {
             use tauri::Manager;
             if let Ok(dir) = app.path().app_data_dir() {
                 logging::init(dir);
             }
+            logging::info(&format!("update_channel beta={beta_channel}"));
             launch_file::open_from_startup(app.handle());
             Ok(())
         })
-        .build(tauri::generate_context!())
+        .build(context)
         .expect("Fehler beim Starten von Wettkampftools")
         .run(|_app, _event| {
             // Doppelklick auf eine Projektdatei unter macOS.

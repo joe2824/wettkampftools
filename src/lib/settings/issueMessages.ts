@@ -25,6 +25,7 @@ const FIELD_LABELS: Record<string, string> = {
 	simplifySeniorAgeGroups: "Senioren zusammenfassen",
 	excludeUnplacedTeams: "Nicht angetretene Teams ausschließen",
 	legacyMigrated: "Übernahme der alten Version",
+	betaUpdates: "Beta-Versionen erhalten",
 	event: "Veranstaltung",
 	"event.number": "Nr. des Wettkampfs",
 	"event.title": "Titel",

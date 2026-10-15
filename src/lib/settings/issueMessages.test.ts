@@ -21,6 +21,9 @@ describe("issueMessage", () => {
 		expect(issueMessage("seniorTeamAgeGroups.invalidEntries")).toBe(
 			"Senioren-Altersklassen (Mannschaft): Ungültige Einträge wurden entfernt."
 		);
+		expect(issueMessage("betaUpdates.invalid")).toBe(
+			"Beta-Versionen erhalten: Der Wert war ungültig und wurde auf Standard zurückgesetzt."
+		);
 	});
 
 	it("liefert für unbekannte Codes einen allgemeinen Hinweis", () => {

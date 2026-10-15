@@ -18,7 +18,7 @@ export default defineConfig({
 	},
 	test: {
 		environment: "node",
-		include: ["src/**/*.test.ts"],
+		include: ["src/**/*.test.ts", "scripts/**/*.test.ts"],
 		// Feste Zeitzone, in der das Programm läuft.
 		env: { TZ: process.env.TZ ?? "Europe/Berlin" },
 		passWithNoTests: true,

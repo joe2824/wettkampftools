@@ -60,6 +60,8 @@ schneller und mit allem, was die bisherige Version konnte.
   um dort weiterzuarbeiten.
 - **Automatische Updates:** Neue Versionen werden beim Start gemeldet und
   lassen sich direkt aus der Anwendung installieren.
+- Wer neue Funktionen früher ausprobieren möchte, schaltet unter **Info** in
+  der Seitenleiste „Beta-Versionen erhalten“ ein; das gilt nach einem Neustart.
 - Entfernungen: Gibt es mehrere DLRG-Gliederungen gleichen Namens, werden sie markiert und lassen sich zuordnen; ein Zusatz im Mannschaftsnamen (z. B. „Saar“) führt zu einem Vorschlag zum Prüfen. Gliederungen wie Dorheim, die zusammen mit ihrer Jugend eingetragen sind, werden jetzt gefunden.
 - Projektdateien (.wwkprojekt) lassen sich per Doppelklick im Explorer öffnen: Wettkampftools startet bzw. holt das offene Fenster nach vorn und fragt vor dem Ersetzen des aktuellen Stands nach.
 - Neues Menü „Datei“ oben links: Neuer Wettkampf (Strg+N), Projekt öffnen (Strg+O) und Projekt speichern (Strg+S), auf dem Mac mit ⌘.

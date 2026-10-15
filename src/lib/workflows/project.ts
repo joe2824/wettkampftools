@@ -11,7 +11,7 @@ import {
 	type Signatures
 } from "$lib/project/projectFile";
 import { eventHeadline } from "$lib/settings/eventInfo";
-import type { EventInfo, Settings } from "$lib/settings/settings";
+import { keepDeviceFields, type EventInfo, type Settings } from "$lib/settings/settings";
 import { settingsStore, type SettingsStore } from "$lib/settings/settingsStore.svelte";
 import { APP_VERSION } from "$lib/version";
 import { competitionStore, type CompetitionStore } from "./competitionStore.svelte";
@@ -76,7 +76,7 @@ async function applySignatures(layouts: LayoutStore, signatures: Signatures): Pr
 
 /** Ohne Unterschriften im Projekt bleiben die eigenen erhalten. */
 async function applyProject(project: Project, deps: ProjectDeps): Promise<void> {
-	deps.settings.settings = { ...project.settings, legacyMigrated: deps.settings.settings.legacyMigrated };
+	deps.settings.settings = keepDeviceFields(project.settings, deps.settings.settings);
 	await deps.settings.save();
 	deps.layouts.layouts = project.layouts;
 	await deps.layouts.save();
