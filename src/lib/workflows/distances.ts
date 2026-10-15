@@ -10,12 +10,11 @@ import { MissingColumnsError, parseRegistrationCsv } from "$lib/io/csv";
 import { logError, logInfo } from "$lib/log";
 import { readJson, writeJson } from "$lib/platform/fs";
 import { platformFetch } from "$lib/platform/http";
+import { NOT_A_TEAM_EXPORT } from "./errors";
 
 export const GLD_CACHE_FILE = "gld-cache.json";
 const ORGANISATION_COLUMN = "gliederung";
 const KM_DECIMALS = 2;
-const NOT_A_TEAM_EXPORT =
-	"Diese Datei scheint kein Mannschaften-Export zu sein. Bitte im DLRG-Meldeportal die Mannschaften als CSV exportieren und diese Datei laden.";
 
 /**
  * cache: gespeicherter Stand, fresh: gerade abgerufen,

@@ -4,6 +4,7 @@
 	import * as Alert from "$lib/components/ui/alert";
 	import { Button } from "$lib/components/ui/button";
 	import Dropzone from "$lib/components/Dropzone.svelte";
+	import LoadedFileCard from "$lib/components/LoadedFileCard.svelte";
 	import type { CheckedFile } from "$lib/components/fileCheck";
 	import type { LoadedRulebook, RulebookOutcome } from "$lib/workflows/records";
 
@@ -30,16 +31,14 @@
 
 <div class="flex flex-col gap-3">
 	{#if rulebook && !replacing}
-		<div class="flex flex-wrap items-center gap-3 rounded-lg border bg-muted/30 p-3">
-			<FileCogIcon class="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
-			<div class="flex min-w-0 flex-1 flex-col">
-				<span class="truncate font-medium" title={rulebook.name}>{rulebook.name}</span>
-				<span class="text-sm text-muted-foreground">
-					„{rulebook.description}“ · {rulebook.records.length} Rec-Werte
-				</span>
-			</div>
-			<Button variant="outline" size="sm" onclick={() => (replacing = true)}>Andere Datei laden</Button>
-		</div>
+		<LoadedFileCard
+			icon={FileCogIcon}
+			title={rulebook.name}
+			tooltip={rulebook.name}
+			onreplace={() => (replacing = true)}
+		>
+			{#snippet details()}„{rulebook.description}“ · {rulebook.records.length} Rec-Werte{/snippet}
+		</LoadedFileCard>
 	{:else}
 		<Dropzone kinds={["rulebook"]} {title} {hint} compact={rulebook !== null} onfile={handleFile} />
 		{#if rulebook}

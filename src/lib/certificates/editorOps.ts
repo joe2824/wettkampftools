@@ -1,6 +1,10 @@
 // Reine Bearbeitungsschritte des Layout-Editors: verschieben, Eigenschaften ändern, Platzhalter einfügen.
 import {
 	FONT_WEIGHTS,
+	MAX_FONT_PT,
+	MAX_TEMPLATE_LENGTH,
+	MIN_EXTENT_MM,
+	MIN_FONT_PT,
 	PAGE_HEIGHT_MM,
 	PAGE_WIDTH_MM,
 	TEXT_ALIGNS,
@@ -15,10 +19,6 @@ import {
 export const SNAP_MM = 0.5;
 export const NUDGE_MM = 0.5;
 export const NUDGE_LARGE_MM = 5;
-export const MIN_EXTENT_MM = 1;
-export const MIN_FONT_PT = 4;
-export const MAX_FONT_PT = 144;
-export const MAX_TEMPLATE_LENGTH = 500;
 const MM_DECIMALS = 100;
 
 export interface PointMm {

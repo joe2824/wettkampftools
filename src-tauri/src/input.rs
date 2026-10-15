@@ -1,4 +1,5 @@
 // Vom Benutzer gewählte oder abgelegte Eingabedateien lesen.
+use crate::file_check::{app_scope, canonical_existing, has_extension, not_found};
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -37,18 +38,12 @@ fn check_input_target(
     path: &Path,
     allowed_in_scope: impl Fn(&Path) -> bool,
 ) -> Result<PathBuf, String> {
-    let canonical = std::fs::canonicalize(path)
-        .map_err(|_| format!("Die Datei {} wurde nicht gefunden.", path.display()))?;
-    let metadata = std::fs::metadata(&canonical)
-        .map_err(|_| format!("Die Datei {} wurde nicht gefunden.", path.display()))?;
+    let canonical = canonical_existing(path)?;
+    let metadata = std::fs::metadata(&canonical).map_err(|_| not_found(path))?;
     if !metadata.is_file() {
         return Err(format!("{} ist keine Datei.", canonical.display()));
     }
-    let has_allowed_extension = canonical
-        .extension()
-        .and_then(|e| e.to_str())
-        .is_some_and(|e| INPUT_EXTENSIONS.iter().any(|x| e.eq_ignore_ascii_case(x)));
-    if !has_allowed_extension {
+    if !has_extension(&canonical, &INPUT_EXTENSIONS) {
         return Err(format!(
             "Die Datei {} kann hier nicht geöffnet werden.",
             canonical.display()
@@ -80,11 +75,7 @@ fn file_times(path: &Path) -> std::io::Result<FileTimes> {
 
 /// Prüfung mit dem Datei-Scope der App: den füllen Öffnen-Dialog und Ablegen.
 fn check_in_app_scope(app: &tauri::AppHandle, path: &str) -> Result<PathBuf, String> {
-    use tauri_plugin_fs::FsExt;
-    let scope = app.try_fs_scope();
-    check_input_target(Path::new(path), |p| {
-        scope.as_ref().is_some_and(|s| s.is_allowed(p))
-    })
+    check_input_target(Path::new(path), app_scope(app))
 }
 
 /// Liest eine gewählte oder abgelegte Datei als Bytes.
@@ -140,37 +131,10 @@ pub fn allow_dropped_paths(app: &tauri::AppHandle, paths: &[PathBuf]) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::atomic::{AtomicUsize, Ordering};
+    use crate::file_check::test_support::{allow_all, TempFile};
 
-    /// Legt eine Datei im Temp-Ordner an und räumt sie beim Drop weg.
-    struct TempFile(PathBuf);
-
-    impl TempFile {
-        fn with_bytes(file_name: &str, bytes: &[u8]) -> Self {
-            static COUNTER: AtomicUsize = AtomicUsize::new(0);
-            let unique = format!(
-                "wettkampftools-input-{}-{}-{file_name}",
-                std::process::id(),
-                COUNTER.fetch_add(1, Ordering::Relaxed)
-            );
-            let path = std::env::temp_dir().join(unique);
-            std::fs::write(&path, bytes).expect("Testdatei anlegen");
-            Self(path)
-        }
-
-        fn new(file_name: &str) -> Self {
-            Self::with_bytes(file_name, b"x")
-        }
-    }
-
-    impl Drop for TempFile {
-        fn drop(&mut self) {
-            let _ = std::fs::remove_file(&self.0);
-        }
-    }
-
-    fn allow_all(_: &Path) -> bool {
-        true
+    fn temp_file(file_name: &str) -> TempFile {
+        TempFile::with_bytes("input", file_name, b"x")
     }
 
     #[test]
@@ -178,7 +142,7 @@ mod tests {
         for name in [
             "a.csv", "b.xls", "c.xlsx", "d.xlsm", "e.rwm", "f.json", "g.png", "h.jpg", "i.jpeg",
         ] {
-            let file = TempFile::new(name);
+            let file = temp_file(name);
             let checked = check_input_target(&file.0, allow_all).expect("erlaubt");
             assert_eq!(checked, std::fs::canonicalize(&file.0).unwrap());
         }
@@ -186,14 +150,14 @@ mod tests {
 
     #[test]
     fn input_accepts_uppercase_extension() {
-        let file = TempFile::new("Ergebnisse.XLS");
+        let file = temp_file("Ergebnisse.XLS");
         assert!(check_input_target(&file.0, allow_all).is_ok());
     }
 
     #[test]
     fn input_rejects_other_extensions() {
         for name in ["a.exe", "b.txt", "c.lnk", "ohne_endung", "d.xls.exe"] {
-            let file = TempFile::new(name);
+            let file = temp_file(name);
             let err = check_input_target(&file.0, allow_all).unwrap_err();
             assert!(
                 err.contains("kann hier nicht geöffnet werden"),
@@ -223,7 +187,7 @@ mod tests {
 
     #[test]
     fn input_rejects_too_large_file() {
-        let file = TempFile::new("gross.csv");
+        let file = temp_file("gross.csv");
         let handle = std::fs::OpenOptions::new()
             .write(true)
             .open(&file.0)
@@ -235,20 +199,15 @@ mod tests {
 
     #[test]
     fn input_rejects_path_outside_scope() {
-        let file = TempFile::new("a.csv");
+        let file = temp_file("a.csv");
         let err = check_input_target(&file.0, |_| false).unwrap_err();
         assert!(err.contains("erneut auswählen"), "{err}");
     }
 
     #[test]
     fn input_checks_scope_with_normalized_path() {
-        let file = TempFile::new("a.json");
-        let dotted = file
-            .0
-            .parent()
-            .unwrap()
-            .join(".")
-            .join(file.0.file_name().unwrap());
+        let file = temp_file("a.json");
+        let dotted = file.dotted();
         let canonical = std::fs::canonicalize(&file.0).unwrap();
         let result = check_input_target(&dotted, |p| p == canonical);
         assert_eq!(result.unwrap(), canonical);
@@ -256,7 +215,7 @@ mod tests {
 
     #[test]
     fn file_times_reports_modification_time() {
-        let file = TempFile::new("zeit.csv");
+        let file = temp_file("zeit.csv");
         let now_ms = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()

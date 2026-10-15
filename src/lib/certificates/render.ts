@@ -1,7 +1,7 @@
 // Seitenaufbau als Zeichenbefehle; y wird von der Oberkante der Seite in mm gemessen.
 import type { TextMetrics } from "./fonts";
 import type { FontWeight, ImageObject, Layout, SignatureSlot, TextObject } from "./layout";
-import { PLACEHOLDERS, fillTemplate, type PlaceholderKey, type PlaceholderValues } from "./layoutTemplate";
+import { fillTemplate, placeholderKeysIn, type PlaceholderValues } from "./layoutTemplate";
 
 export interface TextOp {
 	kind: "text";
@@ -44,8 +44,6 @@ export interface RenderOptions {
 }
 
 const SHRINK_STEP_PT = 0.5;
-const PLACEHOLDER_PATTERN = /\{([a-z0-9]+)\}/g;
-const PLACEHOLDER_KEYS: ReadonlySet<string> = new Set(PLACEHOLDERS.map((p) => p.key));
 
 interface Segment {
 	text: string;
@@ -75,9 +73,7 @@ export function shiftOp(op: DrawOp, offset: OffsetMm): DrawOp {
 
 // Vorlage mit Platzhaltern, die alle leer sind, z. B. "({gliederung})" ohne Gliederung.
 function onlyEmptyPlaceholders(template: string, values: PlaceholderValues): boolean {
-	const keys = [...template.matchAll(PLACEHOLDER_PATTERN)]
-		.map((match) => match[1])
-		.filter((key): key is PlaceholderKey => PLACEHOLDER_KEYS.has(key));
+	const keys = placeholderKeysIn(template);
 	return keys.length > 0 && keys.every((key) => values[key]?.trim() === "");
 }
 

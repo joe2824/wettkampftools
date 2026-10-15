@@ -1,3 +1,4 @@
+mod file_check;
 mod input;
 mod legacy_settings;
 mod logging;

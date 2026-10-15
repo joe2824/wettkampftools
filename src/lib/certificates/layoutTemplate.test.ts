@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PLACEHOLDERS, fillTemplate, parseTemplate } from "./layoutTemplate";
+import { PLACEHOLDERS, fillTemplate, parseTemplate, placeholderKeysIn } from "./layoutTemplate";
 
 describe("PLACEHOLDERS", () => {
 	it("enthält alle deutschen Platzhalter mit Beschreibung", () => {
@@ -79,5 +79,12 @@ describe("fillTemplate", () => {
 		expect(
 			fillTemplate("**{altersklasse} {geschlecht}**", { altersklasse: "AK 12", geschlecht: "weiblich" })
 		).toEqual([{ text: "AK 12 weiblich", bold: true }]);
+	});
+});
+
+describe("placeholderKeysIn", () => {
+	it("liefert die bekannten Platzhalter in Reihenfolge, unbekannte nicht", () => {
+		expect(placeholderKeysIn("({gliederung}) {foo} {name}")).toEqual(["gliederung", "name"]);
+		expect(placeholderKeysIn("ohne Platzhalter")).toEqual([]);
 	});
 });

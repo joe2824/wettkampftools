@@ -1,13 +1,9 @@
 // Urkunden-Warteschlange: auswählbare Einträge, Reihenfolge und Seiten mit Platzhalterwerten.
+import { formatGermanDate } from "$lib/format/date";
 import { formatCompetitionPoints } from "$lib/format/points";
 import type { EventInfo } from "$lib/settings/settings";
-import {
-	classifyAgeGroup,
-	compareAgeGroups,
-	displayAgeGroup,
-	matchAgeGroup,
-	type AgeGroupKind
-} from "$lib/wwk/ageGroups";
+import { classifyAgeGroup, displayAgeGroup, type AgeGroupKind } from "$lib/wwk/ageGroups";
+import { placedEntries, type PlacedEntry } from "$lib/wwk/certificateOrder";
 import type { CompetitionKind, ResultRow } from "$lib/wwk/results";
 import type { PlaceholderValues } from "./layoutTemplate";
 
@@ -47,58 +43,23 @@ export interface CertificatePages {
 	namesShortfall: number;
 }
 
-const LOCALE = "de";
 const KIND_LABELS: Record<AgeGroupKind, string> = {
 	rescue: "Rettungswertung",
 	wave: "Wellenwertung"
 };
-const MONTHS = [
-	"Januar",
-	"Februar",
-	"März",
-	"April",
-	"Mai",
-	"Juni",
-	"Juli",
-	"August",
-	"September",
-	"Oktober",
-	"November",
-	"Dezember"
-];
-const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
 
-function toEntry(row: ResultRow, order: readonly string[]): CertificateEntry | null {
-	if (row.place === null) return null;
-	const match = matchAgeGroup(row.ageGroupRaw, order);
-	if (match.kind === "unknown") return null;
-	const kind = classifyAgeGroup(match.name, order);
+function toEntry(entry: PlacedEntry, order: readonly string[]): CertificateEntry | null {
+	const kind = classifyAgeGroup(entry.ageGroup, order);
 	if (kind === null) return null;
-	return {
-		id: `row${row.sourceRow}`,
-		row,
-		ageGroup: match.name,
-		kind,
-		gender: row.gender,
-		place: row.place
-	};
+	const { row, ageGroup, place } = entry;
+	return { id: `row${row.sourceRow}`, row, ageGroup, kind, gender: row.gender, place };
 }
 
-/** AK nach Reihenfolge, weiblich zuerst, letzter Platz zuerst, dann Name. */
-function compareEntries(order: readonly string[]): (a: CertificateEntry, b: CertificateEntry) => number {
-	const byAgeGroup = compareAgeGroups(order);
-	return (a, b) =>
-		byAgeGroup(a.ageGroup, b.ageGroup) ||
-		b.gender.localeCompare(a.gender, LOCALE) ||
-		b.place - a.place ||
-		a.row.name.localeCompare(b.row.name, LOCALE);
-}
-
+/** Platzierte Einträge mit Rettungs- oder Wellenwertung in Urkunden-Reihenfolge. */
 export function eligibleEntries(rows: readonly ResultRow[], order: readonly string[]): CertificateEntry[] {
-	return rows
-		.map((row) => toEntry(row, order))
-		.filter((entry): entry is CertificateEntry => entry !== null)
-		.sort(compareEntries(order));
+	return placedEntries(rows, order)
+		.map((entry) => toEntry(entry, order))
+		.filter((entry): entry is CertificateEntry => entry !== null);
 }
 
 /** Leere oder fehlende Liste bedeutet „alle“. */
@@ -114,15 +75,6 @@ export function filterEntries(entries: readonly CertificateEntry[], filter: Entr
 			allows(filter.kinds, entry.kind) &&
 			(filter.selectedIds === undefined || filter.selectedIds.has(entry.id))
 	);
-}
-
-/** „2026-11-14“ → „14. November 2026“; leer oder ungültig → leer. */
-export function formatEventDate(iso: string): string {
-	const match = ISO_DATE.exec(iso);
-	if (!match) return "";
-	const month = MONTHS[Number(match[2]) - 1];
-	if (month === undefined) return "";
-	return `${Number(match[3])}. ${month} ${match[1]}`;
 }
 
 export function placeholderValues(
@@ -143,7 +95,7 @@ export function placeholderValues(
 		nr: event.number,
 		titel: event.title,
 		ausrichter: event.host,
-		datum: formatEventDate(event.date),
+		datum: formatGermanDate(event.date),
 		ort: event.venue,
 		unterzeichner1: first.name,
 		funktion1: first.role,

@@ -5,6 +5,12 @@ export const PAGE_HEIGHT_MM = 297;
 export const MM_PER_PT = 25.4 / 72;
 export const LAYOUT_SCHEMA_VERSION = 1;
 
+// Grenzen für Editor und Import.
+export const MIN_EXTENT_MM = 1;
+export const MIN_FONT_PT = 4;
+export const MAX_FONT_PT = 144;
+export const MAX_TEMPLATE_LENGTH = 500;
+
 export const FONT_WEIGHTS = ["light", "regular", "bold", "black"] as const;
 export type FontWeight = (typeof FONT_WEIGHTS)[number];
 

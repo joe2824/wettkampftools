@@ -18,18 +18,16 @@ import {
 import { parseRegistrations, type Team } from "$lib/wwk/registrations";
 import { workbookYear } from "$lib/wwk/results";
 import { errorTeamIds, validateTeams, type Issue } from "$lib/wwk/validation";
+import { NOT_A_TEAM_EXPORT } from "./errors";
+import { EXCEL_FILTER } from "./savedFile";
 
 export const REGISTRATION_FILE_NAME = "WWK_Meldungen.xlsx";
-const EXCEL_FILTER = { name: "Excel-Datei", extensions: ["xlsx"] };
 const LOCALE = "de";
 
 const ENCODING_LABELS: Record<TextEncodingName, string> = {
 	"utf-8": "UTF-8",
 	"windows-1252": "Windows (ältere Exporte)",
 };
-
-const NOT_A_TEAM_EXPORT =
-	"Diese Datei scheint kein Mannschaften-Export zu sein. Bitte im DLRG-Meldeportal die Mannschaften als CSV exportieren und diese Datei laden.";
 
 export type LoadOutcome = { ok: true; registration: SessionRegistration } | { ok: false; message: string };
 

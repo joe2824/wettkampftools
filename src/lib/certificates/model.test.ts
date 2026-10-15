@@ -7,7 +7,6 @@ import {
 	countPages,
 	eligibleEntries,
 	filterEntries,
-	formatEventDate,
 	placeholderValues,
 	type CertificateEntry,
 	type PageOptions
@@ -136,14 +135,6 @@ describe("filterEntries", () => {
 		const selectedIds = new Set([entries[0].id, entries[3].id]);
 		expect(names(filterEntries(entries, { selectedIds }))).toEqual(["A10w", "W13w"]);
 		expect(filterEntries(entries, { selectedIds: new Set() })).toEqual([]);
-	});
-});
-
-describe("formatEventDate", () => {
-	it("schreibt das Datum lang auf Deutsch", () => {
-		expect(formatEventDate("2026-11-14")).toBe("14. November 2026");
-		expect(formatEventDate("2026-03-01")).toBe("1. März 2026");
-		expect(formatEventDate("")).toBe("");
 	});
 });
 

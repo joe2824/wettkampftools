@@ -1,7 +1,6 @@
 <script lang="ts">
 	import ChevronDownIcon from "@lucide/svelte/icons/chevron-down";
 	import * as Collapsible from "$lib/components/ui/collapsible";
-	import * as Table from "$lib/components/ui/table";
 	import {
 		distinctNames,
 		rescueRecords,
@@ -10,7 +9,7 @@
 		type RecMapping
 	} from "$lib/records/mapping";
 	import type { RulebookRecord } from "$lib/records/rulebookRecords";
-	import MappingSelect from "./MappingSelect.svelte";
+	import MappingTable from "./MappingTable.svelte";
 
 	interface Props {
 		mapping: RecMapping;
@@ -42,53 +41,23 @@
 		<p class="text-sm text-muted-foreground">
 			Welche offizielle Altersklasse und Disziplin liefert den Rec-Wert? Die Zuordnung wird gespeichert.
 		</p>
-		<Table.Root>
-			<Table.Header>
-				<Table.Row>
-					<Table.Head>Altersklasse im Verein</Table.Head>
-					<Table.Head>Offizielle Altersklasse</Table.Head>
-				</Table.Row>
-			</Table.Header>
-			<Table.Body>
-				{#each clubAgeGroups as ageGroup (ageGroup)}
-					<Table.Row>
-						<Table.Cell>{ageGroup}</Table.Cell>
-						<Table.Cell>
-							<MappingSelect
-								label="Offizielle Altersklasse für {ageGroup}"
-								value={mapping.ageGroups[ageGroup] ?? null}
-								options={officialAgeGroups}
-								emptyLabel="Gleicher Name"
-								onchange={(value) => onchange(setAgeGroupMapping(mapping, ageGroup, value))}
-							/>
-						</Table.Cell>
-					</Table.Row>
-				{/each}
-			</Table.Body>
-		</Table.Root>
-		<Table.Root>
-			<Table.Header>
-				<Table.Row>
-					<Table.Head>Disziplin im Verein</Table.Head>
-					<Table.Head>Offizielle Disziplin</Table.Head>
-				</Table.Row>
-			</Table.Header>
-			<Table.Body>
-				{#each clubDisciplines as discipline (discipline)}
-					<Table.Row>
-						<Table.Cell>{discipline}</Table.Cell>
-						<Table.Cell>
-							<MappingSelect
-								label="Offizielle Disziplin für {discipline}"
-								value={mapping.disciplineAliases[discipline] ?? null}
-								options={officialDisciplines}
-								emptyLabel="Gleicher Name"
-								onchange={(value) => onchange(setDisciplineAlias(mapping, discipline, value))}
-							/>
-						</Table.Cell>
-					</Table.Row>
-				{/each}
-			</Table.Body>
-		</Table.Root>
+		<MappingTable
+			clubHeading="Altersklasse im Verein"
+			officialHeading="Offizielle Altersklasse"
+			selectLabel="Offizielle Altersklasse für"
+			names={clubAgeGroups}
+			options={officialAgeGroups}
+			valueOf={(ageGroup) => mapping.ageGroups[ageGroup] ?? null}
+			onselect={(ageGroup, value) => onchange(setAgeGroupMapping(mapping, ageGroup, value))}
+		/>
+		<MappingTable
+			clubHeading="Disziplin im Verein"
+			officialHeading="Offizielle Disziplin"
+			selectLabel="Offizielle Disziplin für"
+			names={clubDisciplines}
+			options={officialDisciplines}
+			valueOf={(discipline) => mapping.disciplineAliases[discipline] ?? null}
+			onselect={(discipline, value) => onchange(setDisciplineAlias(mapping, discipline, value))}
+		/>
 	</Collapsible.Content>
 </Collapsible.Root>

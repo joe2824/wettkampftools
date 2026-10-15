@@ -1,8 +1,8 @@
 <script lang="ts">
 	import ChevronDownIcon from "@lucide/svelte/icons/chevron-down";
-	import CircleAlertIcon from "@lucide/svelte/icons/circle-alert";
 	import CircleCheckIcon from "@lucide/svelte/icons/circle-check";
 	import TriangleAlertIcon from "@lucide/svelte/icons/triangle-alert";
+	import MessageListAlert from "$lib/components/MessageListAlert.svelte";
 	import * as Alert from "$lib/components/ui/alert";
 	import { Button } from "$lib/components/ui/button";
 	import * as Collapsible from "$lib/components/ui/collapsible";
@@ -37,17 +37,12 @@
 {/if}
 
 {#if errorMessages.length > 0}
-	<Alert.Root variant="destructive">
-		<CircleAlertIcon />
-		<Alert.Title>Fehler: {check.excludedRows.length} Meldungen würde JAuswertung verwerfen</Alert.Title>
-		<Alert.Description>
-			<ul class="list-disc space-y-1 pl-4">
-				{#each errorMessages as message (message)}
-					<li>{message}</li>
-				{/each}
-			</ul>
-		</Alert.Description>
-	</Alert.Root>
+	<MessageListAlert
+		variant="destructive"
+		withIcon
+		title="Fehler: {check.excludedRows.length} Meldungen würde JAuswertung verwerfen"
+		messages={errorMessages}
+	/>
 {/if}
 
 {#if warningMessages.length > 0}

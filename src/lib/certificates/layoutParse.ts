@@ -4,6 +4,10 @@ import {
 	LAYOUT_KEYS,
 	LAYOUT_SCHEMA_VERSION,
 	LAYOUT_VARIANTS,
+	MAX_FONT_PT,
+	MAX_TEMPLATE_LENGTH,
+	MIN_EXTENT_MM,
+	MIN_FONT_PT,
 	PAGE_HEIGHT_MM,
 	PAGE_WIDTH_MM,
 	SIGNATURE_SLOTS,
@@ -20,12 +24,8 @@ import {
 import { defaultLayouts } from "./layoutDefaults";
 
 // Import nur über Positivliste: Bilder (Unterschriften, Hintergrund) gehören nie zum Layout.
-const MIN_EXTENT_MM = 1;
-const MIN_FONT_PT = 4;
-const MAX_FONT_PT = 144;
 const MAX_ID_LENGTH = 64;
 const MAX_LABEL_LENGTH = 100;
-const MAX_TEMPLATE_LENGTH = 500;
 const DATA_URI_PATTERN = /data:[a-z]+\/[a-z0-9.+-]+[;,]/i;
 
 const VARIANT_NAMES: Record<LayoutVariant, string> = { team: "Mannschaft", individual: "Einzel" };

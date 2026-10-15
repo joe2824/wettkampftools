@@ -32,6 +32,15 @@ const BOLD_MARKER = "**";
 const PLACEHOLDER_PATTERN = /\{([a-z0-9]+)\}/g;
 const PLACEHOLDER_KEYS: ReadonlySet<string> = new Set(PLACEHOLDERS.map((p) => p.key));
 
+function isPlaceholderKey(key: string): key is PlaceholderKey {
+	return PLACEHOLDER_KEYS.has(key);
+}
+
+/** Bekannte Platzhalter der Vorlage in Reihenfolge des Auftretens. */
+export function placeholderKeysIn(template: string): PlaceholderKey[] {
+	return [...template.matchAll(PLACEHOLDER_PATTERN)].map((match) => match[1]).filter(isPlaceholderKey);
+}
+
 export function parseTemplate(template: string): TextRun[] {
 	const parts = template.split(BOLD_MARKER);
 	// Bei ungerader Markeranzahl bleibt der letzte Marker normaler Text.
@@ -51,8 +60,8 @@ export function fillTemplate(template: string, values: PlaceholderValues): TextR
 	return parseTemplate(template).map((run) => ({
 		bold: run.bold,
 		text: run.text.replace(PLACEHOLDER_PATTERN, (token, key: string) => {
-			if (!PLACEHOLDER_KEYS.has(key)) return token;
-			return values[key as PlaceholderKey] ?? token;
+			if (!isPlaceholderKey(key)) return token;
+			return values[key] ?? token;
 		})
 	}));
 }

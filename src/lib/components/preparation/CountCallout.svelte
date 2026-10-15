@@ -1,6 +1,5 @@
 <script lang="ts">
-	import CircleAlertIcon from "@lucide/svelte/icons/circle-alert";
-	import * as Alert from "$lib/components/ui/alert";
+	import MessageListAlert from "$lib/components/MessageListAlert.svelte";
 	import * as Table from "$lib/components/ui/table";
 	import type { ExpectedCounts, VerificationResult } from "$lib/wwk/registrationExport";
 
@@ -45,16 +44,11 @@
 	</Table.Root>
 
 	{#if !verification.ok}
-		<Alert.Root variant="destructive">
-			<CircleAlertIcon />
-			<Alert.Title>Die gespeicherte Datei weicht ab</Alert.Title>
-			<Alert.Description>
-				<ul class="list-disc space-y-1 pl-4">
-					{#each verification.problems as problem (problem)}
-						<li>{problem}</li>
-					{/each}
-				</ul>
-			</Alert.Description>
-		</Alert.Root>
+		<MessageListAlert
+			variant="destructive"
+			withIcon
+			title="Die gespeicherte Datei weicht ab"
+			messages={verification.problems}
+		/>
 	{/if}
 </section>

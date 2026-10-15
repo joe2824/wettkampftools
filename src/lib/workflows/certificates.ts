@@ -5,18 +5,16 @@ import { buildCertificatePages, type CertificateEntry } from "$lib/certificates/
 import { logError, logInfo } from "$lib/log";
 import { loadAppFonts } from "$lib/platform/assets";
 import { datedFileName, saveFile } from "$lib/platform/files";
-import { openOutputFile } from "$lib/platform/output";
 import { writeWorkbook } from "$lib/platform/workbook";
 import type { Settings } from "$lib/settings/settings";
 import { buildAgeGroupOrder } from "$lib/wwk/ageGroups";
 import type { CompetitionKind } from "$lib/wwk/results";
 import { buildSerialLetterSheet } from "$lib/wwk/serialLetterExport";
 import { userMessage } from "./errors";
+import { EXCEL_FILTER, openAfterSave, PDF_FILTER } from "./savedFile";
 
 export const CERTIFICATES_FILE_NAME = "Urkunden.pdf";
 export const SERIAL_LETTER_FILE_NAME = "Seriendruck.xlsx";
-const PDF_FILTER = { name: "PDF-Datei", extensions: ["pdf"] };
-const EXCEL_FILTER = { name: "Excel-Datei", extensions: ["xlsx"] };
 const PDF_FAILED = "Das PDF konnte nicht erzeugt werden.";
 const SERIAL_LETTER_FAILED = "Die Seriendruck-Tabelle konnte nicht gespeichert werden.";
 
@@ -55,16 +53,6 @@ async function renderCertificates(job: CertificateJob): Promise<{ bytes: Uint8Ar
 	return { bytes, pageCount: pages.length };
 }
 
-async function tryOpen(path: string): Promise<boolean> {
-	try {
-		await openOutputFile(path);
-		return true;
-	} catch {
-		logError("certificates.openFailed");
-		return false;
-	}
-}
-
 /** Erzeugt das PDF, fragt nach dem Speicherort und öffnet es danach. */
 export async function createCertificatesPdf(job: CertificateJob, now: Date = new Date()): Promise<PdfOutcome> {
 	try {
@@ -72,7 +60,7 @@ export async function createCertificatesPdf(job: CertificateJob, now: Date = new
 		const path = await saveFile({ defaultName: datedFileName(CERTIFICATES_FILE_NAME, now), filters: [PDF_FILTER], bytes });
 		if (path === null) return { status: "cancelled" };
 		logInfo("certificates.saved", { entries: job.entries.length, pages: pageCount });
-		return { status: "saved", path, pageCount, opened: await tryOpen(path) };
+		return { status: "saved", path, pageCount, opened: await openAfterSave(path, "certificates.openFailed") };
 	} catch (error) {
 		logError("certificates.failed");
 		return { status: "failed", message: userMessage(error, PDF_FAILED) };

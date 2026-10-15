@@ -5,6 +5,7 @@
 	import { Badge } from "$lib/components/ui/badge";
 	import { Button } from "$lib/components/ui/button";
 	import Dropzone from "$lib/components/Dropzone.svelte";
+	import LoadedFileCard from "$lib/components/LoadedFileCard.svelte";
 	import YearCheckNotice from "$lib/components/YearCheckNotice.svelte";
 	import type { CheckedFile } from "$lib/components/fileCheck";
 	import type { SessionResults } from "$lib/session.svelte";
@@ -35,15 +36,15 @@
 
 <div class="flex flex-col gap-3">
 	{#if results && !replacing}
-		<div class="flex flex-wrap items-center gap-3 rounded-lg border bg-muted/30 p-3">
-			<FileSpreadsheetIcon class="size-5 shrink-0 text-muted-foreground" aria-hidden="true" />
-			<div class="flex min-w-0 flex-1 flex-col">
-				<span class="truncate font-medium" title={results.fileName}>Ergebnisdatei: {results.fileName}</span>
-				<span class="text-sm text-muted-foreground">{results.rows.length} Einträge</span>
-			</div>
-			<Badge variant="secondary">{KIND_LABELS[results.kind]}</Badge>
-			<Button variant="outline" size="sm" onclick={() => (replacing = true)}>Andere Datei laden</Button>
-		</div>
+		<LoadedFileCard
+			icon={FileSpreadsheetIcon}
+			title="Ergebnisdatei: {results.fileName}"
+			tooltip={results.fileName}
+			onreplace={() => (replacing = true)}
+		>
+			{#snippet details()}{results.rows.length} Einträge{/snippet}
+			{#snippet badge()}<Badge variant="secondary">{KIND_LABELS[results.kind]}</Badge>{/snippet}
+		</LoadedFileCard>
 	{:else}
 		<Dropzone
 			kinds={["excel"]}

@@ -1,20 +1,18 @@
 <script lang="ts">
-	import CircleAlertIcon from "@lucide/svelte/icons/circle-alert";
 	import { onMount } from "svelte";
-	import { createMetrics, type TextMetrics } from "$lib/certificates/fonts";
 	import { SIGNATURE_SLOTS, type Layout } from "$lib/certificates/layout";
 	import { layoutStore } from "$lib/certificates/layoutStore.svelte";
 	import type { CertificatePage } from "$lib/certificates/model";
-	import * as Alert from "$lib/components/ui/alert";
 	import { Label } from "$lib/components/ui/label";
 	import { Skeleton } from "$lib/components/ui/skeleton";
 	import { Switch } from "$lib/components/ui/switch";
-	import { loadAppFonts } from "$lib/platform/assets";
 	import { previewOps } from "$lib/workflows/layoutEditor";
 	import CertificatePageView from "./CertificatePageView.svelte";
 	import { clampPage, pageCaption, pageForKey } from "./certificatePreview";
+	import FontsUnavailableAlert from "./FontsUnavailableAlert.svelte";
 	import { ImageUrls } from "./imageUrls.svelte";
 	import PreviewNavigation from "./PreviewNavigation.svelte";
+	import { PreviewFonts } from "./previewFonts.svelte";
 
 	interface Props {
 		pages: CertificatePage[];
@@ -28,8 +26,7 @@
 	const BACKGROUND_OPACITY = 0.5;
 
 	let requested = $state(0);
-	let metrics = $state.raw<TextMetrics | null>(null);
-	let fontsFailed = $state(false);
+	const fonts = new PreviewFonts();
 	let showBackground = $state(false);
 	const images = new ImageUrls();
 
@@ -38,16 +35,13 @@
 	const availableSlots = $derived(new Set(SIGNATURE_SLOTS.filter((slot) => layoutStore.images[slot] !== null)));
 	// Nur die aktuelle Seite berechnen; ohne Druckversatz.
 	const ops = $derived(
-		metrics && page ? previewOps(layout, page.values, { withMemberNames, availableSlots }, metrics) : []
+		fonts.metrics && page ? previewOps(layout, page.values, { withMemberNames, availableSlots }, fonts.metrics) : []
 	);
 	const caption = $derived(pageCaption(pages, index));
 	const hasBackground = $derived(images.urls.background !== undefined);
 
 	onMount(() => {
-		loadAppFonts().then(
-			(fonts) => (metrics = createMetrics(fonts)),
-			() => (fontsFailed = true)
-		);
+		void fonts.load();
 		return images.track(() => layoutStore.images);
 	});
 
@@ -64,12 +58,8 @@
 
 	<p class="text-center text-sm font-medium" aria-live="polite">{caption}</p>
 
-	{#if fontsFailed}
-		<Alert.Root variant="destructive">
-			<CircleAlertIcon />
-			<Alert.Title>Vorschau nicht verfügbar</Alert.Title>
-			<Alert.Description>Die Schriftdateien konnten nicht geladen werden. Bitte das Programm neu starten.</Alert.Description>
-		</Alert.Root>
+	{#if fonts.failed}
+		<FontsUnavailableAlert />
 	{:else}
 		<!-- Mit Fokus blättern die Pfeiltasten durch die Seiten. -->
 		<!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions -->
@@ -80,7 +70,7 @@
 			tabindex="0"
 			onkeydown={handleKeyDown}
 		>
-			{#if metrics === null}
+			{#if fonts.metrics === null}
 				<Skeleton class="mx-auto aspect-210/297 h-[min(70vh,48rem)] max-w-full" />
 			{:else}
 				<CertificatePageView

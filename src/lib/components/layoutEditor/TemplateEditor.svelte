@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { tick } from "svelte";
-	import { insertAtCursor, MAX_TEMPLATE_LENGTH } from "$lib/certificates/editorOps";
+	import { insertAtCursor } from "$lib/certificates/editorOps";
+	import { MAX_TEMPLATE_LENGTH } from "$lib/certificates/layout";
 	import { PLACEHOLDERS } from "$lib/certificates/layoutTemplate";
 	import { Label } from "$lib/components/ui/label";
 	import { Textarea } from "$lib/components/ui/textarea";

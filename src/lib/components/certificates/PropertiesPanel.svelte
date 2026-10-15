@@ -2,8 +2,8 @@
 	import AlignCenterIcon from "@lucide/svelte/icons/align-center";
 	import AlignLeftIcon from "@lucide/svelte/icons/align-left";
 	import AlignRightIcon from "@lucide/svelte/icons/align-right";
-	import { MAX_FONT_PT, MIN_FONT_PT, type ObjectPatch } from "$lib/certificates/editorOps";
-	import type { LayoutObject, TextAlign } from "$lib/certificates/layout";
+	import type { ObjectPatch } from "$lib/certificates/editorOps";
+	import { MAX_FONT_PT, MIN_FONT_PT, type LayoutObject, type TextAlign } from "$lib/certificates/layout";
 	import { Label } from "$lib/components/ui/label";
 	import { Switch } from "$lib/components/ui/switch";
 	import * as ToggleGroup from "$lib/components/ui/toggle-group";

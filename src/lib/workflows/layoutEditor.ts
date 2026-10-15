@@ -9,14 +9,13 @@ import { layoutPage, type DrawOp, type OffsetMm } from "$lib/certificates/render
 import { logError, logInfo } from "$lib/log";
 import { loadAppFonts } from "$lib/platform/assets";
 import { datedFileName, saveFile } from "$lib/platform/files";
-import { openOutputFile } from "$lib/platform/output";
 import type { EventInfo } from "$lib/settings/settings";
 import { userMessage } from "./errors";
+import { openAfterSave, PDF_FILTER } from "./savedFile";
 
 export const LAYOUT_EXPORT_NAME = "Urkunden-Layout.json";
 export const CALIBRATION_FILE_NAME = "Kalibrierungsseite.pdf";
 const JSON_FILTER = { name: "Layout-Datei", extensions: ["json"] };
-const PDF_FILTER = { name: "PDF-Datei", extensions: ["pdf"] };
 const EXPORT_FAILED = "Die Layout-Datei konnte nicht gespeichert werden.";
 const CALIBRATION_FAILED = "Die Kalibrierungsseite konnte nicht erzeugt werden.";
 const BACKGROUND_SAVE_ERROR = "Der Hintergrund-Scan konnte nicht gespeichert werden. Bitte erneut versuchen.";
@@ -117,11 +116,7 @@ export async function printCalibration(offsetMm: OffsetMm, now: Date = new Date(
 		const path = await saveFile({ defaultName: datedFileName(CALIBRATION_FILE_NAME, now), filters: [PDF_FILTER], bytes });
 		if (path === null) return { status: "cancelled" };
 		logInfo("calibration.saved");
-		const opened = await openOutputFile(path).then(
-			() => true,
-			() => (logError("calibration.openFailed"), false)
-		);
-		return { status: "saved", path, opened };
+		return { status: "saved", path, opened: await openAfterSave(path, "calibration.openFailed") };
 	} catch (error) {
 		logError("calibration.failed");
 		return { status: "failed", message: userMessage(error, CALIBRATION_FAILED) };

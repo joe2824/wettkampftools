@@ -1,9 +1,7 @@
 <script lang="ts">
-	import RotateCcwIcon from "@lucide/svelte/icons/rotate-ccw";
 	import SaveIcon from "@lucide/svelte/icons/save";
 	import { toast } from "svelte-sonner";
-	import * as AlertDialog from "$lib/components/ui/alert-dialog";
-	import { buttonVariants } from "$lib/components/ui/button";
+	import ConfirmDialog from "$lib/components/ConfirmDialog.svelte";
 	import { competitionStore } from "$lib/competition/competitionStore.svelte";
 	import { formatGermanDateTime } from "$lib/format/date";
 	import { session } from "$lib/session.svelte";
@@ -31,23 +29,16 @@
 			Noch kein Wettkampf geladen. Geladene Dateien bleiben bis zum nächsten Wettkampf gespeichert.
 		{/if}
 	</p>
-	<AlertDialog.Root>
-		<AlertDialog.Trigger class={buttonVariants({ variant: "outline", size: "sm" })} disabled={!hasData}>
-			<RotateCcwIcon data-icon="inline-start" />
-			Neuer Wettkampf
-		</AlertDialog.Trigger>
-		<AlertDialog.Content>
-			<AlertDialog.Header>
-				<AlertDialog.Title>Neuen Wettkampf beginnen?</AlertDialog.Title>
-				<AlertDialog.Description>
-					Alle geladenen Meldungen und Ergebnisse werden entfernt. {eventHint} Titel, Ausrichter, Ort,
-					Unterzeichner, Einstellungen und Layout bleiben erhalten.
-				</AlertDialog.Description>
-			</AlertDialog.Header>
-			<AlertDialog.Footer>
-				<AlertDialog.Cancel>Abbrechen</AlertDialog.Cancel>
-				<AlertDialog.Action onclick={startNew}>Neuen Wettkampf beginnen</AlertDialog.Action>
-			</AlertDialog.Footer>
-		</AlertDialog.Content>
-	</AlertDialog.Root>
+	<ConfirmDialog
+		triggerLabel="Neuer Wettkampf"
+		triggerVariant="outline"
+		triggerSize="sm"
+		disabled={!hasData}
+		title="Neuen Wettkampf beginnen?"
+		confirmLabel="Neuen Wettkampf beginnen"
+		onconfirm={startNew}
+	>
+		Alle geladenen Meldungen und Ergebnisse werden entfernt. {eventHint} Titel, Ausrichter, Ort, Unterzeichner,
+		Einstellungen und Layout bleiben erhalten.
+	</ConfirmDialog>
 </section>

@@ -1,4 +1,5 @@
 // Fertige Ausgabedateien öffnen oder im Ordner zeigen.
+use crate::file_check::{app_scope, canonical_existing, has_extension};
 use std::path::{Path, PathBuf};
 
 /// Nur diese Endungen schreibt die Anwendung selbst.
@@ -12,13 +13,8 @@ fn check_output_target(
     path: &Path,
     allowed_in_scope: impl Fn(&Path) -> bool,
 ) -> Result<PathBuf, String> {
-    let canonical = std::fs::canonicalize(path)
-        .map_err(|_| format!("Die Datei {} wurde nicht gefunden.", path.display()))?;
-    let has_allowed_extension = canonical
-        .extension()
-        .and_then(|e| e.to_str())
-        .is_some_and(|e| OUTPUT_EXTENSIONS.iter().any(|x| e.eq_ignore_ascii_case(x)));
-    if !has_allowed_extension {
+    let canonical = canonical_existing(path)?;
+    if !has_extension(&canonical, &OUTPUT_EXTENSIONS) {
         return Err(format!(
             "Die Datei {} darf nicht geöffnet werden.",
             canonical.display()
@@ -39,12 +35,7 @@ fn check_output_target(
 /// unter Windows trägt der normalisierte das Präfix `\\?\`, mit dem
 /// manche Programme nicht zurechtkommen.
 fn check_in_app_scope(app: &tauri::AppHandle, path: &str) -> Result<(), String> {
-    use tauri_plugin_fs::FsExt;
-    let scope = app.try_fs_scope();
-    check_output_target(Path::new(path), |p| {
-        scope.as_ref().is_some_and(|s| s.is_allowed(p))
-    })
-    .map(|_| ())
+    check_output_target(Path::new(path), app_scope(app)).map(|_| ())
 }
 
 /// Öffnet eine gespeicherte Ausgabedatei mit dem Standardprogramm.
@@ -70,39 +61,16 @@ pub fn reveal_output_file(app: tauri::AppHandle, path: String) -> Result<(), Str
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::atomic::{AtomicUsize, Ordering};
+    use crate::file_check::test_support::{allow_all, TempFile};
 
-    /// Legt eine leere Datei im Temp-Ordner an und räumt sie beim Drop weg.
-    struct TempFile(PathBuf);
-
-    impl TempFile {
-        fn new(file_name: &str) -> Self {
-            static COUNTER: AtomicUsize = AtomicUsize::new(0);
-            let unique = format!(
-                "wettkampftools-output-{}-{}-{file_name}",
-                std::process::id(),
-                COUNTER.fetch_add(1, Ordering::Relaxed)
-            );
-            let path = std::env::temp_dir().join(unique);
-            std::fs::write(&path, b"").expect("Testdatei anlegen");
-            Self(path)
-        }
-    }
-
-    impl Drop for TempFile {
-        fn drop(&mut self) {
-            let _ = std::fs::remove_file(&self.0);
-        }
-    }
-
-    fn allow_all(_: &Path) -> bool {
-        true
+    fn temp_file(file_name: &str) -> TempFile {
+        TempFile::with_bytes("output", file_name, b"")
     }
 
     #[test]
     fn output_accepts_allowed_extensions() {
         for name in ["a.xlsx", "b.pdf", "c.json"] {
-            let file = TempFile::new(name);
+            let file = temp_file(name);
             let checked = check_output_target(&file.0, allow_all).expect("erlaubt");
             assert_eq!(checked, std::fs::canonicalize(&file.0).unwrap());
         }
@@ -110,14 +78,14 @@ mod tests {
 
     #[test]
     fn output_accepts_uppercase_extension() {
-        let file = TempFile::new("Auswertung.PDF");
+        let file = temp_file("Auswertung.PDF");
         assert!(check_output_target(&file.0, allow_all).is_ok());
     }
 
     #[test]
     fn output_rejects_other_extensions() {
         for name in ["a.exe", "b.bat", "c.lnk", "ohne_endung", "d.xlsx.exe"] {
-            let file = TempFile::new(name);
+            let file = temp_file(name);
             let err = check_output_target(&file.0, allow_all).unwrap_err();
             assert!(err.contains("darf nicht geöffnet werden"), "{name}: {err}");
         }
@@ -132,20 +100,15 @@ mod tests {
 
     #[test]
     fn output_rejects_path_outside_scope() {
-        let file = TempFile::new("a.pdf");
+        let file = temp_file("a.pdf");
         let err = check_output_target(&file.0, |_| false).unwrap_err();
         assert!(err.contains("nicht in dieser Sitzung gespeichert"), "{err}");
     }
 
     #[test]
     fn output_checks_scope_with_normalized_path() {
-        let file = TempFile::new("a.json");
-        let dotted = file
-            .0
-            .parent()
-            .unwrap()
-            .join(".")
-            .join(file.0.file_name().unwrap());
+        let file = temp_file("a.json");
+        let dotted = file.dotted();
         let canonical = std::fs::canonicalize(&file.0).unwrap();
         let result = check_output_target(&dotted, |p| p == canonical);
         assert_eq!(result.unwrap(), canonical);

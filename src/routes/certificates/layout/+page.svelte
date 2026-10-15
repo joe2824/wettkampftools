@@ -2,25 +2,23 @@
 	import { beforeNavigate } from "$app/navigation";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
-	import CircleAlertIcon from "@lucide/svelte/icons/circle-alert";
 	import { canRedo, canUndo, emptyHistory, record, redo, undo, type HistoryStep } from "$lib/certificates/editHistory";
 	import { updateObject, replaceObject, type ObjectPatch } from "$lib/certificates/editorOps";
-	import { createMetrics, type TextMetrics } from "$lib/certificates/fonts";
 	import { SIGNATURE_SLOTS, type LayoutObject, type LayoutVariant } from "$lib/certificates/layout";
 	import { layoutStore } from "$lib/certificates/layoutStore.svelte";
+	import FontsUnavailableAlert from "$lib/components/certificates/FontsUnavailableAlert.svelte";
 	import { ImageUrls } from "$lib/components/certificates/imageUrls.svelte";
 	import LayoutCanvas, { type CanvasZoom } from "$lib/components/certificates/LayoutCanvas.svelte";
 	import LayoutToolbar from "$lib/components/certificates/LayoutToolbar.svelte";
 	import ObjectList from "$lib/components/certificates/ObjectList.svelte";
+	import { PreviewFonts } from "$lib/components/certificates/previewFonts.svelte";
 	import PropertiesPanel from "$lib/components/certificates/PropertiesPanel.svelte";
 	import BackgroundControls from "$lib/components/layoutEditor/BackgroundControls.svelte";
 	import PreviewOptions from "$lib/components/layoutEditor/PreviewOptions.svelte";
 	import UndoControls from "$lib/components/layoutEditor/UndoControls.svelte";
-	import * as Alert from "$lib/components/ui/alert";
 	import * as Card from "$lib/components/ui/card";
 	import { Separator } from "$lib/components/ui/separator";
 	import { Skeleton } from "$lib/components/ui/skeleton";
-	import { loadAppFonts } from "$lib/platform/assets";
 	import { settingsStore } from "$lib/settings/settingsStore.svelte";
 	import { layoutSnapshot, previewOps, sampleValues, saveLayoutEditor } from "$lib/workflows/layoutEditor";
 
@@ -35,8 +33,7 @@
 	let zoom = $state<CanvasZoom>("fit");
 	let backgroundVisible = $state(true);
 	let opacityPercent = $state(DEFAULT_OPACITY_PERCENT);
-	let metrics = $state.raw<TextMetrics | null>(null);
-	let fontsFailed = $state(false);
+	const fonts = new PreviewFonts();
 	let savedSnapshot = $state(layoutSnapshot(layoutStore.layouts));
 	const images = new ImageUrls();
 	let history = $state.raw(emptyHistory());
@@ -49,15 +46,14 @@
 	const selected = $derived(layout.objects.find((object) => object.id === selectedId) ?? null);
 	const availableSlots = $derived(new Set(SIGNATURE_SLOTS.filter((slot) => layoutStore.images[slot] !== null)));
 	const values = $derived(sampleValues(variant, settingsStore.settings.event));
-	const ops = $derived(metrics ? previewOps(layout, values, { withMemberNames, availableSlots }, metrics) : []);
+	const ops = $derived(
+		fonts.metrics ? previewOps(layout, values, { withMemberNames, availableSlots }, fonts.metrics) : []
+	);
 	const dirty = $derived(layoutSnapshot(layoutStore.layouts) !== savedSnapshot || settingsStore.dirty);
 	const backgroundOpacity = $derived(backgroundVisible ? opacityPercent / PERCENT : null);
 
 	onMount(() => {
-		loadAppFonts().then(
-			(fonts) => (metrics = createMetrics(fonts)),
-			() => (fontsFailed = true)
-		);
+		void fonts.load();
 		return images.track(() => layoutStore.images);
 	});
 
@@ -142,15 +138,9 @@
 		</Card.Root>
 
 		<div class="h-[calc(100vh-14rem)] min-h-128">
-			{#if fontsFailed}
-				<Alert.Root variant="destructive">
-					<CircleAlertIcon />
-					<Alert.Title>Vorschau nicht verfügbar</Alert.Title>
-					<Alert.Description>
-						Die Schriftdateien konnten nicht geladen werden. Bitte das Programm neu starten.
-					</Alert.Description>
-				</Alert.Root>
-			{:else if metrics === null}
+			{#if fonts.failed}
+				<FontsUnavailableAlert />
+			{:else if fonts.metrics === null}
 				<Skeleton class="mx-auto aspect-210/297 h-full" />
 			{:else}
 				<LayoutCanvas
