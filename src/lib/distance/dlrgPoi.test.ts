@@ -44,6 +44,28 @@ describe("distanceKm", () => {
 });
 
 describe("parsePoiResponse", () => {
+	it("findet Gliederungen auch an Orten mit mehreren Einträgen (Typ am Eintrag)", () => {
+		const json = {
+			locs: [
+				{
+					typ: "multiple",
+					lat: "50.34",
+					lon: "8.79",
+					pois: [
+						{ typ: "Jug", name: "Musterstadt " },
+						{ typ: "Gld", name: "Musterstadt  e.V." }
+					]
+				}
+			]
+		};
+		expect(parsePoiResponse(json)).toEqual([{ name: "Musterstadt  e.V.", lat: 50.34, lon: 8.79 }]);
+	});
+
+	it("ordnet Namen mit doppelten Leerzeichen zu", () => {
+		const orgs = [{ name: "Musterstadt  e.V.", lat: 50.34, lon: 8.79 }];
+		expect(distancesToBadNauheim(["Musterstadt"], orgs).matched.map((m) => m.name)).toEqual(["Musterstadt"]);
+	});
+
 	it("übernimmt nur Gliederungen mit gültigen Koordinaten", () => {
 		const json = {
 			locs: [

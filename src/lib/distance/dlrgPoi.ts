@@ -49,13 +49,19 @@ function toCoordinate(value: unknown, limit: number): number | null {
 	return Number.isFinite(parsed) && Math.abs(parsed) <= limit ? parsed : null;
 }
 
+// Orte mit mehreren Einträgen (z. B. Ortsgruppe und Jugend) tragen den Typ am einzelnen Eintrag.
+function isOrganisationPoi(poi: unknown, locationType: unknown): poi is { name: string } {
+	if (!isRecord(poi) || typeof poi.name !== "string" || poi.name === "") return false;
+	return (poi.typ ?? locationType) === ORGANISATION_TYPE;
+}
+
 function parseLocation(loc: unknown): Organisation[] {
-	if (!isRecord(loc) || loc.typ !== ORGANISATION_TYPE || !Array.isArray(loc.pois)) return [];
+	if (!isRecord(loc) || !Array.isArray(loc.pois)) return [];
 	const lat = toCoordinate(loc.lat, MAX_LAT);
 	const lon = toCoordinate(loc.lon, MAX_LON);
 	if (lat === null || lon === null) return [];
 	return loc.pois
-		.filter((poi): poi is { name: string } => isRecord(poi) && typeof poi.name === "string" && poi.name !== "")
+		.filter((poi): poi is { name: string } => isOrganisationPoi(poi, loc.typ))
 		.map((poi) => ({ name: poi.name, lat, lon }));
 }
 
