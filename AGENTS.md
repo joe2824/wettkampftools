@@ -10,13 +10,14 @@ Hier steht, was aus dem Code nicht hervorgeht.
 ```sh
 npm run check                                           # svelte-check über das Frontend
 npm test                                                # Frontend-Tests (vitest)
+npm run format:check                                    # Formatierung prüfen (Prettier; beheben: npm run format)
 cd src-tauri && cargo clippy --all-targets -- -D warnings   # Rust-Lints
 cd src-tauri && cargo test                              # Rust-Tests
 npm run tauri dev                                       # Anwendung starten
 ```
 
-**Fertig heißt fertig:** erst wenn die ersten vier ohne Befund durchlaufen, nicht
-drei davon. Schlägt etwas fehl: Ergebnis melden, Aussage nicht abschwächen.
+**Fertig heißt fertig:** erst wenn die ersten fünf ohne Befund durchlaufen, nicht
+vier davon. Schlägt etwas fehl: Ergebnis melden, Aussage nicht abschwächen.
 
 ## Wo etwas hingehört
 

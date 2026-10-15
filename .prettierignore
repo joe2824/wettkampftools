@@ -1,0 +1,11 @@
+build
+.svelte-kit
+node_modules
+src-tauri/target
+src-tauri/gen
+src/lib/components/ui
+package-lock.json
+docs/gangsta
+static
+.venv
+coverage
