@@ -15,11 +15,22 @@
 		official: readonly RulebookRecord[] | null;
 		/** Zuschlag auf die Bestzeit in Sekunden. */
 		surcharge: number | null;
+		/** Aus: die echte Bestzeit wird neuer Rec-Wert. */
+		surchargeEnabled: boolean;
 		onmapping: (mapping: RecMapping) => void;
 		onedit: (key: string, rec: number | null) => void;
 	}
 
-	let { rows, mapping, club, official, surcharge = $bindable(), onmapping, onedit }: Props = $props();
+	let {
+		rows,
+		mapping,
+		club,
+		official,
+		surcharge = $bindable(),
+		surchargeEnabled = $bindable(),
+		onmapping,
+		onedit
+	}: Props = $props();
 
 	let onlyChanges = $state(false);
 
@@ -30,8 +41,27 @@
 <div class="flex flex-col gap-4">
 	<div class="flex flex-wrap items-end gap-6">
 		<div class="flex flex-col gap-2">
-			<Label for="wave-surcharge">Zuschlag auf die Bestzeit (Sekunden)</Label>
-			<Input id="wave-surcharge" type="number" min="0" step="0.5" class="w-32" bind:value={surcharge} />
+			<div class="flex items-center gap-2">
+				<Switch id="wave-surcharge-enabled" bind:checked={surchargeEnabled} />
+				<Label for="wave-surcharge-enabled">Zuschlag auf die Wellen-Bestzeit</Label>
+			</div>
+			<p class="text-xs text-muted-foreground">
+				{surchargeEnabled
+					? "Neuer Rec-Wert = Bestzeit des Vorjahres + Zuschlag."
+					: "Neuer Rec-Wert = echte Bestzeit des Vorjahres."}
+			</p>
+		</div>
+		<div class="flex flex-col gap-2">
+			<Label for="wave-surcharge">Zuschlag (Sekunden)</Label>
+			<Input
+				id="wave-surcharge"
+				type="number"
+				min="0"
+				step="0.5"
+				class="w-32"
+				disabled={!surchargeEnabled}
+				bind:value={surcharge}
+			/>
 		</div>
 	</div>
 

@@ -81,7 +81,8 @@ function waveOutcome(record: RulebookRecord, bestTimes: BestTimes | null, surcha
 	const best = bestTimes?.entries.find((entry) => recKey({ ...entry, ageGroup: normalize(entry.ageGroup) }) === key);
 	if (!bestTimes || !best) return unchanged(record, "Keine Bestzeit aus dem Vorjahr.");
 	const surcharge = Math.round(surchargeS * HUNDREDTHS_PER_SECOND);
-	const note = `Bestzeit ${bestTimes.year}: ${formatRecTime(best.time)} + ${formatSeconds(surcharge)}`;
+	const bestText = `Bestzeit ${bestTimes.year}: ${formatRecTime(best.time)}`;
+	const note = surcharge > 0 ? `${bestText} + ${formatSeconds(surcharge)}` : `${bestText} (ohne Zuschlag)`;
 	return { newRec: best.time + surcharge, source: "bestTime", note };
 }
 

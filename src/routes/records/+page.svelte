@@ -14,7 +14,14 @@
 	import type { BestTimes } from "$lib/records/bestTimes";
 	import { DEFAULT_REC_MAPPING, type RecMapping } from "$lib/records/mapping";
 	import { applyRecOverrides, buildRecProposal, DEFAULT_WAVE_SURCHARGE_S } from "$lib/records/proposal";
-	import { listBestTimeYears, loadBestTimes, loadRecMapping, saveRecMapping } from "$lib/records/storage";
+	import {
+		listBestTimeYears,
+		loadBestTimes,
+		loadRecMapping,
+		loadWaveSurcharge,
+		saveRecMapping,
+		saveWaveSurcharge
+	} from "$lib/records/storage";
 	import {
 		importBestTimesFile,
 		officialRulebookName,
@@ -34,6 +41,8 @@
 	let bestTimes = $state.raw<BestTimes | null>(null);
 	let mapping = $state.raw<RecMapping>(DEFAULT_REC_MAPPING);
 	let surcharge = $state<number | null>(DEFAULT_WAVE_SURCHARGE_S);
+	let surchargeEnabled = $state(true);
+	let surchargeLoaded = false;
 	let overrides = $state.raw<ReadonlyMap<string, number>>(new Map());
 	let savedPath = $state<string | null>(null);
 
@@ -47,7 +56,7 @@
 						officialName: officialRulebookName(official),
 						bestTimes,
 						mapping,
-						waveSurchargeS: surcharge ?? 0
+						waveSurchargeS: surchargeEnabled ? (surcharge ?? 0) : 0
 					}),
 					overrides
 				)
@@ -68,9 +77,19 @@
 		void loadBestTimes(selected).then((loaded) => (bestTimes = loaded));
 	});
 
+	// Zuschlag-Einstellung merken, sobald sie geladen ist.
+	$effect(() => {
+		const current = { enabled: surchargeEnabled, seconds: surcharge ?? 0 };
+		if (surchargeLoaded) void saveWaveSurcharge(current);
+	});
+
 	onMount(async () => {
 		club = await restoreClubRulebook();
 		mapping = await loadRecMapping();
+		const stored = await loadWaveSurcharge();
+		surchargeEnabled = stored.enabled;
+		surcharge = stored.seconds;
+		surchargeLoaded = true;
 		await refreshYears(year - 1);
 	});
 
@@ -179,6 +198,7 @@
 					club={club.records}
 					official={official?.records ?? null}
 					bind:surcharge
+					bind:surchargeEnabled
 					onmapping={changeMapping}
 					onedit={edit}
 				/>

@@ -3,11 +3,13 @@ import { appDataStore } from "$lib/platform/fs";
 import type { Workbook } from "$lib/platform/workbook";
 import { extractBestTimes, parseBestTimes, type BestTimes } from "./bestTimes";
 import { DEFAULT_REC_MAPPING, parseRecMapping, type RecMapping } from "./mapping";
+import { DEFAULT_WAVE_SURCHARGE_S } from "./proposal";
 
 const DIR = "records";
 const MAPPING_PATH = `${DIR}/mapping.json`;
 const CLUB_RULEBOOK_PATH = `${DIR}/club.rwm`;
 const CLUB_INFO_PATH = `${DIR}/club.json`;
+const OPTIONS_PATH = `${DIR}/options.json`;
 const BEST_TIMES_FILE = /^best-times-(\d{4})\.json$/;
 const bestTimesPath = (year: number): string => `${DIR}/best-times-${year}.json`;
 
@@ -72,4 +74,27 @@ export async function loadClubRulebook(): Promise<StoredRulebook | null> {
 	if (bytes === null) return null;
 	const info = (await readJson(CLUB_INFO_PATH)) as { name?: unknown } | null;
 	return { name: typeof info?.name === "string" ? info.name : "Vereins-Regelwerk.rwm", bytes };
+}
+
+/** Zuschlag auf die Wellen-Bestzeit; ausgeschaltet gilt die echte Bestzeit. */
+export interface WaveSurcharge {
+	enabled: boolean;
+	seconds: number;
+}
+
+const DEFAULT_SURCHARGE: WaveSurcharge = { enabled: true, seconds: DEFAULT_WAVE_SURCHARGE_S };
+
+function parseWaveSurcharge(value: unknown): WaveSurcharge {
+	if (typeof value !== "object" || value === null) return { ...DEFAULT_SURCHARGE };
+	const { enabled, seconds } = value as Record<string, unknown>;
+	const valid = typeof enabled === "boolean" && typeof seconds === "number" && Number.isFinite(seconds) && seconds >= 0;
+	return valid ? { enabled, seconds } : { ...DEFAULT_SURCHARGE };
+}
+
+export async function loadWaveSurcharge(): Promise<WaveSurcharge> {
+	return parseWaveSurcharge(await readJson(OPTIONS_PATH));
+}
+
+export function saveWaveSurcharge(surcharge: WaveSurcharge): Promise<void> {
+	return writeJson(OPTIONS_PATH, surcharge);
 }

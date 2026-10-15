@@ -126,6 +126,21 @@ describe("buildRecProposal", () => {
 		});
 	});
 
+	it("übernimmt ohne Zuschlag die echte Bestzeit", () => {
+		const plain = buildRecProposal({
+			club: CLUB,
+			official: OFFICIAL,
+			officialName: "DLRG 2026",
+			bestTimes: BEST,
+			mapping: MAPPING,
+			waveSurchargeS: 0
+		});
+		expect(plain.find((r) => r.source === "bestTime")).toMatchObject({
+			newRec: 20000,
+			note: "Bestzeit 2025: 3:20,00 (ohne Zuschlag)"
+		});
+	});
+
 	it("markiert fehlende Disziplinen und fehlende Quellen", () => {
 		const missingDiscipline = buildRecProposal({
 			club: CLUB,

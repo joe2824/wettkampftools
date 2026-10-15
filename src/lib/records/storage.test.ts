@@ -7,10 +7,12 @@ import {
 	loadBestTimes,
 	loadClubRulebook,
 	loadRecMapping,
+	loadWaveSurcharge,
 	rememberBestTimes,
 	saveBestTimes,
 	saveClubRulebook,
-	saveRecMapping
+	saveRecMapping,
+	saveWaveSurcharge
 } from "./storage";
 
 let store: FakeStore;
@@ -87,5 +89,21 @@ describe("rememberBestTimes", () => {
 	it("legt ohne Zeiten nichts an", async () => {
 		expect(await rememberBestTimes(workbook([]), 2025)).toBe(0);
 		expect(store.files.size).toBe(0);
+	});
+});
+
+describe("Wellen-Zuschlag", () => {
+	it("ist ohne Datei eingeschaltet mit 5 s", async () => {
+		expect(await loadWaveSurcharge()).toEqual({ enabled: true, seconds: 5 });
+	});
+
+	it("merkt sich Schalter und Sekunden", async () => {
+		await saveWaveSurcharge({ enabled: false, seconds: 3.5 });
+		expect(await loadWaveSurcharge()).toEqual({ enabled: false, seconds: 3.5 });
+	});
+
+	it("fällt bei kaputter Datei auf den Standard zurück", async () => {
+		await store.writeText("records/options.json", JSON.stringify({ enabled: "ja", seconds: -1 }));
+		expect(await loadWaveSurcharge()).toEqual({ enabled: true, seconds: 5 });
 	});
 });
