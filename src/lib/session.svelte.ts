@@ -20,7 +20,9 @@ export interface SessionRegistration {
 
 export interface SessionResults {
 	fileName: string;
-	lastModified: number;
+	/** Zeiten aus dem Dateisystem; null, wenn unbekannt. */
+	createdMs: number | null;
+	modifiedMs: number | null;
 	workbook: Workbook;
 	kind: CompetitionKind;
 	rows: ResultRow[];

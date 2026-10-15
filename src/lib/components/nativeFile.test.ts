@@ -18,7 +18,7 @@ describe("loadNativeFile", () => {
 		const result = await loadNativeFile("/tmp/Ergebnisse.xls", ["excel"]);
 		expect(result).toEqual({
 			ok: true,
-			file: { name: "Ergebnisse.xls", bytes: OLE, createdMs: 1, lastModified: 2, kind: "excel" }
+			file: { name: "Ergebnisse.xls", bytes: OLE, createdMs: 1, modifiedMs: 2, kind: "excel" }
 		});
 	});
 

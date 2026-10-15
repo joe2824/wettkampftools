@@ -6,7 +6,8 @@ import YearCheckNotice from "./YearCheckNotice.svelte";
 
 const RESULTS: SessionResults = {
 	fileName: "JAuswertung.xls",
-	lastModified: 0,
+	createdMs: null,
+	modifiedMs: 0,
 	workbook: { sheets: [], properties: { created: null, modified: null } },
 	kind: "team",
 	rows: [],

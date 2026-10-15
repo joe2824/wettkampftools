@@ -22,8 +22,22 @@ async function step<T>(code: string, run: () => Promise<T>): Promise<T | null> {
 	}
 }
 
-/** Liefert den Übernahmebericht, wenn beim ersten Start die alte Version übernommen wurde. */
-export async function initApp(deps: InitDeps = {}): Promise<MigrationReport | null> {
+export type StoredArea = "settings" | "layout" | "competition";
+
+/** Unlesbare Dateien eines Bereichs, die beim Start beiseitegelegt wurden. */
+export interface SetAsideNotice {
+	area: StoredArea;
+	files: string[];
+}
+
+export interface InitReport {
+	/** Bericht, wenn beim ersten Start die alte Version übernommen wurde. */
+	migration: MigrationReport | null;
+	setAside: SetAsideNotice[];
+}
+
+/** Liefert, was beim Start gemeldet werden soll. */
+export async function initApp(deps: InitDeps = {}): Promise<InitReport> {
 	const settings = deps.settings ?? settingsStore;
 	const layouts = deps.layouts ?? layoutStore;
 	const competition = deps.competition ?? competitionStore;
@@ -35,7 +49,37 @@ export async function initApp(deps: InitDeps = {}): Promise<MigrationReport | nu
 	// Meldungen brauchen die geladenen Einstellungen.
 	await step("competition", () => competition.restore(settings.settings));
 	competition.startAutosave();
-	return report;
+	const notices: SetAsideNotice[] = [
+		{ area: "settings", files: settings.setAside },
+		{ area: "layout", files: layouts.setAside },
+		{ area: "competition", files: competition.setAside }
+	];
+	return { migration: report, setAside: notices.filter((notice) => notice.files.length > 0) };
+}
+
+const SET_ASIDE_SUBJECT: Record<StoredArea, string> = {
+	settings: "Gespeicherte Einstellungen konnten",
+	layout: "Gespeichertes Layout konnte",
+	competition: "Gespeicherter Wettkampfstand konnte"
+};
+const SET_ASIDE_VERB: Record<StoredArea, string> = {
+	settings: "wurden",
+	layout: "wurde",
+	competition: "wurde"
+};
+const SET_ASIDE_CONSEQUENCE: Record<StoredArea, string> = {
+	settings: "es gelten Standardwerte.",
+	layout: "es gelten Standardwerte.",
+	competition: "es wird ohne gespeicherten Stand begonnen."
+};
+
+/** Hinweistext für unlesbare, beiseitegelegte Dateien. */
+export function setAsideMessage({ area, files }: SetAsideNotice): { title: string; description: string } {
+	const names = files.map((file) => `„${file}“`).join(", ");
+	return {
+		title: "Gespeicherte Daten nicht lesbar",
+		description: `${SET_ASIDE_SUBJECT[area]} nicht gelesen werden und ${SET_ASIDE_VERB[area]} im App-Datenordner gesichert als ${names}; ${SET_ASIDE_CONSEQUENCE[area]}`
+	};
 }
 
 const FALLBACK_HINT = "Einige Werte konnten nicht gelesen werden und stehen auf Standard.";

@@ -6,14 +6,18 @@
 	import { Toaster } from "$lib/components/ui/sonner";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
-	import { initApp, migrationMessage } from "$lib/appInit";
+	import { initApp, migrationMessage, setAsideMessage } from "$lib/appInit";
 
 	let { children } = $props();
 
 	onMount(async () => {
-		const report = await initApp();
-		if (report === null) return;
-		const { title, description } = migrationMessage(report);
+		const { migration, setAside } = await initApp();
+		for (const notice of setAside) {
+			const { title, description } = setAsideMessage(notice);
+			toast.warning(title, { description, duration: Infinity });
+		}
+		if (migration === null) return;
+		const { title, description } = migrationMessage(migration);
 		toast.success(title, { description });
 	});
 </script>

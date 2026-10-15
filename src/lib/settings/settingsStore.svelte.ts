@@ -1,5 +1,5 @@
 // Einstellungen im App-Datenordner: laden, speichern, zurücksetzen, Export/Import.
-import { appDataStore, readJson, writeJson } from "$lib/platform/fs";
+import { appDataStore, readJsonOrSetAside, writeJson } from "$lib/platform/fs";
 import { readLegacySettings, type LegacySettings } from "$lib/platform/legacySettings";
 import { logError, logInfo } from "$lib/log";
 import { mergeLegacySettings } from "./legacyMerge";
@@ -35,6 +35,8 @@ export class SettingsStore {
 	settings = $state<Settings>(defaultSettings());
 	#savedJson = $state(snapshot(defaultSettings()));
 	dirty = $derived(snapshot(this.settings) !== this.#savedJson);
+	/** Beim Laden beiseitegelegte, unlesbare Dateien. */
+	setAside: string[] = [];
 	readonly #readLegacy: () => Promise<LegacySettings | null>;
 
 	constructor(deps: SettingsStoreDeps = {}) {
@@ -43,10 +45,13 @@ export class SettingsStore {
 
 	/** Lädt die Datei; nur beim allerersten Start wird die alte Version übernommen. */
 	async load(): Promise<MigrationReport | null> {
+		this.setAside = [];
 		if (await appDataStore().exists(SETTINGS_FILE)) {
-			const loaded = await readJson(SETTINGS_FILE, (raw) => parseSettings(raw).settings);
-			if (loaded === null) logError("settings.unreadable");
-			this.#accept(loaded ?? defaultSettings());
+			const { value, setAsideAs } = await readJsonOrSetAside(SETTINGS_FILE, (raw) =>
+				isObject(raw) ? parseSettings(raw).settings : null
+			);
+			this.#accept(value ?? defaultSettings());
+			if (setAsideAs !== null) await this.#replaceUnreadable(setAsideAs);
 			return null;
 		}
 		const legacy = await this.#tryReadLegacy();
@@ -98,6 +103,13 @@ export class SettingsStore {
 	#accept(settings: Settings): void {
 		this.settings = settings;
 		this.#savedJson = snapshot(settings);
+	}
+
+	/** Standardwerte gleich speichern, damit beim nächsten Start nicht die alte Version übernommen wird. */
+	async #replaceUnreadable(setAsideAs: string): Promise<void> {
+		logError("settings.unreadable");
+		this.setAside = [setAsideAs];
+		await this.save();
 	}
 
 	async #tryReadLegacy(): Promise<LegacySettings | null> {

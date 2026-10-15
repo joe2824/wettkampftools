@@ -1,5 +1,5 @@
 // Urkunden-Layout, Unterschriften und Hintergrund-Scan im App-Datenordner.
-import { appDataStore, readJson, writeJson } from "$lib/platform/fs";
+import { appDataStore, readJsonOrSetAside, writeJson } from "$lib/platform/fs";
 import { logError } from "$lib/log";
 import type { LayoutSet, LayoutVariant, SignatureSlot } from "./layout";
 import { defaultLayouts } from "./layoutDefaults";
@@ -33,10 +33,12 @@ const imagePath = (slot: ImageSlot, type: ImageType): string => `${IMAGE_DIR}/${
 
 const emptyImages = (): ImageSet => ({ signature1: null, signature2: null, background: null });
 
+const isObject = (raw: unknown): raw is object => typeof raw === "object" && raw !== null && !Array.isArray(raw);
+
 function parseJsonObject(bytes: Uint8Array): object | null {
 	try {
 		const raw: unknown = JSON.parse(new TextDecoder().decode(bytes));
-		return typeof raw === "object" && raw !== null && !Array.isArray(raw) ? raw : null;
+		return isObject(raw) ? raw : null;
 	} catch {
 		return null;
 	}
@@ -46,10 +48,16 @@ export class LayoutStore {
 	layouts = $state<LayoutSet>(defaultLayouts());
 	/** Rohe Bilddaten; die Oberfläche baut daraus Blob-Adressen. */
 	images = $state<ImageSet>(emptyImages());
+	/** Beim Laden beiseitegelegte, unlesbare Dateien. */
+	setAside: string[] = [];
 
 	async load(): Promise<void> {
-		const loaded = await readJson(LAYOUT_FILE, (raw) => parseLayoutSet(raw).layouts);
-		this.layouts = loaded ?? defaultLayouts();
+		const { value, setAsideAs } = await readJsonOrSetAside(LAYOUT_FILE, (raw) =>
+			isObject(raw) ? parseLayoutSet(raw).layouts : null
+		);
+		if (setAsideAs !== null) logError("layout.unreadable");
+		this.setAside = setAsideAs === null ? [] : [setAsideAs];
+		this.layouts = value ?? defaultLayouts();
 	}
 
 	save(): Promise<void> {

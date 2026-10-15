@@ -13,7 +13,8 @@ const registration: SessionRegistration = {
 
 const results: SessionResults = {
 	fileName: "ergebnisse.xlsx",
-	lastModified: 0,
+	createdMs: null,
+	modifiedMs: 0,
 	workbook: { sheets: [], properties: { created: null, modified: null } },
 	kind: "team",
 	rows: [],

@@ -4,20 +4,21 @@ import {
 	clearCompetitionState,
 	decodeBase64,
 	encodeBase64,
-	loadCompetitionState,
+	loadCompetition,
 	saveCompetitionState,
 	type CompetitionState,
 	type StoredCertificateSelection,
-	type StoredRegistration,
-	type StoredResults
+	type StoredRegistration
 } from "$lib/competition/persistence";
+import { clearStoredResults, saveStoredResults, type StoredResults } from "$lib/competition/resultsFile";
 import { logError, logInfo } from "$lib/log";
-import { session as defaultSession, type SessionState } from "$lib/session.svelte";
+import { session as defaultSession, type SessionResults, type SessionState } from "$lib/session.svelte";
 import { nextCompetitionEvent } from "$lib/settings/eventInfo";
 import type { Settings } from "$lib/settings/settings";
 import { settingsStore as defaultSettingsStore, type SettingsStore } from "$lib/settings/settingsStore.svelte";
 import { readJAuswertungResults } from "$lib/wwk/results";
 import { loadRegistrations } from "./preparation";
+import { resultsYearCheck } from "./results";
 
 /** Wartezeit nach der letzten Änderung, bevor gesichert wird. */
 export const AUTOSAVE_DELAY_MS = 500;
@@ -31,15 +32,27 @@ export interface CompetitionDeps {
 
 type Snapshot = Omit<CompetitionState, "savedAt">;
 
+function toStoredResults(results: SessionResults): StoredResults {
+	const { fileName, createdMs, modifiedMs, workbook, yearWarning, yearConfirmed } = results;
+	return { fileName, createdMs, modifiedMs, workbook, yearWarning, yearConfirmed };
+}
+
+/** Noch nicht abgeglichen: beim nächsten Sichern schreiben oder entfernen. */
+const UNSYNCED = Symbol("unsynced");
+
 export class CompetitionStore {
 	/** ISO-Zeitpunkt der letzten Sicherung; null, wenn nichts gespeichert ist. */
 	savedAt = $state<string | null>(null);
+	/** Beim Wiederherstellen beiseitegelegte, unlesbare Dateien. */
+	setAside: string[] = [];
 	#session: SessionState;
 	#selection: SelectionState;
 	#settings: SettingsStore;
 	#now: () => Date;
 	#timer: ReturnType<typeof setTimeout> | null = null;
 	#queue: Promise<void> = Promise.resolve();
+	/** Zuletzt in die eigene Datei geschriebene Ergebnisse. */
+	#savedResults: SessionResults | null | typeof UNSYNCED = UNSYNCED;
 
 	constructor(deps: CompetitionDeps) {
 		this.#session = deps.session;
@@ -50,11 +63,15 @@ export class CompetitionStore {
 
 	/** Meldungen werden mit den aktuellen Einstellungen neu eingelesen. */
 	async restore(settings: Settings): Promise<void> {
-		const state = await loadCompetitionState();
-		if (state === null) return;
-		this.savedAt = state.savedAt;
-		if (state.registration) this.#restoreRegistration(state.registration, settings);
-		if (state.results) this.#restoreResults(state.results, state.certificateSelection);
+		const { state, results, needsMigration, setAside } = await loadCompetition(this.#now());
+		this.setAside = setAside;
+		if (state) this.savedAt = state.savedAt;
+		if (state?.registration) this.#restoreRegistration(state.registration, settings);
+		if (results) this.#restoreResults(results, state?.certificateSelection);
+		// Nicht wiederherstellbare Ergebnisse beim nächsten Sichern entfernen.
+		const restored = results === null || this.#session.results !== null;
+		this.#savedResults = restored && !needsMigration ? this.#session.results : UNSYNCED;
+		if (needsMigration) await this.saveNow();
 	}
 
 	/** Beobachtet Sitzung und Urkunden-Auswahl; liefert eine Funktion zum Beenden. */
@@ -106,8 +123,6 @@ export class CompetitionStore {
 			};
 		}
 		if (results) {
-			const { fileName, lastModified, workbook, yearWarning, creationUnknown, yearConfirmed } = results;
-			snapshot.results = { fileName, lastModified, workbook, yearWarning, creationUnknown, yearConfirmed };
 			const { hidden, excluded } = this.#selection;
 			snapshot.certificateSelection = {
 				hidden: { ageGroups: [...hidden.ageGroups], genders: [...hidden.genders], kinds: [...hidden.kinds] },
@@ -132,10 +147,13 @@ export class CompetitionStore {
 		}
 	}
 
+	/** Das Dateijahr wird neu geprüft; eine Bestätigung gilt nur für dasselbe Jahr. */
 	#restoreResults(stored: StoredResults, selection: StoredCertificateSelection | undefined): void {
 		try {
 			const { kind, rows } = readJAuswertungResults(stored.workbook);
-			this.#session.setResults({ ...stored, kind, rows });
+			const check = resultsYearCheck(stored.workbook, stored, this.#now());
+			const yearConfirmed = stored.yearConfirmed && stored.yearWarning === check.yearWarning;
+			this.#session.setResults({ ...stored, kind, rows, ...check, yearConfirmed });
 		} catch {
 			logError("competition.resultsRestoreFailed");
 			return;
@@ -185,13 +203,24 @@ export class CompetitionStore {
 	async #write(): Promise<void> {
 		const snapshot = this.snapshot();
 		if (snapshot === null) return this.#clear();
+		await this.#writeResultsIfChanged();
 		const savedAt = this.#now().toISOString();
 		await saveCompetitionState({ savedAt, ...snapshot });
 		this.savedAt = savedAt;
 	}
 
+	/** Die großen Ergebnisse nur nach Laden, Bestätigen oder Entfernen schreiben. */
+	async #writeResultsIfChanged(): Promise<void> {
+		const results = this.#session.results;
+		if (results === this.#savedResults) return;
+		if (results) await saveStoredResults(toStoredResults(results));
+		else await clearStoredResults();
+		this.#savedResults = results;
+	}
+
 	async #clear(): Promise<void> {
 		await clearCompetitionState();
+		this.#savedResults = null;
 		this.savedAt = null;
 	}
 }

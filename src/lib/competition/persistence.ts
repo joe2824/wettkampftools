@@ -1,27 +1,27 @@
 // Gesicherter Wettkampfstand im App-Datenordner. Enthält Personendaten: nie protokollieren, nur Codes.
+// Der kleine Stand (state.json) wird oft gesichert, die Ergebnisse (results.json) nur bei Änderung.
 import { logError } from "$lib/log";
-import { appDataStore, readJson, writeJson } from "$lib/platform/fs";
-import type { Cell, Sheet, Workbook } from "$lib/platform/workbook";
+import { appDataStore, readJsonOrSetAside, writeJson } from "$lib/platform/fs";
 import { isRecord } from "$lib/settings/validate";
 import type { AgeGroupKind } from "$lib/wwk/ageGroups";
+import {
+	clearStoredResults,
+	parseLegacyResults,
+	parseStoredResults,
+	COMPETITION_RESULTS_PATH,
+	type StoredResults
+} from "./resultsFile";
 
 export const COMPETITION_STATE_PATH = "competition/state.json";
-const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 2;
+/** Erste Version: Ergebnisse steckten noch im Stand. */
+const LEGACY_SCHEMA_VERSION = 1;
 
 export interface StoredRegistration {
 	fileName: string;
 	/** Original-CSV, Base64-kodiert. */
 	csvBase64: string;
 	waveSelection: string[];
-}
-
-export interface StoredResults {
-	fileName: string;
-	lastModified: number;
-	workbook: Workbook;
-	yearWarning: number | null;
-	creationUnknown: boolean;
-	yearConfirmed: boolean;
 }
 
 export interface StoredHidden {
@@ -39,8 +39,22 @@ export interface CompetitionState {
 	/** ISO-Zeitpunkt der Sicherung. */
 	savedAt: string;
 	registration?: StoredRegistration;
-	results?: StoredResults;
 	certificateSelection?: StoredCertificateSelection;
+}
+
+export interface ParsedCompetitionState {
+	state: CompetitionState;
+	/** Nur im alten Format: dort eingebettete Ergebnisse. */
+	legacyResults: StoredResults | null;
+}
+
+export interface LoadedCompetition {
+	state: CompetitionState | null;
+	results: StoredResults | null;
+	/** Alter Stand mit eingebetteten Ergebnissen: neu sichern. */
+	needsMigration: boolean;
+	/** Unlesbare, beiseitegelegte Dateien. */
+	setAside: string[];
 }
 
 const KINDS: readonly AgeGroupKind[] = ["rescue", "wave"];
@@ -62,45 +76,10 @@ function stringList(value: unknown): string[] | null {
 	return Array.isArray(value) ? value.filter(isString) : null;
 }
 
-function isCell(value: unknown): value is Cell {
-	return value === null || ["string", "number", "boolean"].includes(typeof value);
-}
-
-function isNullableString(value: unknown): value is string | null {
-	return value === null || isString(value);
-}
-
-function parseSheet(raw: unknown): Sheet | null {
-	if (!isRecord(raw) || !isString(raw.name) || !Array.isArray(raw.rows)) return null;
-	const valid = raw.rows.every((row) => Array.isArray(row) && row.every(isCell));
-	return valid ? { name: raw.name, rows: raw.rows as Cell[][] } : null;
-}
-
-function parseWorkbook(raw: unknown): Workbook | null {
-	if (!isRecord(raw) || !Array.isArray(raw.sheets) || !isRecord(raw.properties)) return null;
-	const { created, modified } = raw.properties;
-	if (!isNullableString(created) || !isNullableString(modified)) return null;
-	const sheets = raw.sheets.map(parseSheet);
-	if (sheets.some((sheet) => sheet === null)) return null;
-	return { sheets: sheets as Sheet[], properties: { created, modified } };
-}
-
 function parseRegistration(raw: unknown): StoredRegistration | null {
 	if (!isRecord(raw) || !isString(raw.fileName) || !isString(raw.csvBase64)) return null;
 	const waveSelection = stringList(raw.waveSelection);
 	return waveSelection ? { fileName: raw.fileName, csvBase64: raw.csvBase64, waveSelection } : null;
-}
-
-function parseResults(raw: unknown): StoredResults | null {
-	if (!isRecord(raw) || !isString(raw.fileName) || !Number.isFinite(raw.lastModified)) return null;
-	const yearWarning = Number.isInteger(raw.yearWarning) ? (raw.yearWarning as number) : null;
-	const workbook = parseWorkbook(raw.workbook);
-	if (workbook === null) return null;
-	// Ältere Stände kennen die beiden Angaben noch nicht.
-	const creationUnknown = raw.creationUnknown === true;
-	const yearConfirmed = raw.yearConfirmed === true;
-	const lastModified = raw.lastModified as number;
-	return { fileName: raw.fileName, lastModified, workbook, yearWarning, creationUnknown, yearConfirmed };
 }
 
 function parseHidden(raw: unknown): StoredHidden | null {
@@ -122,31 +101,46 @@ function isIsoTime(value: unknown): value is string {
 	return isString(value) && !Number.isNaN(Date.parse(value));
 }
 
+const KNOWN_VERSIONS: readonly unknown[] = [SCHEMA_VERSION, LEGACY_SCHEMA_VERSION];
+
 /** Nur bekannte Felder; kaputte Teile fallen einzeln weg, Unbrauchbares ergibt null. */
-export function parseCompetitionState(raw: unknown): CompetitionState | null {
-	if (!isRecord(raw) || raw.schemaVersion !== SCHEMA_VERSION || !isIsoTime(raw.savedAt)) return null;
+export function parseCompetitionState(raw: unknown): ParsedCompetitionState | null {
+	if (!isRecord(raw) || !KNOWN_VERSIONS.includes(raw.schemaVersion) || !isIsoTime(raw.savedAt)) return null;
 	const state: CompetitionState = { savedAt: raw.savedAt };
 	const registration = parseRegistration(raw.registration);
-	const results = parseResults(raw.results);
 	const certificateSelection = parseSelection(raw.certificateSelection);
 	if (registration) state.registration = registration;
-	if (results) state.results = results;
 	if (certificateSelection) state.certificateSelection = certificateSelection;
-	return state;
+	const legacyResults = raw.schemaVersion === LEGACY_SCHEMA_VERSION ? parseLegacyResults(raw.results) : null;
+	return { state, legacyResults };
 }
 
-export function saveCompetitionState(state: CompetitionState): Promise<void> {
-	return writeJson(COMPETITION_STATE_PATH, { schemaVersion: SCHEMA_VERSION, ...state });
+/** Schreibt nur den kleinen Stand; Ergebnisse gehören in ihre eigene Datei. */
+export function saveCompetitionState({ savedAt, registration, certificateSelection }: CompetitionState): Promise<void> {
+	return writeJson(COMPETITION_STATE_PATH, {
+		schemaVersion: SCHEMA_VERSION,
+		savedAt,
+		registration,
+		certificateSelection
+	});
 }
 
-/** Fehlt die Datei, kommt null; eine unbrauchbare Datei wird nur mit Code protokolliert. */
-export async function loadCompetitionState(): Promise<CompetitionState | null> {
-	if (!(await appDataStore().exists(COMPETITION_STATE_PATH))) return null;
-	const state = await readJson(COMPETITION_STATE_PATH, parseCompetitionState);
-	if (state === null) logError("competition.stateInvalid");
-	return state;
+/** Lädt beide Dateien; unlesbare werden beiseitegelegt und nur mit Code protokolliert. */
+export async function loadCompetition(now: Date = new Date()): Promise<LoadedCompetition> {
+	const stateFile = await readJsonOrSetAside(COMPETITION_STATE_PATH, parseCompetitionState, now);
+	const resultsFile = await readJsonOrSetAside(COMPETITION_RESULTS_PATH, parseStoredResults, now);
+	if (stateFile.setAsideAs !== null) logError("competition.stateInvalid");
+	if (resultsFile.setAsideAs !== null) logError("competition.resultsInvalid");
+	const legacyResults = stateFile.value?.legacyResults ?? null;
+	return {
+		state: stateFile.value?.state ?? null,
+		results: resultsFile.value ?? legacyResults,
+		needsMigration: legacyResults !== null,
+		setAside: [stateFile.setAsideAs, resultsFile.setAsideAs].filter((path): path is string => path !== null)
+	};
 }
 
-export function clearCompetitionState(): Promise<void> {
-	return appDataStore().remove(COMPETITION_STATE_PATH);
+export async function clearCompetitionState(): Promise<void> {
+	await appDataStore().remove(COMPETITION_STATE_PATH);
+	await clearStoredResults();
 }

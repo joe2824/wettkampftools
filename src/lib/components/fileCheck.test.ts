@@ -119,7 +119,7 @@ describe("readCheckedFile", () => {
 		const result = await readCheckedFile(file, ["csv"]);
 		expect(result).toEqual({
 			ok: true,
-			file: { name: "export.csv", bytes: text("a;b"), lastModified: 1234, createdMs: null, kind: "csv" }
+			file: { name: "export.csv", bytes: text("a;b"), modifiedMs: 1234, createdMs: null, kind: "csv" }
 		});
 	});
 
@@ -149,25 +149,23 @@ describe("dialogFilters", () => {
 });
 
 describe("checkInputFile", () => {
-	const NOW = 5000;
-
 	it("übernimmt Erstellungs- und Änderungszeit aus dem Dateisystem", () => {
 		const input = { name: "Ergebnisse.xls", bytes: bytes(...OLE), createdMs: 1000, modifiedMs: 2000 };
-		expect(checkInputFile(input, ["excel"], DEFAULT_MAX_BYTES, NOW)).toEqual({
+		expect(checkInputFile(input, ["excel"], DEFAULT_MAX_BYTES)).toEqual({
 			ok: true,
-			file: { name: "Ergebnisse.xls", bytes: bytes(...OLE), lastModified: 2000, createdMs: 1000, kind: "excel" }
+			file: { name: "Ergebnisse.xls", bytes: bytes(...OLE), modifiedMs: 2000, createdMs: 1000, kind: "excel" }
 		});
 	});
 
-	it("nimmt ohne Änderungszeit den aktuellen Zeitpunkt", () => {
+	it("lässt eine unbekannte Änderungszeit unbekannt", () => {
 		const input = { name: "export.csv", bytes: text("a;b"), createdMs: null, modifiedMs: null };
-		const result = checkInputFile(input, ["csv"], DEFAULT_MAX_BYTES, NOW);
-		expect(result.ok && result.file).toMatchObject({ lastModified: NOW, createdMs: null });
+		const result = checkInputFile(input, ["csv"], DEFAULT_MAX_BYTES);
+		expect(result.ok && result.file).toMatchObject({ modifiedMs: null, createdMs: null });
 	});
 
 	it("meldet unpassende Dateien wie beim Ablegen", () => {
 		const input = { name: "Bild.png", bytes: bytes(...PNG), createdMs: 1, modifiedMs: 1 };
-		const result = checkInputFile(input, ["excel"], DEFAULT_MAX_BYTES, NOW);
+		const result = checkInputFile(input, ["excel"], DEFAULT_MAX_BYTES);
 		expect(result).toEqual({ ok: false, message: expect.stringContaining("Diese Datei passt hier nicht.") });
 	});
 });

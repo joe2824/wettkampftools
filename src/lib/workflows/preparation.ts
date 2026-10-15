@@ -2,6 +2,7 @@
 import { MissingColumnsError, parseRegistrationCsv, type TextEncodingName } from "$lib/io/csv";
 import { logInfo } from "$lib/log";
 import { datedFileName, saveFile } from "$lib/platform/files";
+import { readInputFile } from "$lib/platform/inputFiles";
 import { readWorkbook, writeWorkbook } from "$lib/platform/workbook";
 import type { SessionRegistration } from "$lib/session.svelte";
 import type { Settings } from "$lib/settings/settings";
@@ -16,7 +17,7 @@ import {
 	type VerificationResult
 } from "$lib/wwk/registrationExport";
 import { parseRegistrations, type Team } from "$lib/wwk/registrations";
-import { workbookYear } from "$lib/wwk/results";
+import { workbookYear, type FileDates } from "$lib/wwk/results";
 import { errorTeamIds, validateTeams, type Issue } from "$lib/wwk/validation";
 import { NOT_A_TEAM_EXPORT } from "./errors";
 import { EXCEL_FILTER } from "./savedFile";
@@ -139,6 +140,18 @@ export function setTeamsInWave(
 	return next;
 }
 
+const READ_BACK_FAILED = "Die gespeicherte Datei konnte nicht zur Kontrolle gelesen werden. Bitte erneut speichern.";
+
+/** Liest die gespeicherte Datei von der Platte zurück und prüft sie. */
+async function verifySavedFile(path: string, expected: ExpectedCounts): Promise<VerificationResult> {
+	try {
+		const saved = await readInputFile(path);
+		return verifyRegistrationSheet(await readWorkbook(saved.bytes), expected);
+	} catch {
+		return { ok: false, problems: [READ_BACK_FAILED] };
+	}
+}
+
 /** Schreibt die Meldungen, liest die Datei zurück und prüft die Anzahlen. */
 export async function exportRegistrations(rows: readonly ExportRow[]): Promise<ExportOutcome> {
 	const bytes = await writeWorkbook([toRegistrationSheet(rows)]);
@@ -149,7 +162,7 @@ export async function exportRegistrations(rows: readonly ExportRow[]): Promise<E
 	});
 	if (path === null) return { status: "cancelled" };
 	const expected = expectedCounts(rows);
-	const verification = verifyRegistrationSheet(await readWorkbook(bytes), expected);
+	const verification = await verifySavedFile(path, expected);
 	logInfo("preparation.exported", { rows: expected.total, verified: verification.ok });
 	return { status: "saved", path, expected, verification };
 }
@@ -157,10 +170,7 @@ export async function exportRegistrations(rows: readonly ExportRow[]): Promise<E
 const NO_PROPERTIES = { created: null, modified: null };
 
 /** Jahr der Meldedatei, wenn es nicht das laufende ist; nur als Hinweis. */
-export function registrationYearWarning(
-	file: { createdMs: number | null; lastModified: number },
-	today: Date = new Date()
-): number | null {
-	const { year } = workbookYear(NO_PROPERTIES, { createdMs: file.createdMs, modifiedMs: file.lastModified });
+export function registrationYearWarning(file: FileDates, today: Date = new Date()): number | null {
+	const { year } = workbookYear(NO_PROPERTIES, file);
 	return year === null || year === today.getFullYear() ? null : year;
 }

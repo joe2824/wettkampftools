@@ -30,10 +30,14 @@ function teamSheet(): Sheet {
 	};
 }
 
-const fileOf = (sheets: Sheet[], lastModified = MODIFIED_2026, createdMs: number | null = MODIFIED_2026) => ({
+const fileOf = (
+	sheets: Sheet[],
+	modifiedMs: number | null = MODIFIED_2026,
+	createdMs: number | null = MODIFIED_2026
+) => ({
 	name: "JAuswertung.xlsx",
 	bytes: new TextEncoder().encode(JSON.stringify(sheets)),
-	lastModified,
+	modifiedMs,
 	createdMs
 });
 const at = (year: number) => new Date(year, 5, 1).getTime();
@@ -97,6 +101,13 @@ describe("loadResultsFile", () => {
 		useAdapter(createFakeWorkbookAdapter({ properties: { created: "2024-06-01T10:00:00Z", modified: null } }));
 		const outcome = await loadResultsFile(fileOf([teamSheet()]), TODAY);
 		expect(outcome.ok && outcome.summary.yearWarning).toBe(2024);
+	});
+
+	it("ersetzt fehlende Dateizeiten nicht durch heute", async () => {
+		useAdapter(createFakeWorkbookAdapter({ properties: { created: "2025-06-01T10:00:00Z", modified: null } }));
+		const outcome = await loadResultsFile(fileOf([teamSheet()], null, null), TODAY);
+		expect(outcome.ok && outcome.summary).toMatchObject({ yearWarning: 2025, creationUnknown: true });
+		expect(session.results).toMatchObject({ createdMs: null, modifiedMs: null });
 	});
 
 	it("meldet ein fehlendes Blatt „Daten“ und lässt die Sitzung unverändert", async () => {

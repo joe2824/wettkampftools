@@ -91,8 +91,7 @@ export async function downloadOfficialRulebook(year: number): Promise<RulebookOu
 export async function importBestTimesFile(file: ResultsFile, today: Date = new Date()): Promise<BestTimesOutcome> {
 	try {
 		const workbook = await readWorkbook(file.bytes);
-		const dates = { createdMs: file.createdMs, modifiedMs: file.lastModified };
-		const year = workbookYear(workbook.properties, dates).year ?? today.getFullYear();
+		const year = workbookYear(workbook.properties, file).year ?? today.getFullYear();
 		const entries = await rememberBestTimes(workbook, year);
 		return entries > 0 ? { ok: true, year, entries } : { ok: false, message: NO_TIMES };
 	} catch (error) {

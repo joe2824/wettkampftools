@@ -65,7 +65,8 @@ const ROWS = [
 function results(overrides: Partial<SessionResults> = {}): SessionResults {
 	return {
 		fileName: "JAuswertung.xlsx",
-		lastModified: NOW.getTime(),
+		createdMs: null,
+		modifiedMs: NOW.getTime(),
 		workbook: { sheets: [{ name: "Übersicht", rows: [] }, DATA_SHEET], properties: { created: null, modified: null } },
 		kind: "team",
 		rows: ROWS,

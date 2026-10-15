@@ -129,10 +129,10 @@ describe("importBestTimesFile", () => {
 			["AkW offen", "männlich", "2:40,00", ""]
 		]
 	};
-	const file = (sheets: Sheet[], lastModified: number) => ({
+	const file = (sheets: Sheet[], modifiedMs: number) => ({
 		name: "Ergebnis.xlsx",
 		bytes: new TextEncoder().encode(JSON.stringify(sheets)),
-		lastModified,
+		modifiedMs,
 		createdMs: null
 	});
 

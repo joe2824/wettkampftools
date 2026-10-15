@@ -1,5 +1,5 @@
 // Ablage im Speicher für Tests.
-import type { AppDataStore } from "$lib/platform/fs";
+import { tempPath, type AppDataStore } from "$lib/platform/fs";
 
 export type FakeStore = AppDataStore & { files: Map<string, Uint8Array> };
 
@@ -8,6 +8,16 @@ export function createFakeStore(): FakeStore {
 	const files = new Map<string, Uint8Array>();
 	const encoder = new TextEncoder();
 	const decoder = new TextDecoder();
+	const rename = async (from: string, to: string): Promise<void> => {
+		const bytes = files.get(from);
+		if (!bytes) throw new Error(`Datei fehlt: ${from}`);
+		files.delete(from);
+		files.set(to, bytes);
+	};
+	const replace = (path: string, bytes: Uint8Array): Promise<void> => {
+		files.set(tempPath(path), bytes);
+		return rename(tempPath(path), path);
+	};
 	return {
 		files,
 		exists: async (path) => files.has(path),
@@ -16,12 +26,13 @@ export function createFakeStore(): FakeStore {
 			return bytes ? decoder.decode(bytes) : null;
 		},
 		readBytes: async (path) => files.get(path)?.slice() ?? null,
-		writeText: async (path, text) => void files.set(path, encoder.encode(text)),
+		writeText: (path, text) => replace(path, encoder.encode(text)),
 		appendText: async (path, text) => {
 			const old = files.get(path) ? decoder.decode(files.get(path)) : "";
 			files.set(path, encoder.encode(old + text));
 		},
-		writeBytes: async (path, bytes) => void files.set(path, bytes.slice()),
+		writeBytes: (path, bytes) => replace(path, bytes.slice()),
+		rename,
 		remove: async (path) => void files.delete(path),
 		list: async (dir) => {
 			const prefix = `${dir}/`;

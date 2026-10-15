@@ -6,9 +6,10 @@ import { SelectionState } from "$lib/certificates/selectionState.svelte";
 import {
 	COMPETITION_STATE_PATH,
 	encodeBase64,
-	loadCompetitionState,
+	loadCompetition,
 	saveCompetitionState
 } from "$lib/competition/persistence";
+import { COMPETITION_RESULTS_PATH, saveStoredResults } from "$lib/competition/resultsFile";
 import { resetAppDataStore, setAppDataStore } from "$lib/platform/fs";
 import type { Sheet } from "$lib/platform/workbook";
 import { SessionState } from "$lib/session.svelte";
@@ -36,6 +37,15 @@ const DATA_SHEET: Sheet = {
 	]
 };
 const WORKBOOK = { sheets: [DATA_SHEET], properties: { created: null, modified: null } };
+const at = (year: number) => new Date(year, 5, 1).getTime();
+const STORED_RESULTS = {
+	fileName: "JAuswertung.xlsx",
+	createdMs: at(2025),
+	modifiedMs: at(2025),
+	workbook: WORKBOOK,
+	yearWarning: 2025,
+	yearConfirmed: true
+};
 
 let fs: FakeStore;
 let session: SessionState;
@@ -52,7 +62,8 @@ function loadRegistration() {
 function setResults() {
 	session.setResults({
 		fileName: "JAuswertung.xlsx",
-		lastModified: 0,
+		createdMs: null,
+		modifiedMs: 0,
 		workbook: WORKBOOK,
 		kind: "team",
 		rows: [],
@@ -105,26 +116,60 @@ describe("restore", () => {
 		expect([...(session.registration?.waveSelection ?? [])]).toEqual(["r1"]);
 	});
 
-	it("stellt Ergebnisse samt Jahreshinweis und Urkunden-Auswahl wieder her", async () => {
+	it("stellt Ergebnisse samt neu geprüftem Jahreshinweis und Urkunden-Auswahl wieder her", async () => {
+		await saveStoredResults(STORED_RESULTS);
 		await saveCompetitionState({
 			savedAt: SAVED_AT,
-			results: {
-				fileName: "JAuswertung.xlsx",
-				lastModified: 5,
-				workbook: WORKBOOK,
-				yearWarning: 2025,
-				creationUnknown: true,
-				yearConfirmed: true
-			},
 			certificateSelection: { hidden: { ageGroups: ["AK 12"], genders: [], kinds: [] }, excluded: ["e1"] }
 		});
 		await store.restore(settings);
 		expect(session.results?.rows).toHaveLength(1);
 		expect(session.results?.kind).toBe("team");
-		expect(session.results).toMatchObject({ yearWarning: 2025, creationUnknown: true, yearConfirmed: true });
+		expect(session.results).toMatchObject({
+			createdMs: at(2025),
+			modifiedMs: at(2025),
+			yearWarning: 2025,
+			creationUnknown: false,
+			yearConfirmed: true
+		});
 		selection.attach(session.results?.workbook ?? null);
 		expect(selection.hidden.ageGroups).toEqual(["AK 12"]);
 		expect([...selection.excluded]).toEqual(["e1"]);
+	});
+
+	it("verwirft eine Bestätigung, die für ein anderes Dateijahr galt", async () => {
+		await saveStoredResults({ ...STORED_RESULTS, createdMs: null, modifiedMs: at(2024), yearWarning: 2025 });
+		await store.restore(settings);
+		expect(session.results).toMatchObject({ yearWarning: 2024, creationUnknown: true, yearConfirmed: false });
+	});
+
+	it("stellt Ergebnisse auch ohne kleinen Stand wieder her", async () => {
+		await saveStoredResults(STORED_RESULTS);
+		await store.restore(settings);
+		expect(session.results?.fileName).toBe("JAuswertung.xlsx");
+		expect(store.savedAt).toBeNull();
+	});
+
+	it("übernimmt den alten einteiligen Stand und teilt ihn gleich auf", async () => {
+		const legacy = {
+			schemaVersion: 1,
+			savedAt: SAVED_AT,
+			results: { ...STORED_RESULTS, lastModified: at(2025), creationUnknown: false }
+		};
+		fs.files.set(COMPETITION_STATE_PATH, new TextEncoder().encode(JSON.stringify(legacy)));
+		await store.restore(settings);
+		expect(session.results).toMatchObject({ yearWarning: 2025, yearConfirmed: true });
+		expect(fs.files.has(COMPETITION_RESULTS_PATH)).toBe(true);
+		const state = JSON.parse(new TextDecoder().decode(fs.files.get(COMPETITION_STATE_PATH)));
+		expect(state).toMatchObject({ schemaVersion: 2 });
+		expect(state).not.toHaveProperty("results");
+	});
+
+	it("meldet beiseitegelegte, unlesbare Dateien", async () => {
+		fs.files.set(COMPETITION_STATE_PATH, new TextEncoder().encode("{kaputt"));
+		await store.restore(settings);
+		expect(store.setAside).toEqual([expect.stringMatching(/^competition\/state\.json\.unreadable-/)]);
+		expect(session.registration).toBeNull();
 	});
 
 	it("lässt eine unbrauchbare Meldedatei weg", async () => {
@@ -150,7 +195,10 @@ describe("restore", () => {
 describe("Autosave", () => {
 	it("speichert nach schnellen Änderungen nur einmal", async () => {
 		vi.useFakeTimers();
-		const write = vi.spyOn(fs, "writeText");
+		const writeText = vi.spyOn(fs, "writeText");
+		const write = {
+			calls: (path: string) => writeText.mock.calls.filter(([target]) => target === path)
+		};
 		const stop = store.startAutosave();
 		loadRegistration();
 		flushSync();
@@ -162,19 +210,38 @@ describe("Autosave", () => {
 		selection.excluded = new Set(["e1"]);
 		flushSync();
 		await vi.advanceTimersByTimeAsync(AUTOSAVE_DELAY_MS - 1);
-		expect(write).not.toHaveBeenCalled();
+		expect(writeText).not.toHaveBeenCalled();
 		await vi.advanceTimersByTimeAsync(1);
 		await store.idle();
-		expect(write).toHaveBeenCalledTimes(1);
+		expect(write.calls(COMPETITION_STATE_PATH)).toHaveLength(1);
+		expect(write.calls(COMPETITION_RESULTS_PATH)).toHaveLength(1);
+
+		// Nur die Auswahl ändert sich: Die großen Ergebnisse werden nicht neu geschrieben.
+		selection.excluded = new Set(["e1", "e2"]);
+		flushSync();
+		await vi.advanceTimersByTimeAsync(AUTOSAVE_DELAY_MS);
+		await store.idle();
+		expect(write.calls(COMPETITION_STATE_PATH)).toHaveLength(2);
+		expect(write.calls(COMPETITION_RESULTS_PATH)).toHaveLength(1);
 		stop();
 
-		const saved = await loadCompetitionState();
-		expect(saved?.savedAt).toBe(NOW.toISOString());
-		expect(saved?.registration?.waveSelection).toEqual(["r1"]);
-		expect(saved?.registration?.csvBase64).toBe(encodeBase64(csv));
-		expect(saved?.results).toMatchObject({ yearWarning: 2025, creationUnknown: false, yearConfirmed: true });
-		expect(saved?.certificateSelection).toEqual({ hidden: NO_HIDDEN, excluded: ["e1"] });
+		const { state, results } = await loadCompetition();
+		expect(state?.savedAt).toBe(NOW.toISOString());
+		expect(state?.registration?.waveSelection).toEqual(["r1"]);
+		expect(state?.registration?.csvBase64).toBe(encodeBase64(csv));
+		expect(results).toMatchObject({ yearWarning: 2025, yearConfirmed: true });
+		expect(state?.certificateSelection).toEqual({ hidden: NO_HIDDEN, excluded: ["e1", "e2"] });
 		expect(store.savedAt).toBe(NOW.toISOString());
+	});
+
+	it("entfernt die gesicherten Ergebnisse, wenn keine mehr geladen sind", async () => {
+		loadRegistration();
+		setResults();
+		await store.saveNow();
+		session.setResults(null);
+		await store.saveNow();
+		expect(fs.files.has(COMPETITION_RESULTS_PATH)).toBe(false);
+		expect(fs.files.has(COMPETITION_STATE_PATH)).toBe(true);
 	});
 
 	it("speichert nicht schon beim Start", async () => {
@@ -204,6 +271,7 @@ describe("newCompetition", () => {
 		expect(session.results).toBeNull();
 		expect(selection.excluded.size).toBe(0);
 		expect(fs.files.has(COMPETITION_STATE_PATH)).toBe(false);
+		expect(fs.files.has(COMPETITION_RESULTS_PATH)).toBe(false);
 		expect(store.savedAt).toBeNull();
 	});
 

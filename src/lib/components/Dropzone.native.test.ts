@@ -16,7 +16,7 @@ vi.mock("./nativeDrop", () => ({
 
 import Dropzone from "./Dropzone.svelte";
 
-const FILE = { name: "Ergebnisse.xls", bytes: new Uint8Array([1]), lastModified: 2, createdMs: 1, kind: "excel" };
+const FILE = { name: "Ergebnisse.xls", bytes: new Uint8Array([1]), modifiedMs: 2, createdMs: 1, kind: "excel" };
 
 let component: ReturnType<typeof mount> | null = null;
 

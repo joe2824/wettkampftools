@@ -41,6 +41,17 @@ describe("LayoutStore Layouts", () => {
 		expect(store.layouts).toEqual(defaultLayouts());
 	});
 
+	it("legt eine unlesbare Datei beiseite", async () => {
+		fs.files.set(LAYOUT_FILE, encoder.encode("42"));
+		const store = new LayoutStore();
+		await store.load();
+		expect(store.setAside).toEqual([expect.stringMatching(/^layout\.json\.unreadable-\d{8}-\d{6}$/)]);
+		expect(decoder.decode(fs.files.get(store.setAside[0]))).toBe("42");
+		expect(fs.files.has(LAYOUT_FILE)).toBe(false);
+		await store.load();
+		expect(store.setAside).toEqual([]);
+	});
+
 	it("speichert und lädt wieder", async () => {
 		const store = new LayoutStore();
 		store.layouts.team.objects[0].xMm = 33;

@@ -9,7 +9,8 @@ import { userMessage } from "./errors";
 export interface ResultsFile {
 	name: string;
 	bytes: Uint8Array;
-	lastModified: number;
+	/** Änderungszeit; null, wenn unbekannt. */
+	modifiedMs: number | null;
 	/** Erstellungszeit im Dateisystem; null, wenn unbekannt. */
 	createdMs: number | null;
 }
@@ -32,7 +33,7 @@ const UNREADABLE = "Die Ergebnisdatei konnte nicht gelesen werden.";
 const EMPTY = "Die Ergebnisdatei enthält keine Einträge.";
 
 /** Prüft, ob die Datei aus dem laufenden Jahr stammt. */
-function resultsYearCheck(workbook: Workbook, dates: FileDates, today: Date): YearCheck {
+export function resultsYearCheck(workbook: Workbook, dates: FileDates, today: Date): YearCheck {
 	const { year, creationKnown } = workbookYear(workbook.properties, dates);
 	const yearWarning = year === null || year === today.getFullYear() ? null : year;
 	return { yearWarning, creationUnknown: !creationKnown };
@@ -68,10 +69,9 @@ export async function loadResultsFile(file: ResultsFile, today: Date = new Date(
 		const workbook = await readWorkbook(file.bytes);
 		const { kind, rows } = readJAuswertungResults(workbook);
 		if (rows.length === 0) return { ok: false, message: EMPTY };
-		const dates = { createdMs: file.createdMs, modifiedMs: file.lastModified };
-		const check = resultsYearCheck(workbook, dates, today);
-		const { name: fileName, lastModified } = file;
-		session.setResults({ fileName, lastModified, workbook, kind, rows, ...check, yearConfirmed: false });
+		const check = resultsYearCheck(workbook, file, today);
+		const { name: fileName, createdMs, modifiedMs } = file;
+		session.setResults({ fileName, createdMs, modifiedMs, workbook, kind, rows, ...check, yearConfirmed: false });
 		logInfo("results.loaded", { rows: rows.length, team: kind === "team", creationUnknown: check.creationUnknown });
 		if (check.yearWarning === null) await keepBestTimes(workbook, today.getFullYear());
 		return { ok: true, summary: { kind, rowCount: rows.length, ...check } };

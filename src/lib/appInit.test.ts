@@ -7,7 +7,7 @@ import { LayoutStore } from "$lib/certificates/layoutStore.svelte";
 import { CompetitionStore } from "$lib/workflows/competitionStore.svelte";
 import { SelectionState } from "$lib/certificates/selectionState.svelte";
 import { SessionState } from "$lib/session.svelte";
-import { initApp, migrationMessage } from "./appInit";
+import { initApp, migrationMessage, setAsideMessage } from "./appInit";
 
 let fs: FakeStore;
 const encoder = new TextEncoder();
@@ -41,7 +41,8 @@ describe("initApp", () => {
 
 		expect(target.addEventListener).toHaveBeenCalledWith("error", expect.any(Function));
 		expect(fs.files.has("logs/2020-01-01.log")).toBe(false);
-		expect(report?.applied).toEqual(["ageGroups"]);
+		expect(report.migration?.applied).toEqual(["ageGroups"]);
+		expect(report.setAside).toEqual([]);
 		expect(settings.settings.ageGroups).toEqual(["AK 13/14"]);
 		expect(layouts.images.signature1).toEqual(png);
 	});
@@ -55,7 +56,7 @@ describe("initApp", () => {
 		const report = await initApp({ settings, layouts, errorTarget: fakeTarget() });
 		await flushLog();
 
-		expect(report).toBeNull();
+		expect(report).toEqual({ migration: null, setAside: [] });
 		expect(loadImages).toHaveBeenCalled();
 		const log = [...fs.files.entries()].filter(([path]) => path.startsWith("logs/"));
 		const text = new TextDecoder().decode(log[0][1]);
@@ -79,6 +80,40 @@ describe("initApp", () => {
 		expect(order).toEqual(["settings", "restore"]);
 		expect(restore).toHaveBeenCalledWith(settings.settings);
 		expect(autosave).toHaveBeenCalledOnce();
+	});
+
+	it("meldet beiseitegelegte, unlesbare Dateien je Bereich", async () => {
+		fs.files.set("settings.json", encoder.encode("{kaputt"));
+		fs.files.set("layout.json", encoder.encode("[]"));
+		fs.files.set("competition/state.json", encoder.encode("null"));
+		const settings = new SettingsStore({ readLegacy: async () => null });
+		const competition = new CompetitionStore({ session: new SessionState(), selection: new SelectionState() });
+		vi.spyOn(competition, "startAutosave").mockImplementation(() => () => {});
+
+		const report = await initApp({ settings, layouts: new LayoutStore(), competition, errorTarget: fakeTarget() });
+
+		expect(report.setAside.map((notice) => notice.area)).toEqual(["settings", "layout", "competition"]);
+		expect(report.setAside[0].files).toEqual([expect.stringMatching(/^settings\.json\.unreadable-/)]);
+	});
+});
+
+describe("setAsideMessage", () => {
+	it("nennt die gesicherte Datei und die Folge", () => {
+		expect(setAsideMessage({ area: "settings", files: ["settings.json.unreadable-20261015-070509"] })).toEqual({
+			title: "Gespeicherte Daten nicht lesbar",
+			description:
+				"Gespeicherte Einstellungen konnten nicht gelesen werden und wurden im App-Datenordner gesichert als „settings.json.unreadable-20261015-070509“; es gelten Standardwerte."
+		});
+		expect(setAsideMessage({ area: "layout", files: ["layout.json.unreadable-1"] }).description).toBe(
+			"Gespeichertes Layout konnte nicht gelesen werden und wurde im App-Datenordner gesichert als „layout.json.unreadable-1“; es gelten Standardwerte."
+		);
+	});
+
+	it("nennt beim Wettkampfstand alle gesicherten Dateien", () => {
+		const message = setAsideMessage({ area: "competition", files: ["competition/a", "competition/b"] });
+		expect(message.description).toBe(
+			"Gespeicherter Wettkampfstand konnte nicht gelesen werden und wurde im App-Datenordner gesichert als „competition/a“, „competition/b“; es wird ohne gespeicherten Stand begonnen."
+		);
 	});
 });
 

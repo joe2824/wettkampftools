@@ -5,6 +5,8 @@ const filesMock = vi.hoisted(() => ({
 	datedFileName: (name: string) => `20261014_${name}`
 }));
 vi.mock("$lib/platform/files", () => filesMock);
+const inputMock = vi.hoisted(() => ({ readInputFile: vi.fn() }));
+vi.mock("$lib/platform/inputFiles", () => inputMock);
 
 import { setWorkbookAdapter } from "$lib/platform/workbook";
 import { defaultSettings } from "$lib/settings/settings";
@@ -132,10 +134,17 @@ describe("Wellenauswahl", () => {
 });
 
 describe("exportRegistrations", () => {
-	beforeEach(() => setWorkbookAdapter(createFakeWorkbookAdapter()));
+	/** Die Platte liefert zurück, was gespeichert wurde. */
+	const savedBytes = (): Uint8Array => filesMock.saveFile.mock.calls[0][0].bytes;
+
+	beforeEach(() => {
+		setWorkbookAdapter(createFakeWorkbookAdapter());
+		inputMock.readInputFile.mockImplementation(async () => ({ bytes: savedBytes() }));
+	});
 	afterEach(() => {
 		setWorkbookAdapter(null);
 		filesMock.saveFile.mockReset();
+		inputMock.readInputFile.mockReset();
 	});
 
 	it("speichert, liest zurück und bestätigt die Anzahl", async () => {
@@ -151,6 +160,7 @@ describe("exportRegistrations", () => {
 		expect(outcome.path).toBe("/tmp/20261014_WWK_Meldungen.xlsx");
 		expect(outcome.expected.total).toBe(3);
 		expect(outcome.verification).toEqual({ ok: true, problems: [] });
+		expect(inputMock.readInputFile).toHaveBeenCalledWith("/tmp/20261014_WWK_Meldungen.xlsx");
 		const request = filesMock.saveFile.mock.calls[0][0];
 		expect(request.defaultName).toBe("20261014_WWK_Meldungen.xlsx");
 		expect(request.filters).toEqual([{ name: "Excel-Datei", extensions: ["xlsx"] }]);
@@ -163,6 +173,27 @@ describe("exportRegistrations", () => {
 		expect(outcome.status === "saved" && outcome.expected.total).toBe(1);
 		const sheets = JSON.parse(new TextDecoder().decode(filesMock.saveFile.mock.calls[0][0].bytes));
 		expect(sheets[0].rows).toHaveLength(2);
+	});
+
+	it("prüft die Datei auf der Platte, nicht die Bytes im Speicher", async () => {
+		filesMock.saveFile.mockResolvedValue("/tmp/x.xlsx");
+		inputMock.readInputFile.mockImplementation(async () => {
+			const sheets = JSON.parse(new TextDecoder().decode(savedBytes()));
+			sheets[0].rows = sheets[0].rows.slice(0, 1);
+			return { bytes: new TextEncoder().encode(JSON.stringify(sheets)) };
+		});
+		const outcome = await exportRegistrations(checkRegistration(load([{ ak: "AK 12" }]), settings).exportableRows);
+		expect(outcome.status === "saved" && outcome.verification.ok).toBe(false);
+	});
+
+	it("meldet eine nicht zurücklesbare Datei als nicht bestätigt", async () => {
+		filesMock.saveFile.mockResolvedValue("/tmp/x.xlsx");
+		inputMock.readInputFile.mockRejectedValue("Die Datei bitte erneut auswählen oder hierher ziehen.");
+		const outcome = await exportRegistrations(checkRegistration(load([{ ak: "AK 12" }]), settings).exportableRows);
+		expect(outcome.status === "saved" && outcome.verification).toEqual({
+			ok: false,
+			problems: ["Die gespeicherte Datei konnte nicht zur Kontrolle gelesen werden. Bitte erneut speichern."]
+		});
 	});
 
 	it("macht bei Abbruch nichts weiter", async () => {
@@ -178,14 +209,14 @@ describe("registrationYearWarning", () => {
 	const at = (year: number) => new Date(year, 5, 1).getTime();
 
 	it("schweigt bei einer Datei aus diesem Jahr", () => {
-		expect(registrationYearWarning({ createdMs: at(2026), lastModified: at(2026) }, today)).toBeNull();
+		expect(registrationYearWarning({ createdMs: at(2026), modifiedMs: at(2026) }, today)).toBeNull();
 	});
 
 	it("nennt das Jahr einer älteren Datei", () => {
-		expect(registrationYearWarning({ createdMs: at(2025), lastModified: at(2026) }, today)).toBe(2025);
+		expect(registrationYearWarning({ createdMs: at(2025), modifiedMs: at(2026) }, today)).toBe(2025);
 	});
 
 	it("prüft ohne Erstellungsdatum nur das Änderungsdatum", () => {
-		expect(registrationYearWarning({ createdMs: null, lastModified: at(2026) }, today)).toBeNull();
+		expect(registrationYearWarning({ createdMs: null, modifiedMs: at(2026) }, today)).toBeNull();
 	});
 });

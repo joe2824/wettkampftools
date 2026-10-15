@@ -8,12 +8,21 @@ const fsMock = vi.hoisted(() => ({
 	writeTextFile: vi.fn(),
 	writeFile: vi.fn(),
 	remove: vi.fn(),
+	rename: vi.fn(),
 	readDir: vi.fn()
 }));
 
 vi.mock("@tauri-apps/plugin-fs", () => ({ BaseDirectory: { AppData: 14 }, ...fsMock }));
 
-import { appDataStore, readJson, resetAppDataStore, setAppDataStore, tauriStore, writeJson } from "./fs";
+import {
+	appDataStore,
+	readJson,
+	readJsonOrSetAside,
+	resetAppDataStore,
+	setAppDataStore,
+	tauriStore,
+	writeJson
+} from "./fs";
 import { createFakeStore } from "$lib/testing/fakeFs";
 
 describe("Fake-Ablage", () => {
@@ -53,6 +62,24 @@ describe("Fake-Ablage", () => {
 		await store.remove("a.txt");
 		await store.remove("a.txt");
 		expect(await store.exists("a.txt")).toBe(false);
+	});
+
+	it("schreibt über eine Zwischendatei und lässt keine liegen", async () => {
+		const store = appDataStore();
+		await store.writeText("data/a.json", "alt");
+		await store.writeText("data/a.json", "neu");
+		await store.writeBytes("data/b.bin", new Uint8Array([1]));
+		expect(await store.readText("data/a.json")).toBe("neu");
+		expect((await store.list("data")).sort()).toEqual(["a.json", "b.bin"]);
+	});
+
+	it("benennt um und ersetzt dabei das Ziel", async () => {
+		const store = appDataStore();
+		await store.writeText("a.json", "eins");
+		await store.writeText("b.json", "zwei");
+		await store.rename("a.json", "b.json");
+		expect(await store.readText("b.json")).toBe("eins");
+		expect(await store.exists("a.json")).toBe(false);
 	});
 
 	it("listet nur die eigene Ebene", async () => {
@@ -103,6 +130,41 @@ describe("JSON-Helfer", () => {
 	});
 });
 
+describe("readJsonOrSetAside", () => {
+	let store: ReturnType<typeof createFakeStore>;
+	const now = new Date(2026, 9, 15, 7, 5, 9);
+	const asCount = (raw: unknown): number | null =>
+		typeof raw === "object" && raw !== null && typeof (raw as { count?: unknown }).count === "number"
+			? (raw as { count: number }).count
+			: null;
+
+	beforeEach(() => {
+		store = createFakeStore();
+		setAppDataStore(store);
+	});
+	afterEach(() => resetAppDataStore());
+
+	it("liefert den Wert einer lesbaren Datei", async () => {
+		await writeJson("data/a.json", { count: 2 });
+		expect(await readJsonOrSetAside("data/a.json", asCount, now)).toEqual({ value: 2, setAsideAs: null });
+	});
+
+	it("liefert nichts ohne Datei", async () => {
+		expect(await readJsonOrSetAside("data/a.json", asCount, now)).toEqual({ value: null, setAsideAs: null });
+	});
+
+	it("legt kaputte oder abgelehnte Dateien mit Zeitstempel beiseite", async () => {
+		await store.writeText("data/a.json", "{kaputt");
+		const result = await readJsonOrSetAside("data/a.json", asCount, now);
+		expect(result).toEqual({ value: null, setAsideAs: "data/a.json.unreadable-20261015-070509" });
+		expect(await store.exists("data/a.json")).toBe(false);
+		expect(await store.readText("data/a.json.unreadable-20261015-070509")).toBe("{kaputt");
+
+		await writeJson("b.json", { count: "zwei" });
+		expect((await readJsonOrSetAside("b.json", asCount, now)).setAsideAs).toBe("b.json.unreadable-20261015-070509");
+	});
+});
+
 describe("Tauri-Ablage", () => {
 	const opts = { baseDir: 14 };
 
@@ -110,16 +172,31 @@ describe("Tauri-Ablage", () => {
 		Object.values(fsMock).forEach((fn) => fn.mockReset());
 	});
 
-	it("legt vor dem Schreiben den Ordner an", async () => {
+	const renameOpts = { oldPathBaseDir: 14, newPathBaseDir: 14 };
+
+	it("legt vor dem Schreiben den Ordner an und ersetzt die Datei erst danach", async () => {
 		await tauriStore.writeText("logs/a.log", "x");
 		expect(fsMock.mkdir).toHaveBeenCalledWith("logs", { ...opts, recursive: true });
-		expect(fsMock.writeTextFile).toHaveBeenCalledWith("logs/a.log", "x", opts);
+		expect(fsMock.writeTextFile).toHaveBeenCalledWith("logs/a.log.tmp", "x", opts);
+		expect(fsMock.rename).toHaveBeenCalledWith("logs/a.log.tmp", "logs/a.log", renameOpts);
 	});
 
 	it("legt für Dateien direkt im Datenordner diesen selbst an", async () => {
 		await tauriStore.writeBytes("a.bin", new Uint8Array([1]));
 		expect(fsMock.mkdir).toHaveBeenCalledWith("", { ...opts, recursive: true });
-		expect(fsMock.writeFile).toHaveBeenCalledWith("a.bin", new Uint8Array([1]), opts);
+		expect(fsMock.writeFile).toHaveBeenCalledWith("a.bin.tmp", new Uint8Array([1]), opts);
+		expect(fsMock.rename).toHaveBeenCalledWith("a.bin.tmp", "a.bin", renameOpts);
+	});
+
+	it("ersetzt nichts, wenn das Schreiben scheitert", async () => {
+		fsMock.writeTextFile.mockRejectedValue(new Error("voll"));
+		await expect(tauriStore.writeText("settings.json", "x")).rejects.toThrow("voll");
+		expect(fsMock.rename).not.toHaveBeenCalled();
+	});
+
+	it("benennt im Datenordner um", async () => {
+		await tauriStore.rename("a.json", "b.json");
+		expect(fsMock.rename).toHaveBeenCalledWith("a.json", "b.json", renameOpts);
 	});
 
 	it("hängt an", async () => {

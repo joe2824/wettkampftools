@@ -65,6 +65,25 @@ describe("SettingsStore.load", () => {
 		expect(store.settings).toEqual(defaultSettings());
 	});
 
+	it("legt eine unlesbare Datei beiseite, statt sie später zu überschreiben", async () => {
+		fs.files.set(SETTINGS_FILE, encoder.encode("[1, 2]"));
+		const store = new SettingsStore({ readLegacy: async () => legacy });
+		await store.load();
+		expect(store.setAside).toEqual([expect.stringMatching(/^settings\.json\.unreadable-\d{8}-\d{6}$/)]);
+		expect(decoder.decode(fs.files.get(store.setAside[0]))).toBe("[1, 2]");
+		// Die Standardwerte stehen gleich in der Datei: Beim nächsten Start wird nicht die alte Version übernommen.
+		expect(savedFile().ageGroups).toEqual(defaultSettings().ageGroups);
+	});
+
+	it("legt nichts beiseite, wenn die Datei lesbar ist oder fehlt", async () => {
+		const store = new SettingsStore({ readLegacy: async () => null });
+		await store.load();
+		expect(store.setAside).toEqual([]);
+		await store.save();
+		await store.load();
+		expect(store.setAside).toEqual([]);
+	});
+
 	it("nutzt Standard ohne Speichern, wenn der Leser scheitert", async () => {
 		const store = new SettingsStore({
 			readLegacy: async () => {

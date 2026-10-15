@@ -11,7 +11,8 @@ interface KindRule {
 export interface CheckedFile {
 	name: string;
 	bytes: Uint8Array;
-	lastModified: number;
+	/** Änderungszeit; null, wenn unbekannt. */
+	modifiedMs: number | null;
 	/** Erstellungszeit im Dateisystem; null, wenn unbekannt (z. B. im Browser). */
 	createdMs: number | null;
 	kind: FileKind;
@@ -114,7 +115,7 @@ export async function readCheckedFile(
 	if (!result.ok) return result;
 	return {
 		ok: true,
-		file: { name: file.name, bytes, lastModified: file.lastModified, createdMs: null, kind: result.kind }
+		file: { name: file.name, bytes, modifiedMs: file.lastModified, createdMs: null, kind: result.kind }
 	};
 }
 
@@ -122,11 +123,10 @@ export async function readCheckedFile(
 export function checkInputFile(
 	input: NativeInputFile,
 	kinds: FileKind[],
-	maxBytes: number = DEFAULT_MAX_BYTES,
-	now: number = Date.now()
+	maxBytes: number = DEFAULT_MAX_BYTES
 ): ReadFileResult {
 	const result = checkFile(input, kinds, maxBytes);
 	if (!result.ok) return result;
 	const { name, bytes, createdMs, modifiedMs } = input;
-	return { ok: true, file: { name, bytes, lastModified: modifiedMs ?? now, createdMs, kind: result.kind } };
+	return { ok: true, file: { name, bytes, modifiedMs, createdMs, kind: result.kind } };
 }
