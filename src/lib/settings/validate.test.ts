@@ -5,6 +5,7 @@ import {
 	checkNumberInRange,
 	checkString,
 	checkStringList,
+	checkStringMap,
 	IssueCollector,
 	isRecord,
 	parseSection,
@@ -112,5 +113,29 @@ describe("parseSection", () => {
 	it("wertet einen gültigen Abschnitt aus", () => {
 		const collector = new IssueCollector();
 		expect(parseSection({ box: { size: 2 } }, "box", { size: 1 }, collector, parse)).toEqual({ size: 2 });
+	});
+});
+
+describe("checkStringMap", () => {
+	const MAX = 10;
+
+	it("kürzt Schlüssel und Werte", () => {
+		expect(checkStringMap({ " Musterstadt ": " Musterstadt / Süd " }, MAX * 2, "map")).toEqual({
+			value: { Musterstadt: "Musterstadt / Süd" },
+		});
+	});
+
+	it("verwirft leere, zu lange und falsche Einträge mit Hinweis", () => {
+		const checked = checkStringMap({ a: "ok", b: "", " ": "x", c: 3, d: "x".repeat(MAX + 1) }, MAX, "map");
+		expect(checked).toEqual({ value: { a: "ok" }, issue: "map.invalidEntries" });
+	});
+
+	it("behält bei gleichen Schlüsseln (ohne Groß-/Kleinschreibung) den ersten", () => {
+		const checked = checkStringMap({ Musterstadt: "Eins", musterstadt: "Zwei" }, MAX, "map");
+		expect(checked).toEqual({ value: { Musterstadt: "Eins" }, issue: "map.invalidEntries" });
+	});
+
+	it("ersetzt Nicht-Objekte durch eine leere Zuordnung", () => {
+		expect(checkStringMap(["a"], MAX, "map")).toEqual({ value: {}, issue: "map.invalid" });
 	});
 });

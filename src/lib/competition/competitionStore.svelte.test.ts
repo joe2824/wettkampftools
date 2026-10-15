@@ -79,6 +79,18 @@ describe("restore", () => {
 		expect(store.savedAt).toBe(SAVED_AT);
 	});
 
+	it("wendet beim Wiederherstellen die eigenen Mannschaftsnamen an", async () => {
+		await saveCompetitionState({
+			savedAt: SAVED_AT,
+			registration: { fileName: "meldungen.csv", csvBase64: encodeBase64(csv), waveSelection: ["r1"] }
+		});
+		await store.restore({ ...settings, teamNameOverrides: { musterstadt: "Musterstadt / Süd" } });
+		const teams = session.registration?.teams ?? [];
+		expect(teams.map((team) => team.name)).toEqual(["Musterstadt / Süd", "Beispielhausen"]);
+		expect(teams[0].organisation).toBe("Musterstadt");
+		expect([...(session.registration?.waveSelection ?? [])]).toEqual(["r1"]);
+	});
+
 	it("stellt Ergebnisse samt Jahreshinweis und Urkunden-Auswahl wieder her", async () => {
 		await saveCompetitionState({
 			savedAt: SAVED_AT,

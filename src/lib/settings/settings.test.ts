@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
 	defaultSettings,
+	MAX_TEAM_NAME_LENGTH,
 	mergeLegacySettings,
 	parseSettings,
 	serializeSettingsForExport,
@@ -19,6 +20,7 @@ const SCHEMA_KEYS = [
 	"rulebook",
 	"event",
 	"certificates",
+	"teamNameOverrides",
 	"legacyMigrated",
 ];
 
@@ -82,6 +84,7 @@ describe("parseSettings", () => {
 		valid.waveStartAgeGroup = "AK Offen";
 		valid.event.date = "2026-06-20";
 		valid.rulebook = { name: "DLRG 2026", ageGroups: [{ name: "AK 12", minMembers: 4, maxMembers: 5 }] };
+		valid.teamNameOverrides = { Musterstadt: "Musterstadt / Süd" };
 		valid.legacyMigrated = true;
 		expect(parseSettings(valid)).toEqual({ settings: valid, issues: [] });
 	});
@@ -202,6 +205,18 @@ describe("parseSettings", () => {
 		expect(issues).toEqual(["rulebook.invalid"]);
 	});
 
+	it("hat standardmäßig keine eigenen Mannschaftsnamen", () => {
+		expect(defaultSettings().teamNameOverrides).toEqual({});
+	});
+
+	it("verwirft ungültige Mannschaftsnamen einzeln", () => {
+		const { settings, issues } = parseSettings({
+			teamNameOverrides: { Musterstadt: " Musterstadt / Süd ", Beispielhausen: "", Irgendwo: 5, Lang: "x".repeat(MAX_TEAM_NAME_LENGTH + 1) },
+		});
+		expect(settings.teamNameOverrides).toEqual({ Musterstadt: "Musterstadt / Süd" });
+		expect(issues).toEqual(["teamNameOverrides.invalidEntries"]);
+	});
+
 	it("wirft nie", () => {
 		const cyclic: Record<string, unknown> = {};
 		cyclic.event = cyclic;
@@ -219,6 +234,7 @@ describe("serializeSettingsForExport", () => {
 	it("lässt sich wieder einlesen", () => {
 		const original = defaultSettings();
 		original.certificates.copiesPerTeam = 3;
+		original.teamNameOverrides = { Musterstadt: "Musterstadt / Süd" };
 		const roundTrip = parseSettings(JSON.parse(JSON.stringify(serializeSettingsForExport(original))));
 		expect(roundTrip).toEqual({ settings: original, issues: [] });
 	});

@@ -4,6 +4,7 @@ import {
 	checkNumberInRange,
 	checkString,
 	checkStringList,
+	checkStringMap,
 	isRecord,
 	IssueCollector,
 	parseSection,
@@ -15,6 +16,7 @@ export const SETTINGS_SCHEMA_VERSION = 1;
 export const MIN_COPIES = 1;
 export const MAX_COPIES = 10;
 export const MAX_PRINT_OFFSET_MM = 20;
+export const MAX_TEAM_NAME_LENGTH = 80;
 
 const DEFAULT_COPIES_PER_TEAM = 5;
 const DEFAULT_COPIES_PER_INDIVIDUAL = 1;
@@ -65,6 +67,8 @@ export interface Settings {
 	rulebook: RulebookSummary | null;
 	event: EventInfo;
 	certificates: CertificateSettings;
+	/** Eigener Mannschaftsname je Gliederung (Schlüssel wie in der Meldedatei). */
+	teamNameOverrides: Record<string, string>;
 	legacyMigrated: boolean;
 }
 
@@ -108,6 +112,7 @@ export function defaultSettings(): Settings {
 			copiesPerIndividual: DEFAULT_COPIES_PER_INDIVIDUAL,
 			printOffsetMm: { x: 0, y: 0 },
 		},
+		teamNameOverrides: {},
 		legacyMigrated: false,
 	};
 }
@@ -245,6 +250,9 @@ export function parseSettings(input: unknown): { settings: Settings; issues: str
 	settings.rulebook = collector.take(input, "rulebook", settings.rulebook, () => checkRulebook(input.rulebook));
 	settings.event = parseSection(input, "event", settings.event, collector, parseEvent);
 	settings.certificates = parseSection(input, "certificates", settings.certificates, collector, parseCertificates);
+	settings.teamNameOverrides = collector.take(input, "teamNameOverrides", settings.teamNameOverrides, () =>
+		checkStringMap(input.teamNameOverrides, MAX_TEAM_NAME_LENGTH, "teamNameOverrides"),
+	);
 	settings.legacyMigrated = flag("legacyMigrated");
 	return { settings, issues: collector.issues };
 }

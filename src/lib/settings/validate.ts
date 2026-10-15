@@ -29,6 +29,26 @@ export function checkStringList(input: unknown, fallback: readonly string[], fie
 	return hasInvalidEntries ? { value, issue: `${field}.invalidEntries` } : { value };
 }
 
+/** Text-Zuordnung prüfen: kürzen, Leere, zu Lange und doppelte Schlüssel (ohne Groß-/Kleinschreibung) entfernen. */
+export function checkStringMap(input: unknown, maxLength: number, field: string): Checked<Record<string, string>> {
+	if (!isRecord(input)) return { value: {}, issue: `${field}.invalid` };
+	const seen = new Set<string>();
+	const value: Record<string, string> = {};
+	let hasInvalidEntries = false;
+	for (const [rawKey, rawValue] of Object.entries(input)) {
+		const key = rawKey.trim();
+		const text = typeof rawValue === "string" ? rawValue.trim() : "";
+		const lowerKey = key.toLocaleLowerCase("de");
+		if (key === "" || text === "" || text.length > maxLength || seen.has(lowerKey)) {
+			hasInvalidEntries = true;
+			continue;
+		}
+		seen.add(lowerKey);
+		value[key] = text;
+	}
+	return hasInvalidEntries ? { value, issue: `${field}.invalidEntries` } : { value };
+}
+
 export function checkString(input: unknown, fallback: string, field: string): Checked<string> {
 	return typeof input === "string" ? { value: input } : { value: fallback, issue: `${field}.invalid` };
 }

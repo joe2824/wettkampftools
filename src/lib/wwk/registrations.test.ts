@@ -138,6 +138,28 @@ describe("parseRegistrations", () => {
 		expect(renames).toEqual([{ teamId: "r2", from: "Team B", to: "Beispielhausen" }]);
 	});
 
+	it("verwendet den eigenen Mannschaftsnamen der Gliederung samt Nummerierung", () => {
+		const settings = settingsWith({ teamNameOverrides: { Musterstadt: "Musterstadt / Süd" } });
+		const { teams, renames } = parse(
+			[
+				{ gliederung: "Musterstadt", name: "A" },
+				{ gliederung: "Beispielhausen", name: "Beispielhausen" },
+				{ gliederung: "Musterstadt", name: "B" },
+			],
+			settings,
+		);
+		expect(names(teams)).toEqual(["Musterstadt / Süd 1", "Beispielhausen", "Musterstadt / Süd 2"]);
+		expect(teams.map((team) => team.organisation)).toEqual(["Musterstadt", "Beispielhausen", "Musterstadt"]);
+		expect(renames.map((rename) => rename.to)).toEqual(["Musterstadt / Süd 1", "Musterstadt / Süd 2"]);
+	});
+
+	it("findet den eigenen Namen ohne Groß-/Kleinschreibung", () => {
+		const settings = settingsWith({ teamNameOverrides: { musterstadt: "Musterstadt / Süd" } });
+		const { teams, renames } = parse([{ gliederung: "Musterstadt", name: "Musterstadt / Süd" }], settings);
+		expect(names(teams)).toEqual(["Musterstadt / Süd"]);
+		expect(renames).toEqual([]);
+	});
+
 	it("verträgt fehlende Spalten", () => {
 		const { teams } = parseRegistrations([{ gliederung: "Musterstadt", ak: "AK 12", geschlecht: "weiblich" }], settingsWith());
 		expect(teams[0]).toMatchObject({ originalName: "", qualification: "", reportedPoints: "", members: [] });
@@ -152,5 +174,11 @@ describe("assignTeamNames", () => {
 			{ ...base, id: "b", ageGroup: "AK offen" },
 		]);
 		expect(names(teams)).toEqual(["Musterstadt 1", "Musterstadt 2"]);
+	});
+
+	it("nimmt ohne passenden eigenen Namen die Gliederung", () => {
+		const base = parse([{ gliederung: "Musterstadt" }]).teams[0];
+		const teams = assignTeamNames([base], { Beispielhausen: "Beispielhausen / Nord" });
+		expect(names(teams)).toEqual(["Musterstadt"]);
 	});
 });

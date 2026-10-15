@@ -14,6 +14,8 @@ const FULL_MESSAGES: Record<string, string> = {
 	"rulebook.invalid": "Das Regelwerk war ungültig und wurde entfernt.",
 	"event.signers.invalid": "Die Unterzeichner waren ungültig und wurden zurückgesetzt.",
 	"event.date.invalid": "Das Datum war ungültig und wurde zurückgesetzt.",
+	"teamNameOverrides.invalid": "Die eigenen Mannschaftsnamen waren ungültig und wurden entfernt.",
+	"teamNameOverrides.invalidEntries": "Ungültige eigene Mannschaftsnamen wurden entfernt.",
 };
 
 const FIELD_LABELS: Record<string, string> = {

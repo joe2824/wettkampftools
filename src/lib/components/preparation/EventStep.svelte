@@ -1,5 +1,5 @@
 <script lang="ts">
-	import CheckIcon from "@lucide/svelte/icons/check";
+	import AutosaveStatus from "$lib/components/AutosaveStatus.svelte";
 	import MissingDateAlert from "$lib/components/MissingDateAlert.svelte";
 	import { Input } from "$lib/components/ui/input";
 	import { Label } from "$lib/components/ui/label";
@@ -43,16 +43,5 @@
 		<SignerCard index={0} />
 		<SignerCard index={1} />
 	</div>
-	<p class="flex min-h-5 items-center gap-1.5 text-sm text-muted-foreground" role="status" aria-live="polite">
-		{#if autosave.status === "pending"}
-			Wird gespeichert …
-		{:else if autosave.status === "saved"}
-			<CheckIcon class="size-4" aria-hidden="true" />
-			Gespeichert
-		{:else if autosave.status === "failed"}
-			<span class="text-destructive">Konnte nicht gespeichert werden. Bitte erneut ändern.</span>
-		{:else}
-			Änderungen werden automatisch gespeichert.
-		{/if}
-	</p>
+	<AutosaveStatus status={autosave.status} idleText="Änderungen werden automatisch gespeichert." />
 </div>

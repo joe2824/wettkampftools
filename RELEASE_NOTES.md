@@ -29,6 +29,9 @@ schneller und mit allem, was die bisherige Version konnte.
   Mitgliedernamen können wahlweise mit gedruckt werden. Ein Layout-Editor mit
   Kalibrierungsseite sorgt dafür, dass der Druck genau auf das vorbedruckte
   Papier passt.
+- **Mannschaftsnamen:** Je Gliederung lässt sich ein eigener Name festlegen
+  (z. B. „Sulzbach / Saar“ statt „Sulzbach“) oder per Klick aus der Meldung
+  übernehmen. Er wird gemerkt und in den folgenden Jahren automatisch verwendet.
 - Der Arbeitsstand bleibt über mehrere Tage erhalten; ‚Neuer Wettkampf‘ auf der
   Startseite beginnt von vorn.
 - Die **Veranstaltung** wird als erster Schritt der Vorbereitung eingetragen

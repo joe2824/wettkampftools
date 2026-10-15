@@ -9,6 +9,7 @@
 	import EventStep from "$lib/components/preparation/EventStep.svelte";
 	import ExportStep from "$lib/components/preparation/ExportStep.svelte";
 	import LoadStep from "$lib/components/preparation/LoadStep.svelte";
+	import TeamNamesCard from "$lib/components/preparation/TeamNamesCard.svelte";
 	import WaveStep from "$lib/components/preparation/WaveStep.svelte";
 	import { session } from "$lib/session.svelte";
 	import { isEventComplete } from "$lib/settings/eventInfo";
@@ -21,6 +22,7 @@
 		registrationYearWarning,
 		type PreparationCheck,
 	} from "$lib/workflows/preparation";
+	import { refreshTeamNames } from "$lib/workflows/teamNames";
 
 	let loadError = $state<string | null>(null);
 	let fileYearWarning = $state<number | null>(null);
@@ -61,6 +63,14 @@
 		if (load(current.sourceBytes, current.fileName)) {
 			toast.info("Einstellungen geändert", { description: "Die Meldedatei wurde neu eingelesen." });
 		}
+	});
+
+	// Eigene Mannschaftsnamen sofort anwenden; Wellenauswahl bleibt.
+	$effect(() => {
+		const current = session.registration;
+		if (!current || current.settingsKey !== settingsKey) return;
+		const next = refreshTeamNames(current, settings.teamNameOverrides);
+		if (next) session.setRegistration(next);
 	});
 
 	function resetWave() {
@@ -105,6 +115,7 @@
 			<StepHeader step={3} title="Prüfen" description="Gründe, aus denen JAuswertung Meldungen verwerfen würde." done={check !== null && check.errors.length === 0} />
 			{#if registration && check}
 				<CheckStep {check} renames={registration.renames} />
+				<TeamNamesCard teams={registration.teams} />
 			{:else}
 				<p class="text-sm text-muted-foreground">Zuerst die Meldedatei laden.</p>
 			{/if}

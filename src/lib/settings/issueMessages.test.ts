@@ -38,6 +38,7 @@ describe("issueMessage", () => {
 			rulebook: { name: 1 },
 			event: { number: 1, date: "14.11.2026", signers: [{ name: 1, role: 2 }, {}] },
 			certificates: { copiesPerTeam: 99, copiesPerIndividual: 1.4, printOffsetMm: { x: "a", y: 50 } },
+			teamNameOverrides: { Musterstadt: "" },
 			extra: true,
 		});
 		expect(issues.length).toBeGreaterThan(10);

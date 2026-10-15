@@ -32,7 +32,10 @@ können direkt aus der Anwendung installiert werden.
   verständlichen Hinweisen zu jeder auffälligen Zeile.
 - Mannschaften je Gliederung für die Wellenwertung auswählen; vorausgewählt
   wird nach Altersklasse.
-- Mannschaftsnamen werden je Gliederung einheitlich nummeriert.
+- Mannschaftsnamen werden je Gliederung einheitlich nummeriert. Statt der
+  Gliederung kann je Gliederung ein eigener Name gelten (z. B. „Sulzbach / Saar“),
+  frei eingetragen oder aus der Meldung übernommen; er wird für die nächsten
+  Jahre gemerkt.
 - Export der Meldungen für JAuswertung mit **Kontrollzahl**: So viele Meldungen
   muss JAuswertung nach dem Import anzeigen.
 
