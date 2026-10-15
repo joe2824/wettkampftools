@@ -1,13 +1,12 @@
 // Einstellungen im App-Datenordner: laden, speichern, zurücksetzen, Export/Import.
 import { appDataStore, readJson, writeJson } from "$lib/platform/fs";
-import { readLegacySettings } from "$lib/platform/legacySettings";
+import { readLegacySettings, type LegacySettings } from "$lib/platform/legacySettings";
 import { logError, logInfo } from "$lib/log";
 import {
 	defaultSettings,
 	mergeLegacySettings,
 	parseSettings,
 	serializeSettingsForExport,
-	type LegacySettings,
 	type Settings
 } from "./settings";
 

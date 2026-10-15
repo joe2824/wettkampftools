@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { loadFontBytes } from "$lib/certificates/fonts";
 
 const assetsMock = vi.hoisted(() => ({ loadAppFonts: vi.fn() }));
-vi.mock("$lib/platform/assets", () => assetsMock);
+vi.mock("$lib/certificates/appFonts", () => assetsMock);
 
 import { PreviewFonts } from "./previewFonts.svelte";
 

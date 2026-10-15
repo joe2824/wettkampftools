@@ -4,8 +4,8 @@ import { resetAppDataStore, setAppDataStore } from "$lib/platform/fs";
 import { flushLog } from "$lib/log";
 import { SettingsStore } from "$lib/settings/settingsStore.svelte";
 import { LayoutStore } from "$lib/certificates/layoutStore.svelte";
-import { CompetitionStore } from "$lib/competition/competitionStore.svelte";
-import { SelectionState } from "$lib/components/certificates/selectionState.svelte";
+import { CompetitionStore } from "$lib/workflows/competitionStore.svelte";
+import { SelectionState } from "$lib/certificates/selectionState.svelte";
 import { SessionState } from "$lib/session.svelte";
 import { initApp, migrationMessage } from "./appInit";
 

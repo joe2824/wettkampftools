@@ -1,8 +1,9 @@
 // @vitest-environment happy-dom
 import { flushSync } from "svelte";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { NO_HIDDEN } from "$lib/components/certificates/certificateSelection";
-import { SelectionState } from "$lib/components/certificates/selectionState.svelte";
+import { NO_HIDDEN } from "$lib/certificates/selection";
+import { SelectionState } from "$lib/certificates/selectionState.svelte";
+import { COMPETITION_STATE_PATH, encodeBase64, loadCompetitionState, saveCompetitionState } from "$lib/competition/persistence";
 import { resetAppDataStore, setAppDataStore } from "$lib/platform/fs";
 import type { Sheet } from "$lib/platform/workbook";
 import { SessionState } from "$lib/session.svelte";
@@ -10,9 +11,8 @@ import { defaultSettings } from "$lib/settings/settings";
 import { SETTINGS_FILE, SettingsStore } from "$lib/settings/settingsStore.svelte";
 import { createFakeStore, type FakeStore } from "$lib/testing/fakeFs";
 import { buildRegistrationCsv } from "$lib/testing/fixtures";
-import { loadRegistrations } from "$lib/workflows/preparation";
 import { AUTOSAVE_DELAY_MS, CompetitionStore } from "./competitionStore.svelte";
-import { COMPETITION_STATE_PATH, encodeBase64, loadCompetitionState, saveCompetitionState } from "./persistence";
+import { loadRegistrations } from "./preparation";
 
 const settings = defaultSettings();
 const SAVED_AT = "2026-10-14T09:30:00.000Z";

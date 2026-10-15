@@ -1,3 +1,4 @@
+import type { LegacySettings } from "$lib/platform/legacySettings";
 import {
 	checkBoolean,
 	checkIntegerInRange,
@@ -70,17 +71,6 @@ export interface Settings {
 	/** Eigener Mannschaftsname je Gliederung (Schlüssel wie in der Meldedatei). */
 	teamNameOverrides: Record<string, string>;
 	legacyMigrated: boolean;
-}
-
-/** Einstellungen der alten Version, wie sie aus der Registry gelesen werden. */
-export interface LegacySettings {
-	ageGroups?: string[];
-	seniorTeamAgeGroups?: string[];
-	seniorIndividualAgeGroups?: string[];
-	waveStartAgeGroup?: string;
-	simplifySeniorAgeGroups?: boolean;
-	excludeUnplacedTeams?: boolean;
-	warnings: string[];
 }
 
 export type ExportedSettings = Omit<Settings, "legacyMigrated">;

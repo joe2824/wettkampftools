@@ -1,6 +1,6 @@
 // Pokalwertung: berechnen, als Excel speichern, Aushang-PDF speichern und öffnen.
+import { loadAppFonts } from "$lib/certificates/appFonts";
 import { logError, logInfo } from "$lib/log";
-import { loadAppFonts } from "$lib/platform/assets";
 import { datedFileName, saveFile } from "$lib/platform/files";
 import { writeWorkbook } from "$lib/platform/workbook";
 import type { SessionResults } from "$lib/session.svelte";

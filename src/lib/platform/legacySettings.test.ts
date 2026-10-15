@@ -4,8 +4,7 @@ const coreMock = vi.hoisted(() => ({ invoke: vi.fn() }));
 
 vi.mock("@tauri-apps/api/core", () => coreMock);
 
-import type { LegacySettings } from "$lib/settings/settings";
-import { readLegacySettings } from "./legacySettings";
+import { readLegacySettings, type LegacySettings } from "./legacySettings";
 
 describe("readLegacySettings", () => {
   beforeEach(() => {

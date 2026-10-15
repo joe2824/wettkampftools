@@ -1,5 +1,5 @@
 // Auswahl der Urkunden-Seite; bleibt beim Seitenwechsel erhalten, solange dieselbe Ergebnisdatei geladen ist.
-import { NO_HIDDEN, type HiddenValues } from "./certificateSelection";
+import { NO_HIDDEN, type HiddenValues } from "./selection";
 
 export class SelectionState {
 	hidden = $state.raw<HiddenValues>(NO_HIDDEN);

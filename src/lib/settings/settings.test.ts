@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import type { LegacySettings } from "$lib/platform/legacySettings";
 import {
 	defaultSettings,
 	MAX_TEAM_NAME_LENGTH,
@@ -6,7 +7,6 @@ import {
 	parseSettings,
 	serializeSettingsForExport,
 	SETTINGS_SCHEMA_VERSION,
-	type LegacySettings,
 } from "./settings";
 
 const SCHEMA_KEYS = [

@@ -1,5 +1,5 @@
 // Auswahl der Urkunden: Filter (als ausgeblendete Werte), Gruppen und Häkchen.
-import type { CertificateEntry } from "$lib/certificates/model";
+import type { CertificateEntry } from "./model";
 import { MAX_COPIES, MIN_COPIES } from "$lib/settings/settings";
 import { displayAgeGroup, type AgeGroupKind } from "$lib/wwk/ageGroups";
 

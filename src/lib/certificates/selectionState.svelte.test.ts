@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { NO_HIDDEN } from "./certificateSelection";
+import { NO_HIDDEN } from "./selection";
 import { SelectionState } from "./selectionState.svelte";
 
 const resultsA = {};

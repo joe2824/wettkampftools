@@ -15,7 +15,7 @@ import {
 	visibleEntries,
 	withIds,
 	type HiddenValues
-} from "./certificateSelection";
+} from "./selection";
 
 function row(sourceRow: number, place: number, ageGroupRaw: string, gender = "weiblich"): ResultRow {
 	return { sourceRow, place, name: `Team ${sourceRow}`, organisation: "Musterstadt", ageGroupRaw, gender, competitionPoints: 1, members: [] };

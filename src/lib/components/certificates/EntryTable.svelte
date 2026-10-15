@@ -5,7 +5,7 @@
 	import * as Table from "$lib/components/ui/table";
 	import { formatCompetitionPoints } from "$lib/format/points";
 	import type { CompetitionKind } from "$lib/wwk/results";
-	import { KIND_FILTER_LABELS, groupState, selectedEntries, withIds, type EntryGroup } from "./certificateSelection";
+	import { KIND_FILTER_LABELS, groupState, selectedEntries, withIds, type EntryGroup } from "$lib/certificates/selection";
 
 	interface Props {
 		groups: EntryGroup[];

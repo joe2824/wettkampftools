@@ -1,12 +1,5 @@
 // Wettkampfstand über Neustarts: beim Start wiederherstellen, bei Änderungen verzögert sichern.
-import { certificateSelection, type SelectionState } from "$lib/components/certificates/selectionState.svelte";
-import { logError, logInfo } from "$lib/log";
-import { session as defaultSession, type SessionState } from "$lib/session.svelte";
-import { nextCompetitionEvent } from "$lib/settings/eventInfo";
-import type { Settings } from "$lib/settings/settings";
-import { settingsStore as defaultSettingsStore, type SettingsStore } from "$lib/settings/settingsStore.svelte";
-import { loadRegistrations } from "$lib/workflows/preparation";
-import { readJAuswertungResults } from "$lib/wwk/results";
+import { certificateSelection, type SelectionState } from "$lib/certificates/selectionState.svelte";
 import {
 	clearCompetitionState,
 	decodeBase64,
@@ -17,7 +10,14 @@ import {
 	type StoredCertificateSelection,
 	type StoredRegistration,
 	type StoredResults
-} from "./persistence";
+} from "$lib/competition/persistence";
+import { logError, logInfo } from "$lib/log";
+import { session as defaultSession, type SessionState } from "$lib/session.svelte";
+import { nextCompetitionEvent } from "$lib/settings/eventInfo";
+import type { Settings } from "$lib/settings/settings";
+import { settingsStore as defaultSettingsStore, type SettingsStore } from "$lib/settings/settingsStore.svelte";
+import { readJAuswertungResults } from "$lib/wwk/results";
+import { loadRegistrations } from "./preparation";
 
 /** Wartezeit nach der letzten Änderung, bevor gesichert wird. */
 export const AUTOSAVE_DELAY_MS = 500;

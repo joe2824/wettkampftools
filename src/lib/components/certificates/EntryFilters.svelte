@@ -8,7 +8,7 @@
 		shownValues,
 		type FilterOptions,
 		type HiddenValues
-	} from "./certificateSelection";
+	} from "$lib/certificates/selection";
 
 	interface Props {
 		options: FilterOptions;

@@ -14,8 +14,8 @@
 		groupEntries,
 		selectedEntries,
 		visibleEntries
-	} from "$lib/components/certificates/certificateSelection";
-	import { certificateSelection as selection } from "$lib/components/certificates/selectionState.svelte";
+	} from "$lib/certificates/selection";
+	import { certificateSelection as selection } from "$lib/certificates/selectionState.svelte";
 	import Stepper from "$lib/components/stepper/Stepper.svelte";
 	import { session } from "$lib/session.svelte";
 	import { settingsStore } from "$lib/settings/settingsStore.svelte";

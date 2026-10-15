@@ -1,4 +1,5 @@
 // Abläufe des Layout-Editors: Vorschau mit Beispieldaten, Export/Import, Hintergrund, Kalibrierung, Speichern.
+import { loadAppFonts } from "$lib/certificates/appFonts";
 import { buildCalibrationPdf } from "$lib/certificates/certificatePdf";
 import type { TextMetrics } from "$lib/certificates/fonts";
 import type { Layout, LayoutSet, LayoutVariant, SignatureSlot } from "$lib/certificates/layout";
@@ -7,7 +8,6 @@ import { IMAGE_FORMAT_ERROR, type ImageSlot } from "$lib/certificates/layoutStor
 import { placeholderValues, type CertificateEntry } from "$lib/certificates/model";
 import { layoutPage, type DrawOp, type OffsetMm } from "$lib/certificates/render";
 import { logError, logInfo } from "$lib/log";
-import { loadAppFonts } from "$lib/platform/assets";
 import { datedFileName, saveFile } from "$lib/platform/files";
 import type { EventInfo } from "$lib/settings/settings";
 import { userMessage } from "./errors";

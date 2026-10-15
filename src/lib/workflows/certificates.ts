@@ -1,9 +1,9 @@
 // Urkunden: PDF erzeugen, speichern und öffnen; Seriendruck-Tabelle als Notlösung.
+import { loadAppFonts } from "$lib/certificates/appFonts";
 import { buildCertificatesPdf } from "$lib/certificates/certificatePdf";
 import { SIGNATURE_SLOTS, type LayoutSet, type SignatureSlot } from "$lib/certificates/layout";
 import { buildCertificatePages, type CertificateEntry } from "$lib/certificates/model";
 import { logError, logInfo } from "$lib/log";
-import { loadAppFonts } from "$lib/platform/assets";
 import { datedFileName, saveFile } from "$lib/platform/files";
 import { writeWorkbook } from "$lib/platform/workbook";
 import type { Settings } from "$lib/settings/settings";

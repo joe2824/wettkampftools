@@ -8,7 +8,7 @@
 	import { MAX_COPIES, MIN_COPIES } from "$lib/settings/settings";
 	import { settingsStore } from "$lib/settings/settingsStore.svelte";
 	import type { CompetitionKind } from "$lib/wwk/results";
-	import { clampCopies } from "./certificateSelection";
+	import { clampCopies } from "$lib/certificates/selection";
 
 	interface Props {
 		competition: CompetitionKind;

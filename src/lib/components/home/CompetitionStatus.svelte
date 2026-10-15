@@ -2,7 +2,7 @@
 	import SaveIcon from "@lucide/svelte/icons/save";
 	import { toast } from "svelte-sonner";
 	import ConfirmDialog from "$lib/components/ConfirmDialog.svelte";
-	import { competitionStore } from "$lib/competition/competitionStore.svelte";
+	import { competitionStore } from "$lib/workflows/competitionStore.svelte";
 	import { formatGermanDateTime } from "$lib/format/date";
 	import { session } from "$lib/session.svelte";
 	import { nextCompetitionHint } from "$lib/settings/eventInfo";

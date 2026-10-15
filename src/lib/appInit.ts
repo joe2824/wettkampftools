@@ -2,7 +2,7 @@
 import { installErrorLogging, logError, pruneOldLogs } from "$lib/log";
 import { settingsStore, type MigrationReport, type SettingsStore } from "$lib/settings/settingsStore.svelte";
 import { layoutStore, type LayoutStore } from "$lib/certificates/layoutStore.svelte";
-import { competitionStore, type CompetitionStore } from "$lib/competition/competitionStore.svelte";
+import { competitionStore, type CompetitionStore } from "$lib/workflows/competitionStore.svelte";
 
 export interface InitDeps {
 	settings?: SettingsStore;

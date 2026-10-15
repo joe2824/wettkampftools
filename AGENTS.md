@@ -30,18 +30,22 @@ Der Fachkern in `src/lib/` ist reines TypeScript und ohne Tauri testbar:
 | `pdf/` | PDF-Erzeugung aus den Zeichenbefehlen |
 | `distance/` | Entfernungsberechnung |
 | `settings/` | Einstellungen laden, speichern, übernehmen |
+| `records/` | Rec-Werte und Regelwerk fürs neue Jahr |
+| `competition/` | Wettkampfstand speichern und laden |
+| `workflows/` | Abläufe der Oberfläche: Fachkern und Plattform zusammenführen |
 | `format/` | Formatierung von Zahlen, Zeiten, Namen |
 | `platform/` | Adapter zu Tauri (Dateien, Dialoge, HTTP, Workbook) |
 | `components/` | Svelte-Komponenten |
 | `testing/` | Fakes und Fixtures für Tests — keine Tests |
 
-Importe laufen nur nach unten: Oberfläche → Fachkern → `platform/`. Keine
+Importe laufen nur nach unten: Oberfläche → `workflows/` → Fachkern → `platform/`. Keine
 Fachlogik in Svelte-Komponenten oder Plattform-Adaptern.
 
 Rust bleibt schlank und kennt keine Fachlogik: `src-tauri/src/` mit `workbook`
 (Excel lesen/schreiben), `input` (gewählte oder abgelegte Dateien samt
 Erstellungsdatum lesen), `output` (Dateien schreiben), `legacy_settings`
-(Einstellungen der alten Version übernehmen) und `logging`.
+(Einstellungen der alten Version übernehmen), `file_check` (gemeinsame Pfad-
+und Endungsprüfung für `input` und `output`) und `logging`.
 
 Der Test liegt **neben** seinem Modul (`foo.ts` → `foo.test.ts`), nicht in
 einem eigenen Baum: so wandert er beim Verschieben mit.

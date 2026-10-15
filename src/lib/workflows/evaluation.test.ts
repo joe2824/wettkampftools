@@ -17,7 +17,7 @@ vi.mock("$lib/platform/files", async (importOriginal) => ({
 	saveFile: filesMock.saveFile
 }));
 vi.mock("$lib/platform/output", () => outputMock);
-vi.mock("$lib/platform/assets", () => assetsMock);
+vi.mock("$lib/certificates/appFonts", () => assetsMock);
 
 import {
 	computeEvaluation,

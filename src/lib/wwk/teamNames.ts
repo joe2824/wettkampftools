@@ -1,7 +1,12 @@
 // Eigene Mannschaftsnamen je Gliederung statt des reinen Gliederungsnamens.
-import type { Team } from "./registrations";
 
 export type TeamNameOverrides = Readonly<Record<string, string>>;
+
+/** Was von einer Mannschaft gebraucht wird. */
+export interface NamedTeam {
+	organisation: string;
+	originalName: string;
+}
 
 export interface TeamNameRow {
 	organisation: string;
@@ -51,7 +56,7 @@ function toRow(organisation: string, names: Set<string>, overrides: TeamNameOver
 }
 
 /** Eine Zeile je Gliederung, alphabetisch. */
-export function teamNameRows(teams: readonly Team[], overrides: TeamNameOverrides): TeamNameRow[] {
+export function teamNameRows(teams: readonly NamedTeam[], overrides: TeamNameOverrides): TeamNameRow[] {
 	const groups = new Map<string, Set<string>>();
 	for (const team of teams) {
 		const names = groups.get(team.organisation) ?? new Set<string>();

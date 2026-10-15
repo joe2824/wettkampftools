@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createFakeStore, type FakeStore } from "$lib/testing/fakeFs";
 import { resetAppDataStore, setAppDataStore } from "$lib/platform/fs";
-import { defaultSettings, type LegacySettings } from "./settings";
+import type { LegacySettings } from "$lib/platform/legacySettings";
+import { defaultSettings } from "./settings";
 import { SETTINGS_FILE, SettingsStore } from "./settingsStore.svelte";
 
 let fs: FakeStore;

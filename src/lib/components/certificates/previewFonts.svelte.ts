@@ -1,6 +1,6 @@
 // Textmaße für die Vorschau, sobald die Schriften geladen sind.
 import { createMetrics, type TextMetrics } from "$lib/certificates/fonts";
-import { loadAppFonts } from "$lib/platform/assets";
+import { loadAppFonts } from "$lib/certificates/appFonts";
 
 export class PreviewFonts {
 	metrics = $state.raw<TextMetrics | null>(null);
