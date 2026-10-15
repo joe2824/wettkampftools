@@ -1,11 +1,11 @@
 # Was offen ist
 
 Stand: 2026-10-15, Branch `dev`. Der Neuaufbau mit Tauri und SvelteKit ist
-fertig, die Python-Version ist entfernt (letzter Stand: Tag `v1.0.0.4`). Offen
+fertig, die Python-Version ist entfernt (letzter Stand: Tag `v1.0.1.2`). Offen
 sind die manuelle Abnahme unter Windows, die GitHub-Secrets für den Updater
 und das erste Release.
 
-## Abgleich mit der früheren Python-Version (`app.py`, bis `v1.0.0.4`)
+## Abgleich mit der früheren Python-Version (`app.py`, bis `v1.0.1.2`)
 
 Im Code umgesetzt; geprüft wird das Verhalten bei der manuellen Abnahme.
 
