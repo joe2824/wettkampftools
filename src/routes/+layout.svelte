@@ -8,6 +8,8 @@
 	import { toast } from "svelte-sonner";
 	import { initApp, migrationMessage, setAsideMessage } from "$lib/appInit";
 
+	const TOAST_BOTTOM_OFFSET = "5rem";
+
 	let { children } = $props();
 
 	onMount(async () => {
@@ -23,14 +25,20 @@
 </script>
 
 <ModeWatcher />
-<Toaster richColors closeButton />
+<!-- Abstand unten, damit Meldungen nicht über der Aktionsleiste liegen. -->
+<Toaster
+	richColors
+	closeButton
+	offset={{ bottom: TOAST_BOTTOM_OFFSET }}
+	mobileOffset={{ bottom: TOAST_BOTTOM_OFFSET }}
+/>
 <Sidebar.Provider>
 	<AppSidebar />
 	<Sidebar.Inset>
 		<header class="flex h-12 shrink-0 items-center border-b px-2">
 			<Sidebar.Trigger />
 		</header>
-		<main class="flex-1 p-6">
+		<main class="@container flex-1 p-6">
 			{@render children()}
 		</main>
 	</Sidebar.Inset>

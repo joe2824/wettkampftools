@@ -3,6 +3,7 @@
 	import ArrowRightIcon from "@lucide/svelte/icons/arrow-right";
 	import type { Snippet } from "svelte";
 	import { untrack } from "svelte";
+	import ActionBar from "$lib/components/ActionBar.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import * as Card from "$lib/components/ui/card";
 	import { cn } from "$lib/utils.js";
@@ -16,9 +17,11 @@
 		steps: Step[];
 		/** Inhalt eines Schritts; sichtbar ist nur der aktive. */
 		children: Snippet<[Step]>;
+		/** Seitenbezogene Aktionen in der Leiste unten, vor „Weiter“. */
+		actions?: Snippet;
 	}
 
-	let { page, steps, children }: Props = $props();
+	let { page, steps, children, actions }: Props = $props();
 
 	// Anfangs der erste nicht erledigte Schritt; danach bestimmt nur der Benutzer den Schritt.
 	untrack(() => {
@@ -80,23 +83,27 @@
 					{/if}
 				{/each}
 			</Card.Content>
-			<Card.Footer class="flex flex-wrap items-center justify-between gap-2">
+		</Card.Root>
+
+		<ActionBar label="Schritt-Navigation">
+			{#snippet start()}
 				<Button variant="ghost" disabled={!previous} onclick={() => go(previous)}>
 					<ArrowLeftIcon data-icon="inline-start" />
 					Zurück
 				</Button>
+			{/snippet}
+			{#snippet end()}
+				{@render actions?.()}
 				{#if next}
-					<div class="flex flex-wrap items-center justify-end gap-3">
-						{#if next.status === "locked" && next.lockedReason}
-							<p class="text-sm text-muted-foreground">{next.lockedReason}</p>
-						{/if}
-						<Button disabled={next.status === "locked"} onclick={() => go(next)}>
-							Weiter: {next.label}
-							<ArrowRightIcon data-icon="inline-end" />
-						</Button>
-					</div>
+					{#if next.status === "locked" && next.lockedReason}
+						<p class="text-sm text-muted-foreground">{next.lockedReason}</p>
+					{/if}
+					<Button disabled={next.status === "locked"} onclick={() => go(next)}>
+						Weiter: {next.label}
+						<ArrowRightIcon data-icon="inline-end" />
+					</Button>
 				{/if}
-			</Card.Footer>
-		</Card.Root>
+			{/snippet}
+		</ActionBar>
 	{/if}
 </div>

@@ -2,6 +2,7 @@
 	import DownloadIcon from "@lucide/svelte/icons/download";
 	import UploadIcon from "@lucide/svelte/icons/upload";
 	import { toast } from "svelte-sonner";
+	import ActionBar from "$lib/components/ActionBar.svelte";
 	import ConfirmDialog from "$lib/components/ConfirmDialog.svelte";
 	import SaveButton from "$lib/components/SaveButton.svelte";
 	import { Button } from "$lib/components/ui/button";
@@ -26,16 +27,16 @@
 	}
 </script>
 
-<div
-	class="sticky bottom-0 z-10 -mx-6 mt-8 flex flex-wrap items-center gap-2 border-t border-border bg-background/95 px-6 py-3 backdrop-blur"
->
-	<SaveButton
-		dirty={settingsStore.dirty}
-		onsave={() => saveSettings(settingsStore)}
-		successMessage="Einstellungen gespeichert"
-		errorMessage="Die Einstellungen konnten nicht gespeichert werden. Bitte erneut versuchen."
-	/>
-	<div class="ms-auto flex flex-wrap gap-2">
+<ActionBar label="Einstellungen speichern">
+	{#snippet start()}
+		<SaveButton
+			dirty={settingsStore.dirty}
+			onsave={() => saveSettings(settingsStore)}
+			successMessage="Einstellungen gespeichert"
+			errorMessage="Die Einstellungen konnten nicht gespeichert werden. Bitte erneut versuchen."
+		/>
+	{/snippet}
+	{#snippet end()}
 		<ConfirmDialog
 			triggerLabel="Auf Standard zurücksetzen"
 			title="Einstellungen zurücksetzen?"
@@ -53,7 +54,7 @@
 			<UploadIcon data-icon="inline-start" />
 			Importieren
 		</Button>
-	</div>
-</div>
+	{/snippet}
+</ActionBar>
 
 <ImportDialog bind:open={importOpen} />
