@@ -1,4 +1,3 @@
-import type { LegacySettings } from "$lib/platform/legacySettings";
 import {
 	checkBoolean,
 	checkIntegerInRange,
@@ -110,7 +109,7 @@ export function defaultSettings(): Settings {
 const SETTINGS_KEYS: readonly (keyof Settings)[] = Object.keys(defaultSettings()) as (keyof Settings)[];
 
 /** Wellen-Start muss in den Altersklassen stehen, sonst Standard bzw. erster Eintrag. */
-function resolveWaveStart(candidate: string, ageGroups: readonly string[]): Checked<string> {
+export function resolveWaveStart(candidate: string, ageGroups: readonly string[]): Checked<string> {
 	if (ageGroups.includes(candidate)) return { value: candidate };
 	const fallback = defaultSettings().waveStartAgeGroup;
 	const value = ageGroups.includes(fallback) ? fallback : ageGroups[0];
@@ -264,40 +263,4 @@ export function parseSettings(input: unknown): { settings: Settings; issues: str
 export function serializeSettingsForExport(settings: Settings): ExportedSettings {
 	const { legacyMigrated: _omitted, ...exported } = structuredClone(settings);
 	return exported;
-}
-
-const LEGACY_FIELDS = [
-	"ageGroups",
-	"seniorTeamAgeGroups",
-	"seniorIndividualAgeGroups",
-	"simplifySeniorAgeGroups",
-	"excludeUnplacedTeams"
-] as const;
-
-/** Übernimmt die alte Version feldweise; ungültige Felder fallen auf Standard. */
-export function mergeLegacySettings(
-	base: Settings,
-	legacy: LegacySettings
-): { settings: Settings; applied: string[]; fellBack: string[] } {
-	const defaults = defaultSettings();
-	const settings: Settings = { ...structuredClone(base), legacyMigrated: true };
-	const applied: string[] = [];
-	const fellBack: string[] = [];
-	const source = legacy as unknown as Record<string, unknown>;
-	for (const field of LEGACY_FIELDS) {
-		if (source[field] === undefined) continue;
-		const { settings: parsed, issues } = parseSettings({ [field]: source[field] });
-		const ok = !issues.some((issue) => issue.startsWith(`${field}.`));
-		(settings as unknown as Record<string, unknown>)[field] = ok ? parsed[field] : defaults[field];
-		(ok ? applied : fellBack).push(field);
-	}
-	const candidate = typeof source.waveStartAgeGroup === "string" ? source.waveStartAgeGroup : null;
-	const waveStart = resolveWaveStart(candidate ?? settings.waveStartAgeGroup, settings.ageGroups);
-	settings.waveStartAgeGroup = waveStart.value;
-	if (waveStart.issue || (source.waveStartAgeGroup !== undefined && candidate === null)) {
-		fellBack.push("waveStartAgeGroup");
-	} else if (candidate !== null) {
-		applied.push("waveStartAgeGroup");
-	}
-	return { settings, applied, fellBack };
 }

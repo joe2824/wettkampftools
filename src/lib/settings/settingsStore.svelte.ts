@@ -2,13 +2,8 @@
 import { appDataStore, readJson, writeJson } from "$lib/platform/fs";
 import { readLegacySettings, type LegacySettings } from "$lib/platform/legacySettings";
 import { logError, logInfo } from "$lib/log";
-import {
-	defaultSettings,
-	mergeLegacySettings,
-	parseSettings,
-	serializeSettingsForExport,
-	type Settings
-} from "./settings";
+import { mergeLegacySettings } from "./legacyMerge";
+import { defaultSettings, parseSettings, serializeSettingsForExport, type Settings } from "./settings";
 
 export const SETTINGS_FILE = "settings.json";
 const INVALID_FILE_ISSUE = "root.invalid";
