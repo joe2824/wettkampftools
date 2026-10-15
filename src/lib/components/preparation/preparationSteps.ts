@@ -3,7 +3,7 @@ import type { Step } from "$lib/components/stepper/stepper";
 import { isEventComplete } from "$lib/settings/eventInfo";
 import type { EventInfo } from "$lib/settings/settings";
 
-export const NO_REGISTRATION_REASON = "Zuerst die Meldedatei laden.";
+const NO_REGISTRATION_REASON = "Zuerst die Meldedatei laden.";
 
 export interface PreparationStepInput {
 	event: EventInfo;

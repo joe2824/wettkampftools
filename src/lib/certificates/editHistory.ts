@@ -2,7 +2,7 @@
 
 export const HISTORY_LIMIT = 100;
 /** Änderungen am selben Objekt innerhalb dieser Zeit zählen als ein Schritt (z. B. Ziehen, Tippen). */
-export const COALESCE_MS = 700;
+const COALESCE_MS = 700;
 
 export interface EditHistory {
 	past: readonly string[];

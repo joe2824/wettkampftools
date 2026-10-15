@@ -41,7 +41,7 @@ const PNG = [0x89, 0x50, 0x4e, 0x47];
 const JPEG = [0xff, 0xd8, 0xff];
 const ZIP_PREFIX = [0x50, 0x4b];
 
-export const KIND_RULES: Record<FileKind, KindRule> = {
+const KIND_RULES: Record<FileKind, KindRule> = {
 	csv: { label: "CSV-Datei", extensions: { csv: [] } },
 	excel: { label: "Excel-Datei", extensions: { xlsx: [ZIP], xlsm: [ZIP], xls: [OLE] } },
 	image: { label: "Bilddatei", extensions: { png: [PNG], jpg: [JPEG], jpeg: [JPEG] } },

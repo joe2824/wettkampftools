@@ -36,7 +36,7 @@ export class ResultsError extends Error {
 	}
 }
 
-export const RESULTS_SHEET = "Daten";
+const RESULTS_SHEET = "Daten";
 
 const HEADER = {
 	place: "Platz",

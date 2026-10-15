@@ -1,4 +1,4 @@
-export const MAX_TEAM_MEMBERS = 5;
+const MAX_TEAM_MEMBERS = 5;
 
 export interface MemberFixture {
 	lastName: string;
@@ -46,7 +46,7 @@ function memberHeaders(index: number): string[] {
 }
 
 /** Kopfzeile wie im DLRG-Mannschaften-Export (inkl. abschließendem Semikolon). */
-export function registrationCsvHeader(): string {
+function registrationCsvHeader(): string {
 	const members = Array.from({ length: MAX_TEAM_MEMBERS }, (_, i) => memberHeaders(i + 1)).flat();
 	return [...BASE_HEADERS, ...members].join(";") + ";";
 }

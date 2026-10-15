@@ -10,13 +10,17 @@ use chrono::NaiveDateTime;
 
 static LOG_DIR: OnceLock<PathBuf> = OnceLock::new();
 
+/// Breite der Stufe („INFO “, „ERROR“), wie im Frontend.
+const LEVEL_WIDTH: usize = 5;
+
 /// Eine Protokollzeile ohne Zeilenumbruch.
 pub fn format_line(at: NaiveDateTime, level: &str, text: &str) -> String {
     format!(
-        "{} rust {:<5} {}",
+        "{} rust {:<width$} {}",
         at.format("%Y-%m-%d %H:%M:%S%.3f"),
         level,
-        text
+        text,
+        width = LEVEL_WIDTH
     )
 }
 

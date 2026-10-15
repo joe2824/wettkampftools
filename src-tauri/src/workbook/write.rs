@@ -69,7 +69,9 @@ fn validate_sheet_name(name: &str) -> Result<(), String> {
         return Err("Ein Tabellenblatt braucht einen Namen.".to_string());
     }
     if name.chars().count() > MAX_SHEET_NAME_CHARS {
-        return Err(format!("Der Blattname „{name}“ ist länger als 31 Zeichen."));
+        return Err(format!(
+            "Der Blattname „{name}“ ist länger als {MAX_SHEET_NAME_CHARS} Zeichen."
+        ));
     }
     if name.contains(FORBIDDEN_NAME_CHARS) {
         return Err(format!(

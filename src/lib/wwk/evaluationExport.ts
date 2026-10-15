@@ -11,7 +11,7 @@ export interface EvaluationInput {
   source: Sheet;
 }
 
-export const TROPHY_POINTS_HEADER = "Pokalpunkte";
+const TROPHY_POINTS_HEADER = "Pokalpunkte";
 
 const STANDINGS_HEADER: Cell[] = ["Platz", "Gliederung", TROPHY_POINTS_HEADER];
 const BREAKDOWN_HEADER: Cell[] = [

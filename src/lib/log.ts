@@ -11,9 +11,11 @@ const LOG_FILE = /^(\d{4}-\d{2}-\d{2})\.log$/;
 const CODE = /^[a-z0-9_.-]+$/i;
 const INVALID_CODE = "invalid_code";
 const MS_DIGITS = 3;
+/** Breite der Stufe („INFO “, „ERROR“), wie im Rust-Teil. */
+const LEVEL_WIDTH = 5;
 
 /** So viele Tage (einschließlich heute) bleiben liegen. */
-export const KEEP_DAYS = 14;
+const KEEP_DAYS = 14;
 
 const pad = (n: number, len = 2): string => String(n).padStart(len, "0");
 
@@ -39,7 +41,7 @@ function dataText(data: LogData): string {
 
 /** Eine Protokollzeile im selben Format wie der Rust-Teil. */
 export function formatLogLine(at: Date, level: LogLevel, code: string, data: LogData = {}): string {
-	return `${timeStamp(at)} web ${level.padEnd(5)} ${safeCode(code)}${dataText(data)}`;
+	return `${timeStamp(at)} web ${level.padEnd(LEVEL_WIDTH)} ${safeCode(code)}${dataText(data)}`;
 }
 
 let queue: Promise<void> = Promise.resolve();

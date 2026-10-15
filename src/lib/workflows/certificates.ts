@@ -13,8 +13,8 @@ import { buildSerialLetterSheet } from "$lib/wwk/serialLetterExport";
 import { userMessage } from "./errors";
 import { EXCEL_FILTER, openAfterSave, PDF_FILTER } from "./savedFile";
 
-export const CERTIFICATES_FILE_NAME = "Urkunden.pdf";
-export const SERIAL_LETTER_FILE_NAME = "Seriendruck.xlsx";
+const CERTIFICATES_FILE_NAME = "Urkunden.pdf";
+const SERIAL_LETTER_FILE_NAME = "Seriendruck.xlsx";
 const PDF_FAILED = "Das PDF konnte nicht erzeugt werden.";
 const SERIAL_LETTER_FAILED = "Die Seriendruck-Tabelle konnte nicht gespeichert werden.";
 

@@ -16,7 +16,7 @@ export class RulebookError extends Error {
 }
 
 /** XML-Text aus dem .rwm-Archiv. */
-export function readDataXml(bytes: Uint8Array): string {
+function readDataXml(bytes: Uint8Array): string {
 	let entries: Record<string, Uint8Array>;
 	try {
 		entries = unzipSync(bytes, { filter: (file) => file.name === DATA_ENTRY });

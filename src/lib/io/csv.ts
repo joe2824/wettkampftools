@@ -18,7 +18,7 @@ export interface ParsedRegistrationCsv extends ParsedCsv {
 	encoding: TextEncodingName;
 }
 
-export const CSV_DELIMITER = ";";
+const CSV_DELIMITER = ";";
 export const REQUIRED_REGISTRATION_COLUMNS: readonly string[] = ["gliederung", "ak", "geschlecht"];
 
 const BYTE_ORDER_MARK = "﻿";

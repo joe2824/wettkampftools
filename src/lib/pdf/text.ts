@@ -3,7 +3,7 @@ import type { TextMetrics } from "$lib/certificates/fonts";
 import { ptToMm, type FontWeight } from "$lib/certificates/layout";
 import type { TextOp } from "$lib/certificates/render";
 
-export const DEFAULT_LINE_FACTOR = 1.35;
+const DEFAULT_LINE_FACTOR = 1.35;
 
 export interface ParagraphOptions {
   text: string;

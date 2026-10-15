@@ -13,8 +13,8 @@ import type { EventInfo } from "$lib/settings/settings";
 import { userMessage } from "./errors";
 import { openAfterSave, PDF_FILTER } from "./savedFile";
 
-export const LAYOUT_EXPORT_NAME = "Urkunden-Layout.json";
-export const CALIBRATION_FILE_NAME = "Kalibrierungsseite.pdf";
+const LAYOUT_EXPORT_NAME = "Urkunden-Layout.json";
+const CALIBRATION_FILE_NAME = "Kalibrierungsseite.pdf";
 const JSON_FILTER = { name: "Layout-Datei", extensions: ["json"] };
 const EXPORT_FAILED = "Die Layout-Datei konnte nicht gespeichert werden.";
 const CALIBRATION_FAILED = "Die Kalibrierungsseite konnte nicht erzeugt werden.";
@@ -22,6 +22,8 @@ const BACKGROUND_SAVE_ERROR = "Der Hintergrund-Scan konnte nicht gespeichert wer
 const NO_OFFSET: OffsetMm = { x: 0, y: 0 };
 
 const SAMPLE_MEMBER = "Anna Meier";
+const SAMPLE_PLACE = 3;
+const SAMPLE_COMPETITION_POINTS = 1234.56;
 const SAMPLE_EVENT: EventInfo = {
 	number: "12",
 	title: "Wellenwettkampf",
@@ -68,18 +70,18 @@ export function sampleValues(variant: LayoutVariant, event: EventInfo): Placehol
 		id: "sample",
 		row: {
 			sourceRow: 1,
-			place: 3,
+			place: SAMPLE_PLACE,
 			name: team ? "Musterstadt 2" : SAMPLE_MEMBER,
 			organisation: "Musterstadt",
 			ageGroupRaw: "AK 13/14",
 			gender: "weiblich",
-			competitionPoints: 1234.56,
+			competitionPoints: SAMPLE_COMPETITION_POINTS,
 			members: team ? [SAMPLE_MEMBER] : []
 		},
 		ageGroup: "AK 13/14",
 		kind: "rescue",
 		gender: "weiblich",
-		place: 3
+		place: SAMPLE_PLACE
 	};
 	return placeholderValues(entry, sampleEvent(event), team ? SAMPLE_MEMBER : "");
 }

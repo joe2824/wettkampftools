@@ -3,7 +3,7 @@ import type { CertificateEntry } from "./model";
 import { MAX_COPIES, MIN_COPIES } from "$lib/settings/settings";
 import { displayAgeGroup, type AgeGroupKind } from "$lib/wwk/ageGroups";
 
-export const KIND_ORDER: readonly AgeGroupKind[] = ["rescue", "wave"];
+const KIND_ORDER: readonly AgeGroupKind[] = ["rescue", "wave"];
 export const KIND_FILTER_LABELS: Record<AgeGroupKind, string> = { rescue: "Rettung", wave: "Welle" };
 
 /** Ausgeblendete Werte; so sind neu geladene Werte sofort sichtbar. */

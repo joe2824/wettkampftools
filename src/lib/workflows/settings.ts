@@ -11,7 +11,7 @@ import {
 } from "$lib/settings/settings";
 import { IMAGE_FORMAT_ERROR, type ImageSlot } from "$lib/certificates/layoutStore.svelte";
 
-export const SETTINGS_EXPORT_NAME = "Wettkampftools_Einstellungen.json";
+const SETTINGS_EXPORT_NAME = "Wettkampftools_Einstellungen.json";
 const UNREADABLE_ISSUE = "root.invalid";
 const SIGNATURE_SAVE_ERROR = "Die Unterschrift konnte nicht gespeichert werden. Bitte erneut versuchen.";
 

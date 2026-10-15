@@ -6,7 +6,7 @@ import { isRecord } from "$lib/settings/validate";
 import type { AgeGroupKind } from "$lib/wwk/ageGroups";
 
 export const COMPETITION_STATE_PATH = "competition/state.json";
-export const SCHEMA_VERSION = 1;
+const SCHEMA_VERSION = 1;
 
 export interface StoredRegistration {
 	fileName: string;

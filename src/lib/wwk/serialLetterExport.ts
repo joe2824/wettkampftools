@@ -5,7 +5,7 @@ import { classifyAgeGroup } from "./ageGroups";
 import { placedEntries, type PlacedEntry } from "./certificateOrder";
 import type { CompetitionKind, ResultRow } from "./results";
 
-export const SERIAL_LETTER_SHEET = "Seriendruck";
+const SERIAL_LETTER_SHEET = "Seriendruck";
 
 const WAVE_MARK = "x";
 

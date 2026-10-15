@@ -14,9 +14,9 @@ import { rankOrganisations, scoreTeams, type NotScored, type Ranking, type Score
 import { userMessage } from "./errors";
 import { EXCEL_FILTER, openAfterSave, PDF_FILTER } from "./savedFile";
 
-export const EVALUATION_FILE_NAME = "WWK_Auswertung.xlsx";
-export const NOTICE_FILE_NAME = "WWK_Gesamtwertung.pdf";
-export const BREAKDOWN_FILE_NAME = "WWK_Aufschluesselung.pdf";
+const EVALUATION_FILE_NAME = "WWK_Auswertung.xlsx";
+const NOTICE_FILE_NAME = "WWK_Gesamtwertung.pdf";
+const BREAKDOWN_FILE_NAME = "WWK_Aufschluesselung.pdf";
 export const INDIVIDUAL_COMPETITION_MESSAGE =
 	"Diese Datei stammt aus einem Einzelwettkampf. Die Pokalwertung gilt für Mannschaften – Urkunden gibt es unter ‚Urkunden‘.";
 const EXCEL_FAILED = "Die Auswertung konnte nicht gespeichert werden.";

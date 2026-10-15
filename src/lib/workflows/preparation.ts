@@ -21,7 +21,7 @@ import { errorTeamIds, validateTeams, type Issue } from "$lib/wwk/validation";
 import { NOT_A_TEAM_EXPORT } from "./errors";
 import { EXCEL_FILTER } from "./savedFile";
 
-export const REGISTRATION_FILE_NAME = "WWK_Meldungen.xlsx";
+const REGISTRATION_FILE_NAME = "WWK_Meldungen.xlsx";
 const LOCALE = "de";
 
 const ENCODING_LABELS: Record<TextEncodingName, string> = {

@@ -1,9 +1,9 @@
 import type { RulebookAgeGroup, RulebookSummary } from "../settings/settings";
 import { equalsAgeGroup } from "./ageGroups";
 
-export const DEFAULT_MIN_MEMBERS = 4;
-export const DEFAULT_MAX_MEMBERS = 5;
-export const EARLIEST_YEAR_OF_BIRTH = 1900;
+const DEFAULT_MIN_MEMBERS = 4;
+const DEFAULT_MAX_MEMBERS = 5;
+const EARLIEST_YEAR_OF_BIRTH = 1900;
 
 const VALID_GENDERS: readonly string[] = ["weiblich", "männlich"];
 const YEAR_OF_BIRTH_PATTERN = /^(\d{2}|\d{4})$/;

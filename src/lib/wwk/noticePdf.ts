@@ -153,7 +153,7 @@ class PageFlow {
   }
 }
 
-export function eventLine(event: EventInfo): string {
+function eventLine(event: EventInfo): string {
   const title = event.title.trim();
   const number = event.number.trim();
   const named = number !== "" && title !== "" ? `${number}. ${title}` : title;

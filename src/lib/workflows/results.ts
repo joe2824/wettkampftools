@@ -32,7 +32,7 @@ const UNREADABLE = "Die Ergebnisdatei konnte nicht gelesen werden.";
 const EMPTY = "Die Ergebnisdatei enthält keine Einträge.";
 
 /** Prüft, ob die Datei aus dem laufenden Jahr stammt. */
-export function resultsYearCheck(workbook: Workbook, dates: FileDates, today: Date): YearCheck {
+function resultsYearCheck(workbook: Workbook, dates: FileDates, today: Date): YearCheck {
 	const { year, creationKnown } = workbookYear(workbook.properties, dates);
 	const yearWarning = year === null || year === today.getFullYear() ? null : year;
 	return { yearWarning, creationUnknown: !creationKnown };

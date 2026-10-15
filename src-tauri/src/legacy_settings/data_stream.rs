@@ -47,8 +47,8 @@ impl Reader<'_> {
     }
 
     fn u32(&mut self) -> Option<u32> {
-        let b = self.take(4)?;
-        Some(u32::from_be_bytes([b[0], b[1], b[2], b[3]]))
+        let bytes = self.take(size_of::<u32>())?;
+        Some(u32::from_be_bytes(bytes.try_into().ok()?))
     }
 
     fn at_end(&self) -> bool {

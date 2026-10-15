@@ -16,9 +16,9 @@ import {
 	type TextObject
 } from "./layout";
 
-export const SNAP_MM = 0.5;
-export const NUDGE_MM = 0.5;
-export const NUDGE_LARGE_MM = 5;
+const SNAP_MM = 0.5;
+const NUDGE_MM = 0.5;
+const NUDGE_LARGE_MM = 5;
 const MM_DECIMALS = 100;
 
 export interface PointMm {
