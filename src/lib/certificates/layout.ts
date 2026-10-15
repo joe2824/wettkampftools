@@ -45,6 +45,8 @@ export interface TextObject {
 	minSizePt: number;
 	template: string;
 	visibleWhen: Visibility;
+	/** Gruppe im Editor: Mitglieder werden gemeinsam gewählt und bewegt. */
+	groupId?: string;
 }
 
 export interface ImageObject {
@@ -57,6 +59,7 @@ export interface ImageObject {
 	yMm: number;
 	widthMm: number;
 	heightMm: number;
+	groupId?: string;
 }
 
 /** Deutschlandkarte mit den teilnehmenden Gliederungen; nur auf Wunsch im Layout. */
@@ -73,6 +76,7 @@ export interface MapObject {
 	highlightOwn: boolean;
 	/** Ausgeschaltet bleibt die Karte im Layout, wird aber nicht gezeichnet. */
 	visible?: boolean;
+	groupId?: string;
 }
 
 export type LayoutObject = TextObject | ImageObject | MapObject;
@@ -98,7 +102,8 @@ export const TEXT_OBJECT_KEYS = [
 	"sizePt",
 	"minSizePt",
 	"template",
-	"visibleWhen"
+	"visibleWhen",
+	"groupId"
 ] as const satisfies readonly (keyof TextObject)[];
 
 export const IMAGE_OBJECT_KEYS = [
@@ -109,7 +114,8 @@ export const IMAGE_OBJECT_KEYS = [
 	"xMm",
 	"yMm",
 	"widthMm",
-	"heightMm"
+	"heightMm",
+	"groupId"
 ] as const satisfies readonly (keyof ImageObject)[];
 
 export const MAP_OBJECT_KEYS = [
@@ -121,7 +127,8 @@ export const MAP_OBJECT_KEYS = [
 	"widthMm",
 	"heightMm",
 	"highlightOwn",
-	"visible"
+	"visible",
+	"groupId"
 ] as const satisfies readonly (keyof MapObject)[];
 
 export const LAYOUT_KEYS = ["schemaVersion", "variant", "objects"] as const satisfies readonly (keyof Layout)[];

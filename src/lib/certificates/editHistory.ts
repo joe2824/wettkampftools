@@ -3,6 +3,10 @@
 export const HISTORY_LIMIT = 100;
 /** Änderungen am selben Objekt innerhalb dieser Zeit zählen als ein Schritt (z. B. Ziehen, Tippen). */
 const COALESCE_MS = 700;
+const GESTURE_PREFIX = "gesture:";
+
+/** Schlüssel einer Maus-Geste (Ziehen, Skalieren): alles darin ist ein Schritt, auch mit Pausen. */
+export const gestureKey = (gesture: number): string => `${GESTURE_PREFIX}${gesture}`;
 
 export interface EditHistory {
 	past: readonly string[];
@@ -23,7 +27,8 @@ export const canRedo = (history: EditHistory): boolean => history.future.length 
 
 /** Merkt sich den Zustand vor einer Änderung. */
 export function record(history: EditHistory, before: string, key: string, now: number): EditHistory {
-	const coalesce = history.lastKey === key && now - history.lastAt < COALESCE_MS && history.past.length > 0;
+	const recent = key.startsWith(GESTURE_PREFIX) || now - history.lastAt < COALESCE_MS;
+	const coalesce = history.lastKey === key && recent && history.past.length > 0;
 	const past = coalesce ? history.past : [...history.past, before].slice(-HISTORY_LIMIT);
 	return { past, future: [], lastKey: key, lastAt: now };
 }

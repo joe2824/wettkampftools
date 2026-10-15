@@ -155,10 +155,19 @@ type ObjectKind = keyof typeof OBJECT_KEYS;
 const isObjectKind = (kind: unknown): kind is ObjectKind =>
 	typeof kind === "string" && Object.hasOwn(OBJECT_KEYS, kind);
 
+/** Gruppe ist freiwillig; eine ungültige Angabe verwirft das Element. */
+function readGroup(raw: Fields): { groupId?: string } | undefined {
+	if (raw.groupId === undefined) return {};
+	const groupId = readString(raw.groupId, MAX_ID_LENGTH, false);
+	return groupId === undefined ? undefined : { groupId };
+}
+
 function parseObject(raw: unknown): LayoutObject | undefined {
 	if (!isRecord(raw) || !isObjectKind(raw.kind)) return undefined;
 	if (extraKeys(raw, OBJECT_KEYS[raw.kind]).length > 0) return undefined;
-	return PARSERS[raw.kind](raw);
+	const group = readGroup(raw);
+	const object = group && PARSERS[raw.kind](raw);
+	return object && { ...object, ...group };
 }
 
 function parseObjects(rawObjects: unknown[], variantName: string, issues: string[]): LayoutObject[] {

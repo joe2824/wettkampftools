@@ -1,64 +1,21 @@
 import { describe, expect, it } from "vitest";
-import { PAGE_HEIGHT_MM, PAGE_WIDTH_MM, ptToMm, type ImageObject, type MapObject, type TextObject } from "./layout";
+import { image, map, text } from "$lib/testing/layoutObjects";
+import { PAGE_HEIGHT_MM, PAGE_WIDTH_MM, ptToMm } from "./layout";
 import { defaultLayouts } from "./layoutDefaults";
 import {
 	hitBox,
 	insertAtCursor,
 	isShown,
 	moveObject,
+	moveObjects,
 	nudgeDelta,
 	objectAt,
 	replaceObject,
+	replaceObjects,
 	snapMm,
+	unionBox,
 	updateObject
 } from "./editorOps";
-
-function text(overrides: Partial<TextObject> = {}): TextObject {
-	return {
-		id: "name",
-		kind: "text",
-		label: "Name",
-		xMm: 25,
-		yMm: 100,
-		widthMm: 160,
-		align: "center",
-		font: "regular",
-		boldFont: "black",
-		sizePt: 18,
-		minSizePt: 12,
-		template: "{name}",
-		visibleWhen: "always",
-		...overrides
-	};
-}
-
-function image(overrides: Partial<ImageObject> = {}): ImageObject {
-	return {
-		id: "signature1",
-		kind: "image",
-		label: "Unterschrift 1",
-		slot: "signature1",
-		xMm: 30,
-		yMm: 250,
-		widthMm: 30,
-		heightMm: 20,
-		...overrides
-	};
-}
-
-function map(overrides: Partial<MapObject> = {}): MapObject {
-	return {
-		id: "map",
-		kind: "map",
-		label: "Deutschlandkarte",
-		xMm: 150,
-		yMm: 40,
-		widthMm: 45,
-		heightMm: 55,
-		highlightOwn: false,
-		...overrides
-	};
-}
 
 describe("snapMm", () => {
 	it("rundet auf halbe Millimeter", () => {
@@ -253,5 +210,56 @@ describe("Kartenobjekt im Editor", () => {
 		expect(isShown(map(), false)).toBe(true);
 		expect(isShown(map({ visible: false }), true)).toBe(false);
 		expect(objectAt([map({ visible: false })], { x: 160, y: 50 }, true)).toBeNull();
+	});
+});
+
+describe("moveObjects", () => {
+	it("verschiebt alle gemeinsam; das erste Objekt gibt das Raster vor", () => {
+		const moved = moveObjects([image({ xMm: 30.2 }), map({ xMm: 100 })], { x: 3, y: 1 }, true);
+		expect(moved.map((object) => [object.xMm, object.yMm])).toEqual([
+			[33, 251],
+			[102.8, 41]
+		]);
+	});
+
+	it("bremst die ganze Gruppe am Seitenrand", () => {
+		const moved = moveObjects([image({ xMm: 10 }), map({ xMm: 150 })], { x: 100, y: 0 }, false);
+		expect(moved.map((object) => object.xMm)).toEqual([25, PAGE_WIDTH_MM - 45]);
+	});
+
+	it("rastet nur auf den gewünschten Achsen", () => {
+		const [moved] = moveObjects([image({ xMm: 30, yMm: 250 })], { x: 0.3, y: 0.3 }, { x: true, y: false });
+		expect(moved).toMatchObject({ xMm: 30.5, yMm: 250.3 });
+	});
+
+	it("gibt ohne Objekte nichts zurück", () => {
+		expect(moveObjects([], { x: 1, y: 1 }, true)).toEqual([]);
+	});
+});
+
+describe("replaceObjects", () => {
+	it("ersetzt mehrere Objekte über ihre Kennung", () => {
+		const layout = defaultLayouts().team;
+		const first = { ...layout.objects[0], xMm: 1 };
+		const third = { ...layout.objects[2], xMm: 2 };
+		const next = replaceObjects(layout, [first, third]);
+		expect(next.objects[0]).toBe(first);
+		expect(next.objects[2]).toBe(third);
+		expect(next.objects[1]).toBe(layout.objects[1]);
+	});
+});
+
+describe("unionBox", () => {
+	it("umschließt alle Rechtecke", () => {
+		expect(
+			unionBox([
+				{ xMm: 10, yMm: 20, widthMm: 5, heightMm: 5 },
+				{ xMm: 30, yMm: 5, widthMm: 10, heightMm: 2 }
+			])
+		).toEqual({ xMm: 10, yMm: 5, widthMm: 30, heightMm: 20 });
+	});
+
+	it("ist ohne Rechtecke leer", () => {
+		expect(unionBox([])).toBeNull();
 	});
 });

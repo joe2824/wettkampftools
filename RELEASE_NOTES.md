@@ -68,3 +68,4 @@ schneller und mit allem, was die bisherige Version konnte.
 - Entfernungen: Deutschlandkarte mit allen Gliederungen und Bad Nauheim, Übersicht (Anzahl, weiteste Anreise, Durchschnitt, Bundesländer), als PNG oder PDF speicherbar – ohne Internet (Kartendaten: Natural Earth, gemeinfrei).
 - Urkunden-Layout: optional eine Deutschlandkarte mit allen teilnehmenden Gliederungen auf der Urkunde.
 - Die Seiten nutzen breite Fenster besser aus.
+- Urkunden-Layout: Hilfslinien mit Einrasten (Kanten, Mitten, Grundlinien, gleiche Abstände mit Anzeige), Größe über Anfasser ändern, Elemente hinzufügen, entfernen und duplizieren, Mehrfachauswahl per Rahmen, Ausrichten, gleichmäßig Verteilen und Gruppieren.

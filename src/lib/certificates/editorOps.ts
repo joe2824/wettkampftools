@@ -46,8 +46,8 @@ const NUDGE_DIRECTIONS: Record<string, DeltaMm> = {
 	ArrowDown: { x: 0, y: 1 }
 };
 
-const clamp = (value: number, min: number, max: number): number => Math.min(Math.max(value, min), max);
-const roundMm = (mm: number): number => Math.round(mm * MM_DECIMALS) / MM_DECIMALS;
+export const clamp = (value: number, min: number, max: number): number => Math.min(Math.max(value, min), max);
+export const roundMm = (mm: number): number => Math.round(mm * MM_DECIMALS) / MM_DECIMALS;
 
 // "+ 0" macht aus -0 eine 0.
 export function snapMm(value: number): number {
@@ -57,16 +57,46 @@ export function snapMm(value: number): number {
 /** Obere Grenze für die Grundlinie: der Text soll nicht über den Seitenrand ragen. */
 const textTopMm = (object: TextObject): number => ptToMm(object.sizePt);
 
-/** Verschiebt ab der Ausgangslage; das Objekt bleibt ganz auf der Seite. */
-export function moveObject<T extends LayoutObject>(object: T, delta: DeltaMm, snap: boolean): T {
-	const place = (value: number) => (snap ? snapMm(value) : value);
-	const minY = object.kind === "text" ? textTopMm(object) : 0;
-	const maxY = object.kind === "text" ? PAGE_HEIGHT_MM : PAGE_HEIGHT_MM - object.heightMm;
-	return {
-		...object,
-		xMm: roundMm(clamp(place(object.xMm + delta.x), 0, PAGE_WIDTH_MM - object.widthMm)),
-		yMm: roundMm(clamp(place(object.yMm + delta.y), minY, maxY))
+export type Axis = "x" | "y";
+/** Raster für beide Achsen oder je Achse getrennt */
+export type SnapAxes = boolean | Record<Axis, boolean>;
+
+export const snapsOn = (snap: SnapAxes, axis: Axis): boolean => (typeof snap === "boolean" ? snap : snap[axis]);
+
+const POSITION_KEYS = { x: "xMm", y: "yMm" } as const;
+
+/** Erlaubte Lage eines Objekts, damit es ganz auf der Seite bleibt. */
+function placeRange(object: LayoutObject, axis: Axis): { min: number; max: number } {
+	if (axis === "x") return { min: 0, max: PAGE_WIDTH_MM - object.widthMm };
+	if (object.kind === "text") return { min: textTopMm(object), max: PAGE_HEIGHT_MM };
+	return { min: 0, max: PAGE_HEIGHT_MM - object.heightMm };
+}
+
+/** Verschiebt mehrere Objekte gemeinsam; das erste gibt das Raster vor, alle bleiben ganz auf der Seite. */
+export function moveObjects<T extends LayoutObject>(objects: readonly T[], delta: DeltaMm, snap: SnapAxes): T[] {
+	const first = objects[0];
+	if (first === undefined) return [];
+	const shift = (axis: Axis): number => {
+		const key = POSITION_KEYS[axis];
+		const target = first[key] + delta[axis];
+		const wanted = (snapsOn(snap, axis) ? snapMm(target) : target) - first[key];
+		const min = Math.max(...objects.map((object) => placeRange(object, axis).min - object[key]));
+		const max = Math.min(...objects.map((object) => placeRange(object, axis).max - object[key]));
+		return clamp(wanted, min, max);
 	};
+	const shiftX = shift("x");
+	const shiftY = shift("y");
+	return objects.map((object) => ({
+		...object,
+		xMm: roundMm(object.xMm + shiftX),
+		yMm: roundMm(object.yMm + shiftY)
+	}));
+}
+
+/** Verschiebt ab der Ausgangslage; das Objekt bleibt ganz auf der Seite. */
+export function moveObject<T extends LayoutObject>(object: T, delta: DeltaMm, snap: SnapAxes): T {
+	const [moved] = moveObjects([object], delta, snap);
+	return moved ?? object;
 }
 
 /** Pfeiltaste → Verschiebung; null bei anderen Tasten. */
@@ -131,7 +161,12 @@ export function updateObject<T extends LayoutObject>(object: T, patch: ObjectPat
 }
 
 export function replaceObject(layout: Layout, object: LayoutObject): Layout {
-	return { ...layout, objects: layout.objects.map((current) => (current.id === object.id ? object : current)) };
+	return replaceObjects(layout, [object]);
+}
+
+export function replaceObjects(layout: Layout, objects: readonly LayoutObject[]): Layout {
+	const byId = new Map(objects.map((object) => [object.id, object]));
+	return { ...layout, objects: layout.objects.map((current) => byId.get(current.id) ?? current) };
 }
 
 /** Setzt den Platzhalter an die Schreibmarke bzw. statt der Markierung; ohne Marke ans Ende. */
@@ -153,6 +188,9 @@ const FONT_ASCENT_EM = 1.011;
 const FONT_DESCENT_EM = 0.353;
 const BOX_PADDING_MM = 0.5;
 
+/** Abstand der Grundlinie von der Oberkante des Textrahmens */
+export const textAscentMm = (sizePt: number): number => FONT_ASCENT_EM * ptToMm(sizePt) + BOX_PADDING_MM;
+
 /** Klickfläche: Textrahmen über die volle Schrifthöhe, Bilder und Karte als Rechteck. */
 export function hitBox(object: LayoutObject): BoxMm {
 	if (object.kind !== "text") {
@@ -160,7 +198,7 @@ export function hitBox(object: LayoutObject): BoxMm {
 		return { xMm, yMm, widthMm, heightMm };
 	}
 	const sizeMm = ptToMm(object.sizePt);
-	const topMm = object.yMm - FONT_ASCENT_EM * sizeMm - BOX_PADDING_MM;
+	const topMm = object.yMm - textAscentMm(object.sizePt);
 	const bottomMm = object.yMm + FONT_DESCENT_EM * sizeMm + BOX_PADDING_MM;
 	return { xMm: object.xMm, yMm: topMm, widthMm: object.widthMm, heightMm: bottomMm - topMm };
 }
@@ -168,6 +206,16 @@ export function hitBox(object: LayoutObject): BoxMm {
 export function isShown(object: LayoutObject, withMemberNames: boolean): boolean {
 	if (object.kind === "map") return object.visible !== false;
 	return object.kind === "image" || object.visibleWhen === "always" || withMemberNames;
+}
+
+/** Gemeinsames Rechteck; null ohne Rechtecke. */
+export function unionBox(boxes: readonly BoxMm[]): BoxMm | null {
+	if (boxes.length === 0) return null;
+	const left = Math.min(...boxes.map((box) => box.xMm));
+	const top = Math.min(...boxes.map((box) => box.yMm));
+	const right = Math.max(...boxes.map((box) => box.xMm + box.widthMm));
+	const bottom = Math.max(...boxes.map((box) => box.yMm + box.heightMm));
+	return { xMm: left, yMm: top, widthMm: right - left, heightMm: bottom - top };
 }
 
 const contains = (box: BoxMm, point: PointMm): boolean =>

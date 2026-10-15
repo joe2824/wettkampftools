@@ -13,10 +13,12 @@
 
 	interface Props {
 		object: LayoutObject | null;
+		/** Anzahl gewählter Elemente */
+		count: number;
 		onchange: (patch: ObjectPatch) => void;
 	}
 
-	let { object, onchange }: Props = $props();
+	let { object, count, onchange }: Props = $props();
 
 	const POSITION_STEP_MM = 0.5;
 	const SIZE_STEP_PT = 0.5;
@@ -28,10 +30,13 @@
 </script>
 
 <section aria-label="Eigenschaften" class="flex flex-col gap-4">
-	{#if object === null}
+	{#if count > 1}
+		<p class="text-sm text-muted-foreground">Für Maße und Schrift bitte ein einzelnes Element wählen.</p>
+	{:else if object === null}
 		<h2 class="text-sm font-semibold text-muted-foreground">Eigenschaften</h2>
 		<p class="text-sm text-muted-foreground">
-			Ein Element in der Vorschau oder in der Liste anklicken, um es zu bearbeiten.
+			Ein Element in der Vorschau oder in der Liste anklicken, um es zu bearbeiten. Rahmen aufziehen oder Umschalt+Klick
+			wählt mehrere.
 		</p>
 	{:else}
 		<div class="flex flex-col gap-0.5">

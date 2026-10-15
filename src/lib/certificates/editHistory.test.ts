@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canRedo, canUndo, emptyHistory, HISTORY_LIMIT, record, redo, undo } from "./editHistory";
+import { canRedo, canUndo, emptyHistory, gestureKey, HISTORY_LIMIT, record, redo, undo } from "./editHistory";
 
 describe("editHistory", () => {
 	it("macht eine Änderung rückgängig und wiederholt sie", () => {
@@ -59,5 +59,15 @@ describe("editHistory", () => {
 			count++;
 		}
 		expect(count).toBe(HISTORY_LIMIT);
+	});
+
+	it("fasst eine ganze Maus-Geste zu einem Schritt zusammen, auch mit Pausen", () => {
+		const key = gestureKey(1);
+		let history = record(emptyHistory(), "A", key, 0);
+		for (let time = 16; time < 3000; time += 16) history = record(history, `A${time}`, key, time);
+		history = record(history, "B", key, 9000);
+		expect(history.past).toEqual(["A"]);
+		history = record(history, "C", gestureKey(2), 9010);
+		expect(history.past).toEqual(["A", "C"]);
 	});
 });

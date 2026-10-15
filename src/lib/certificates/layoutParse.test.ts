@@ -200,3 +200,26 @@ describe("Kartenobjekt", () => {
 		expect(kinds).not.toContain("map");
 	});
 });
+
+describe("Gruppen und zusätzliche Texte", () => {
+	it("übernimmt beliebig viele Texte mit Gruppe (Hin- und Rückweg)", () => {
+		const objects = [
+			validText({ groupId: "group-1" }),
+			validText({ id: "t2", groupId: "group-1" }),
+			validText({ id: "t3" })
+		];
+		const result = parseLayoutSet(setWith(objects));
+		expect(result.issues).toEqual([]);
+		expect(result.layouts.team.objects.map((object) => object.groupId)).toEqual(["group-1", "group-1", undefined]);
+		const again = parseLayoutSet(serializeLayoutSet(result.layouts));
+		expect(again.layouts.team).toEqual(result.layouts.team);
+		const serialized = serializeLayoutSet(result.layouts).team.objects as object[];
+		expect("groupId" in serialized[2]).toBe(false);
+	});
+
+	it("verwirft Elemente mit ungültiger Gruppe", () => {
+		const result = parseLayoutSet(setWith([validText({ groupId: 7 }), validText({ id: "t2", groupId: "" })]));
+		expect(result.layouts.team.objects).toEqual([]);
+		expect(result.issues).toHaveLength(2);
+	});
+});
