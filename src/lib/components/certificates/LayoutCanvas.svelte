@@ -4,16 +4,17 @@
 
 <script lang="ts">
 	import { hitBox, isShown, moveObject, nudgeDelta, objectAt, type PointMm } from "$lib/certificates/editorOps";
-	import { PAGE_HEIGHT_MM, PAGE_WIDTH_MM, ptToMm, type FontWeight, type Layout, type LayoutObject } from "$lib/certificates/layout";
-	import type { ImageSlot } from "$lib/certificates/layoutStore.svelte";
+	import { PAGE_WIDTH_MM, type Layout, type LayoutObject } from "$lib/certificates/layout";
 	import type { DrawOp } from "$lib/certificates/render";
 	import { cn } from "$lib/utils.js";
+	import CertificatePageView from "./CertificatePageView.svelte";
+	import type { ImageUrlMap } from "./imageUrls.svelte";
 
 	interface Props {
 		layout: Layout;
 		ops: DrawOp[];
 		/** Blob-Adressen der Unterschriften und des Hintergrund-Scans. */
-		imageUrls: Partial<Record<ImageSlot, string>>;
+		imageUrls: ImageUrlMap;
 		backgroundOpacity: number | null;
 		withMemberNames: boolean;
 		zoom: CanvasZoom;
@@ -24,9 +25,6 @@
 
 	let { layout, ops, imageUrls, backgroundOpacity, withMemberNames, zoom, selectedId, onselect, onchange }: Props =
 		$props();
-
-	const CSS_WEIGHTS: Record<FontWeight, number> = { light: 300, regular: 400, bold: 700, black: 900 };
-	const VIEW_BOX = `0 0 ${PAGE_WIDTH_MM} ${PAGE_HEIGHT_MM}`;
 
 	let svg = $state<SVGSVGElement | null>(null);
 	let drag = $state.raw<{ pointerId: number; start: PointMm; object: LayoutObject } | null>(null);
@@ -81,62 +79,26 @@
 
 <div class="h-full w-full overflow-auto rounded-lg bg-muted/50 p-4">
 	<!-- Zeichenfläche als eigenes Bedienelement: Maus und Pfeiltasten verschieben das gewählte Element. -->
-	<!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions -->
-	<svg
-		bind:this={svg}
-		viewBox={VIEW_BOX}
+	<CertificatePageView
+		bind:svg
+		{ops}
+		{imageUrls}
+		{backgroundOpacity}
 		role="application"
 		aria-label="Urkunden-Vorschau. Element anklicken und ziehen oder mit den Pfeiltasten verschieben, Umschalt für 5 mm."
-		tabindex="0"
+		tabindex={0}
 		class={cn(
 			"mx-auto block touch-none rounded-sm shadow-md outline-none select-none focus-visible:ring-3 focus-visible:ring-ring/50",
 			zoom === "fit" ? "h-full" : "",
 			drag ? "cursor-grabbing" : "cursor-default"
 		)}
-		style:aspect-ratio="{PAGE_WIDTH_MM} / {PAGE_HEIGHT_MM}"
-		style:width={zoom === "actual" ? `${PAGE_WIDTH_MM}mm` : undefined}
+		style={zoom === "actual" ? `width: ${PAGE_WIDTH_MM}mm` : undefined}
 		onpointerdown={handlePointerDown}
 		onpointermove={handlePointerMove}
 		onpointerup={handlePointerUp}
 		onpointercancel={handlePointerUp}
 		onkeydown={handleKeyDown}
 	>
-		<rect width={PAGE_WIDTH_MM} height={PAGE_HEIGHT_MM} fill="white" />
-		{#if backgroundOpacity !== null && imageUrls.background}
-			<image
-				href={imageUrls.background}
-				width={PAGE_WIDTH_MM}
-				height={PAGE_HEIGHT_MM}
-				preserveAspectRatio="none"
-				opacity={backgroundOpacity}
-			/>
-		{/if}
-
-		{#each ops as op, index (index)}
-			{#if op.kind === "text"}
-				<text
-					x={op.xMm}
-					y={op.baselineMm}
-					font-family="Nunito"
-					font-weight={CSS_WEIGHTS[op.font]}
-					font-size={ptToMm(op.sizePt)}
-					fill="black"
-					style:white-space="pre">{op.text}</text
-				>
-			{:else if op.kind === "image"}
-				<image
-					href={imageUrls[op.slot]}
-					x={op.xMm}
-					y={op.topMm}
-					width={op.widthMm}
-					height={op.heightMm}
-					preserveAspectRatio="xMidYMid meet"
-				/>
-			{:else}
-				<line x1={op.x1Mm} y1={op.y1Mm} x2={op.x2Mm} y2={op.y2Mm} stroke="black" stroke-width={op.thicknessMm} />
-			{/if}
-		{/each}
-
 		{#each missingImages as object (object.id)}
 			{@const box = hitBox(object)}
 			<rect x={box.xMm} y={box.yMm} width={box.widthMm} height={box.heightMm} class="fill-muted/60" />
@@ -155,5 +117,5 @@
 				class={object.id === selectedId ? "stroke-primary stroke-2" : "stroke-primary/25 [stroke-dasharray:4_3]"}
 			/>
 		{/each}
-	</svg>
+	</CertificatePageView>
 </div>

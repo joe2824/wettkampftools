@@ -1,7 +1,10 @@
 <script lang="ts">
+	import { layoutStore } from "$lib/certificates/layoutStore.svelte";
 	import { buildCertificatePages, eligibleEntries } from "$lib/certificates/model";
 	import CertificateActions from "$lib/components/certificates/CertificateActions.svelte";
 	import CertificateOptions from "$lib/components/certificates/CertificateOptions.svelte";
+	import CertificatePreview from "$lib/components/certificates/CertificatePreview.svelte";
+	import { certificateSteps } from "$lib/components/certificates/certificateSteps";
 	import EntryFilters from "$lib/components/certificates/EntryFilters.svelte";
 	import EntryTable from "$lib/components/certificates/EntryTable.svelte";
 	import MissingDateAlert from "$lib/components/MissingDateAlert.svelte";
@@ -13,8 +16,7 @@
 		visibleEntries
 	} from "$lib/components/certificates/certificateSelection";
 	import { certificateSelection as selection } from "$lib/components/certificates/selectionState.svelte";
-	import StepHeader from "$lib/components/StepHeader.svelte";
-	import * as Card from "$lib/components/ui/card";
+	import Stepper from "$lib/components/stepper/Stepper.svelte";
 	import { session } from "$lib/session.svelte";
 	import { settingsStore } from "$lib/settings/settingsStore.svelte";
 	import { needsYearConfirmation } from "$lib/workflows/results";
@@ -31,6 +33,15 @@
 		buildCertificatePages(selected, { competition, ...settings.certificates }, settings.event)
 	);
 
+	const steps = $derived(
+		certificateSteps({
+			hasResults: results !== null,
+			yearPending: needsYearConfirmation(results),
+			entryCount: entries.length,
+			selectedCount: selected.length
+		})
+	);
+
 	// An die Arbeitsmappe binden: das Bestätigen des Dateijahrs setzt die Auswahl nicht zurück.
 	$effect.pre(() => selection.attach(results?.workbook ?? null));
 </script>
@@ -45,63 +56,40 @@
 
 	<MissingDateAlert message="Auf den Urkunden fehlt das Datum – in der Vorbereitung eintragen." withLink />
 
-	<Card.Root>
-		<Card.Content class="flex flex-col gap-4">
-			<StepHeader
-				step={1}
-				title="Ergebnisdatei"
-				description="Aus der Auswertung übernommen oder hier neu laden."
-				done={results !== null}
-			/>
-			<ResultsSource {results} />
-		</Card.Content>
-	</Card.Root>
-
-	<Card.Root>
-		<Card.Content class="flex flex-col gap-4">
-			<StepHeader
-				step={2}
-				title="Auswählen"
-				description="Filtern und einzelne Einträge an- oder abwählen – z. B. zwischendurch nur AK 10 und AK 12."
-				done={selected.length > 0}
-			/>
-			{#if results === null}
-				<p class="text-sm text-muted-foreground">Zuerst die Ergebnisdatei laden.</p>
-			{:else if entries.length === 0}
-				<p class="text-sm text-muted-foreground">
-					Die Datei enthält keine Einträge mit Platz und bekannter Altersklasse. Bitte die Altersklassen in den
-					Einstellungen prüfen.
-				</p>
-			{:else}
-				<EntryFilters {options} hidden={selection.hidden} onchange={(next) => (selection.hidden = next)} />
-				<EntryTable
-					groups={groupEntries(visible)}
-					{competition}
-					excluded={selection.excluded}
-					onchange={(next) => (selection.excluded = next)}
-				/>
-			{/if}
-		</Card.Content>
-	</Card.Root>
-
-	<Card.Root>
-		<Card.Content class="flex flex-col gap-4">
-			<StepHeader
-				step={3}
-				title="Drucken"
-				description="Anzahl festlegen, PDF erzeugen und in tatsächlicher Größe drucken."
-			/>
-			{#if entries.length > 0}
+	<Stepper page="certificates" {steps}>
+		{#snippet children(step)}
+			{#if step.id === "results"}
+				<ResultsSource {results} />
+			{:else if step.id === "select"}
+				{#if entries.length === 0}
+					<p class="text-sm text-muted-foreground">
+						Die Datei enthält keine Einträge mit Platz und bekannter Altersklasse. Bitte die Altersklassen in den
+						Einstellungen prüfen.
+					</p>
+				{:else}
+					<EntryFilters {options} hidden={selection.hidden} onchange={(next) => (selection.hidden = next)} />
+					<EntryTable
+						groups={groupEntries(visible)}
+						{competition}
+						excluded={selection.excluded}
+						onchange={(next) => (selection.excluded = next)}
+					/>
+				{/if}
+			{:else if step.id === "preview"}
 				<CertificateOptions {competition} namesShortfall={preview.namesShortfall} />
+				<CertificatePreview
+					pages={preview.pages}
+					layout={layoutStore.layouts[competition]}
+					withMemberNames={settings.certificates.withMemberNames}
+				/>
+			{:else if step.id === "print"}
 				<CertificateActions
 					entries={selected}
 					{competition}
 					pageCount={preview.pages.length}
 					locked={needsYearConfirmation(results)}
 				/>
-			{:else}
-				<p class="text-sm text-muted-foreground">Zuerst Einträge auswählen.</p>
 			{/if}
-		</Card.Content>
-	</Card.Root>
+		{/snippet}
+	</Stepper>
 </div>

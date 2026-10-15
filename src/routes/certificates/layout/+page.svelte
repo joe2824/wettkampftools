@@ -7,7 +7,8 @@
 	import { updateObject, replaceObject, type ObjectPatch } from "$lib/certificates/editorOps";
 	import { createMetrics, type TextMetrics } from "$lib/certificates/fonts";
 	import { SIGNATURE_SLOTS, type LayoutObject, type LayoutVariant } from "$lib/certificates/layout";
-	import { IMAGE_SLOTS, layoutStore, type ImageSlot } from "$lib/certificates/layoutStore.svelte";
+	import { layoutStore } from "$lib/certificates/layoutStore.svelte";
+	import { ImageUrls } from "$lib/components/certificates/imageUrls.svelte";
 	import LayoutCanvas, { type CanvasZoom } from "$lib/components/certificates/LayoutCanvas.svelte";
 	import LayoutToolbar from "$lib/components/certificates/LayoutToolbar.svelte";
 	import ObjectList from "$lib/components/certificates/ObjectList.svelte";
@@ -37,7 +38,7 @@
 	let metrics = $state.raw<TextMetrics | null>(null);
 	let fontsFailed = $state(false);
 	let savedSnapshot = $state(layoutSnapshot(layoutStore.layouts));
-	let imageUrls = $state<Partial<Record<ImageSlot, string>>>({});
+	const images = new ImageUrls();
 	let history = $state.raw(emptyHistory());
 	// Zuletzt gesehener Stand; Änderungen dagegen landen im Verlauf.
 	let currentSnapshot = layoutSnapshot(layoutStore.layouts);
@@ -57,17 +58,7 @@
 			(fonts) => (metrics = createMetrics(fonts)),
 			() => (fontsFailed = true)
 		);
-	});
-
-	// Blob-Adressen für Unterschriften und Hintergrund; alte werden freigegeben.
-	$effect(() => {
-		const urls: Partial<Record<ImageSlot, string>> = {};
-		for (const slot of IMAGE_SLOTS) {
-			const bytes = layoutStore.images[slot];
-			if (bytes) urls[slot] = URL.createObjectURL(new Blob([bytes as BlobPart]));
-		}
-		imageUrls = urls;
-		return () => Object.values(urls).forEach((url) => URL.revokeObjectURL(url));
+		return images.track(() => layoutStore.images);
 	});
 
 	// Jede Layout-Änderung (Bearbeiten, Import, Zurücksetzen) wird für Rückgängig gemerkt.
@@ -165,7 +156,7 @@
 				<LayoutCanvas
 					{layout}
 					{ops}
-					{imageUrls}
+					imageUrls={images.urls}
 					{backgroundOpacity}
 					{withMemberNames}
 					{zoom}

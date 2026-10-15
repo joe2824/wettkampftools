@@ -2,17 +2,16 @@
 	import LightbulbIcon from "@lucide/svelte/icons/lightbulb";
 	import { toast } from "svelte-sonner";
 	import * as Alert from "$lib/components/ui/alert";
-	import * as Card from "$lib/components/ui/card";
-	import StepHeader from "$lib/components/StepHeader.svelte";
 	import type { CheckedFile } from "$lib/components/fileCheck";
 	import CheckStep from "$lib/components/preparation/CheckStep.svelte";
 	import EventStep from "$lib/components/preparation/EventStep.svelte";
 	import ExportStep from "$lib/components/preparation/ExportStep.svelte";
 	import LoadStep from "$lib/components/preparation/LoadStep.svelte";
+	import { preparationSteps } from "$lib/components/preparation/preparationSteps";
 	import TeamNamesCard from "$lib/components/preparation/TeamNamesCard.svelte";
 	import WaveStep from "$lib/components/preparation/WaveStep.svelte";
+	import Stepper from "$lib/components/stepper/Stepper.svelte";
 	import { session } from "$lib/session.svelte";
-	import { isEventComplete } from "$lib/settings/eventInfo";
 	import { settingsStore } from "$lib/settings/settingsStore.svelte";
 	import { defaultWaveSelection } from "$lib/wwk/registrationExport";
 	import {
@@ -32,6 +31,14 @@
 	const registration = $derived(session.registration);
 	const check = $derived(registration ? checkRegistration(registration, settings) : null);
 	const settingsKey = $derived(registrationSettingsKey(settings));
+	const steps = $derived(
+		preparationSteps({
+			event: settings.event,
+			hasRegistration: registration !== null,
+			errorCount: check?.errors.length ?? 0,
+			exported: check !== null && exportedFor === check
+		})
+	);
 
 	function load(bytes: Uint8Array, fileName: string): boolean {
 		let outcome;
@@ -96,36 +103,16 @@
 		</Alert.Root>
 	{/if}
 
-	<Card.Root>
-		<Card.Content class="flex flex-col gap-4">
-			<StepHeader step={1} title="Veranstaltung" description="Angaben für Urkunden und Aushang – werden sofort gespeichert." done={isEventComplete(settings.event)} />
-			<EventStep />
-		</Card.Content>
-	</Card.Root>
-
-	<Card.Root>
-		<Card.Content class="flex flex-col gap-4">
-			<StepHeader step={2} title="Meldedatei laden" description="Mannschaften-Export (CSV) aus dem Meldeportal." done={registration !== null} />
-			<LoadStep {registration} error={loadError} yearWarning={fileYearWarning} onfile={handleFile} />
-		</Card.Content>
-	</Card.Root>
-
-	<Card.Root>
-		<Card.Content class="flex flex-col gap-4">
-			<StepHeader step={3} title="Prüfen" description="Gründe, aus denen JAuswertung Meldungen verwerfen würde." done={check !== null && check.errors.length === 0} />
-			{#if registration && check}
+	<Stepper page="preparation" {steps}>
+		{#snippet children(step)}
+			{#if step.id === "event"}
+				<EventStep />
+			{:else if step.id === "load"}
+				<LoadStep {registration} error={loadError} yearWarning={fileYearWarning} onfile={handleFile} />
+			{:else if step.id === "check" && registration && check}
 				<CheckStep {check} renames={registration.renames} />
 				<TeamNamesCard teams={registration.teams} />
-			{:else}
-				<p class="text-sm text-muted-foreground">Zuerst die Meldedatei laden.</p>
-			{/if}
-		</Card.Content>
-	</Card.Root>
-
-	<Card.Root>
-		<Card.Content class="flex flex-col gap-4">
-			<StepHeader step={4} title="Wellenwettkampf" description="Welche Mannschaften starten zusätzlich in der Welle?" done={registration !== null} />
-			{#if registration}
+			{:else if step.id === "wave" && registration}
 				<WaveStep
 					teams={registration.teams}
 					selection={registration.waveSelection}
@@ -133,20 +120,9 @@
 					onchange={(selection) => session.setWaveSelection(selection)}
 					onreset={resetWave}
 				/>
-			{:else}
-				<p class="text-sm text-muted-foreground">Zuerst die Meldedatei laden.</p>
-			{/if}
-		</Card.Content>
-	</Card.Root>
-
-	<Card.Root>
-		<Card.Content class="flex flex-col gap-4">
-			<StepHeader step={5} title="Exportieren" description="Excel-Datei zum Import in JAuswertung speichern." done={check !== null && exportedFor === check} />
-			{#if check}
+			{:else if step.id === "export" && check}
 				<ExportStep {check} onexported={() => (exportedFor = check)} />
-			{:else}
-				<p class="text-sm text-muted-foreground">Zuerst die Meldedatei laden.</p>
 			{/if}
-		</Card.Content>
-	</Card.Root>
+		{/snippet}
+	</Stepper>
 </div>
