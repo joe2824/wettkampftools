@@ -1,9 +1,9 @@
 ---
 heist: tauri-port
 phase: laundering
-status: awaiting-don
+status: completed
 timestamp: 2026-10-15T06:18:16Z
-next-action: Don declares Heist complete; then manual Windows acceptance (docs/OPEN_WORK.md), Python removal, first release v2.0.0
+next-action: Heist complete. Don: Windows-Abnahme, Updater-Schlüssel, Python entfernen, v2.0.0 taggen. Merge to main nach Abnahme.
 artifacts:
   - docs/gangsta/tauri-port/specs/2026-10-14-contract.md
   - docs/gangsta/tauri-port/plans/2026-10-14-execution-plan.md
