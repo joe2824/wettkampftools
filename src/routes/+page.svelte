@@ -5,8 +5,11 @@
 	import * as Card from "$lib/components/ui/card";
 	import CompetitionStatus from "$lib/components/home/CompetitionStatus.svelte";
 	import EventSummary from "$lib/components/home/EventSummary.svelte";
+	import RecUpdateHint from "$lib/components/records/RecUpdateHint.svelte";
 	import { FOOTER_ITEMS, NAVIGATION_GROUPS } from "$lib/navigation";
+	import { shouldShowRecUpdateHint } from "$lib/records/updateHint";
 	import { session } from "$lib/session.svelte";
+	import { settingsStore } from "$lib/settings/settingsStore.svelte";
 
 	const [competition, toolGroup] = NAVIGATION_GROUPS;
 	const tools = [...toolGroup.items, ...FOOTER_ITEMS];
@@ -25,6 +28,10 @@
 			loaded: () => session.hasResults
 		}
 	};
+
+	const showRecHint = $derived(
+		shouldShowRecUpdateHint({ hasResults: session.hasResults, eventDate: settingsStore.settings.event.date, today: new Date() })
+	);
 
 	const steps = $derived(
 		competition.items.map((item, index) => ({
@@ -48,6 +55,10 @@
 	<EventSummary />
 
 	<CompetitionStatus />
+
+	{#if showRecHint}
+		<RecUpdateHint />
+	{/if}
 
 	<section aria-label="Ablauf des Wettkampfs" class="grid gap-4 md:grid-cols-3">
 		{#each steps as step (step.href)}

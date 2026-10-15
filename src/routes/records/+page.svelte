@@ -1,15 +1,13 @@
 <script lang="ts">
-	import DownloadIcon from "@lucide/svelte/icons/download";
-	import LoaderCircleIcon from "@lucide/svelte/icons/loader-circle";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 	import StepHeader from "$lib/components/StepHeader.svelte";
 	import type { CheckedFile } from "$lib/components/fileCheck";
 	import BestTimesStep from "$lib/components/records/BestTimesStep.svelte";
+	import OfficialRulebookStep from "$lib/components/records/OfficialRulebookStep.svelte";
 	import ProposalStep from "$lib/components/records/ProposalStep.svelte";
 	import RulebookSource from "$lib/components/records/RulebookSource.svelte";
 	import SaveStep from "$lib/components/records/SaveStep.svelte";
-	import { Button } from "$lib/components/ui/button";
 	import * as Card from "$lib/components/ui/card";
 	import { Input } from "$lib/components/ui/input";
 	import { Label } from "$lib/components/ui/label";
@@ -18,9 +16,8 @@
 	import { applyRecOverrides, buildRecProposal, DEFAULT_WAVE_SURCHARGE_S } from "$lib/records/proposal";
 	import { listBestTimeYears, loadBestTimes, loadRecMapping, saveRecMapping } from "$lib/records/storage";
 	import {
-		downloadOfficialRulebook,
 		importBestTimesFile,
-		readRulebookFile,
+		officialRulebookName,
 		restoreClubRulebook,
 		useClubRulebook,
 		type LoadedRulebook,
@@ -32,7 +29,6 @@
 	let yearInput = $state<number | null>(currentYear);
 	let club = $state.raw<LoadedRulebook | null>(null);
 	let official = $state.raw<LoadedRulebook | null>(null);
-	let downloading = $state(false);
 	let years = $state.raw<number[]>([]);
 	let bestYear = $state("");
 	let bestTimes = $state.raw<BestTimes | null>(null);
@@ -48,6 +44,7 @@
 					buildRecProposal({
 						club: club.records,
 						official: official?.records ?? null,
+						officialName: officialRulebookName(official),
 						bestTimes,
 						mapping,
 						waveSurchargeS: surcharge ?? 0
@@ -87,24 +84,6 @@
 		return outcome;
 	}
 
-	async function handleOfficial(file: CheckedFile): Promise<RulebookOutcome> {
-		const outcome = readRulebookFile(file.name, file.bytes);
-		if (outcome.ok) official = outcome.rulebook;
-		return outcome;
-	}
-
-	async function download() {
-		downloading = true;
-		const outcome = await downloadOfficialRulebook(year);
-		downloading = false;
-		if (!outcome.ok) {
-			toast.error(outcome.message);
-			return;
-		}
-		official = outcome.rulebook;
-		toast.success(`Offizielles Regelwerk ${year} geladen`);
-	}
-
 	async function importBestTimes(file: CheckedFile) {
 		const outcome = await importBestTimesFile(file);
 		if (!outcome.ok) {
@@ -134,6 +113,7 @@
 		<div class="flex flex-col gap-1">
 			<h1 class="text-2xl font-bold">Rec-Werte</h1>
 			<p class="text-muted-foreground">Neue Rec-Werte ins Vereins-Regelwerk übernehmen, zum Import in JAuswertung.</p>
+			<p class="text-sm font-medium" aria-live="polite">Regelwerk für das Jahr {year} (Rec-Werte aus {year - 1})</p>
 		</div>
 		<div class="flex flex-col gap-2">
 			<Label for="target-year">Regelwerk für das Jahr</Label>
@@ -165,18 +145,7 @@
 			/>
 		</Card.Header>
 		<Card.Content>
-			<RulebookSource rulebook={official} title="Offizielles Regelwerk (.rwm)" hint="Aus JAuswertung, z. B. „DLRG {year}.rwm“." onfile={handleOfficial}>
-				{#snippet actions()}
-					<Button variant="outline" class="self-start" onclick={download} disabled={downloading}>
-						{#if downloading}
-							<LoaderCircleIcon class="animate-spin" data-icon="inline-start" />
-						{:else}
-							<DownloadIcon data-icon="inline-start" />
-						{/if}
-						„DLRG {year}“ von JAuswertung laden
-					</Button>
-				{/snippet}
-			</RulebookSource>
+			<OfficialRulebookStep bind:official {year} />
 		</Card.Content>
 	</Card.Root>
 

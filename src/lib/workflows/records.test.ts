@@ -17,6 +17,7 @@ import {
 	downloadOfficialRulebook,
 	importBestTimesFile,
 	newRulebookDescription,
+	officialRulebookName,
 	officialRulebookUrl,
 	readRulebookFile,
 	restoreClubRulebook,
@@ -91,12 +92,32 @@ describe("downloadOfficialRulebook", () => {
 
 	it("meldet ein noch nicht veröffentlichtes Jahr", async () => {
 		httpMock.platformFetch.mockResolvedValue(new Response("", { status: 404 }));
-		expect(await downloadOfficialRulebook(2030)).toEqual({ ok: false, message: expect.stringContaining("2030") });
+		expect(await downloadOfficialRulebook(2030)).toEqual({
+			ok: false,
+			message:
+				"Das Regelwerk „DLRG 2030.rwm“ ist bei JAuswertung noch nicht veröffentlicht. Bitte später erneut versuchen oder die Datei aus dem JAuswertung-Programmordner wählen."
+		});
 	});
 
 	it("meldet fehlendes Netz", async () => {
 		httpMock.platformFetch.mockRejectedValue(new TypeError("offline"));
 		expect(await downloadOfficialRulebook(2026)).toEqual({ ok: false, message: expect.stringContaining("Internet") });
+	});
+});
+
+describe("officialRulebookName", () => {
+	it("nimmt den Dateinamen ohne Endung", () => {
+		expect(officialRulebookName({ name: "DLRG 2026.rwm", description: "Regelwerk 2026" })).toBe("DLRG 2026");
+		expect(officialRulebookName({ name: "DLRG 2026.RWM", description: "" })).toBe("DLRG 2026");
+	});
+
+	it("weicht auf die Beschreibung aus", () => {
+		expect(officialRulebookName({ name: ".rwm", description: " Regelwerk 2026 " })).toBe("Regelwerk 2026");
+	});
+
+	it("liefert null ohne Regelwerk oder Namen", () => {
+		expect(officialRulebookName(null)).toBeNull();
+		expect(officialRulebookName({ name: "", description: "" })).toBeNull();
 	});
 });
 

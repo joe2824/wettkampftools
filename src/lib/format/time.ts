@@ -28,3 +28,18 @@ export function parseRecTime(text: string): number | null {
 	const total = minutes * HUNDREDTHS_PER_MINUTE + seconds * HUNDREDTHS_PER_SECOND + fraction;
 	return total > 0 ? total : null;
 }
+
+/** Immer in Sekunden: „5,00 s“, „83,45 s“. */
+export function formatSeconds(hundredths: number): string {
+	const seconds = Math.floor(hundredths / HUNDREDTHS_PER_SECOND);
+	return `${seconds},${pad2(hundredths % HUNDREDTHS_PER_SECOND)} s`;
+}
+
+const MINUS_SIGN = "−";
+
+/** Unterschied neu − alt: „+5,00 s“, „−6,96 s“, „±0“. */
+export function formatRecDifference(hundredths: number): string {
+	if (hundredths === 0) return "±0";
+	const sign = hundredths > 0 ? "+" : MINUS_SIGN;
+	return sign + formatSeconds(Math.abs(hundredths));
+}

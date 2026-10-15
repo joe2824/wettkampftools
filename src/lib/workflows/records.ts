@@ -27,7 +27,20 @@ const DOWNLOAD_FAILED = "Das offizielle Regelwerk konnte nicht geladen werden. B
 const UNREADABLE_RESULTS = "Die Ergebnisdatei konnte nicht gelesen werden.";
 const NO_TIMES = "Die Ergebnisdatei enthält keine gültigen Zeiten.";
 
+const RULEBOOK_EXTENSION = /\.rwm$/i;
+
 const officialFileName = (year: number): string => `DLRG ${year}.rwm`;
+
+const notPublished = (year: number): string =>
+	`Das Regelwerk „${officialFileName(year)}“ ist bei JAuswertung noch nicht veröffentlicht. ` +
+	"Bitte später erneut versuchen oder die Datei aus dem JAuswertung-Programmordner wählen.";
+
+/** Name für die Herkunft der Rec-Werte: Dateiname ohne Endung, sonst die Beschreibung. */
+export function officialRulebookName(rulebook: Pick<LoadedRulebook, "name" | "description"> | null): string | null {
+	if (rulebook === null) return null;
+	const name = rulebook.name.replace(RULEBOOK_EXTENSION, "").trim() || rulebook.description.trim();
+	return name || null;
+}
 
 /** Offizielles Regelwerk eines Jahres im JAuswertung-Projekt auf GitHub. */
 export const officialRulebookUrl = (year: number): string =>
@@ -68,7 +81,7 @@ export async function downloadOfficialRulebook(year: number): Promise<RulebookOu
 		return { ok: false, message: DOWNLOAD_FAILED };
 	}
 	if (response.status === HTTP_NOT_FOUND) {
-		return { ok: false, message: `Für ${year} gibt es bei JAuswertung noch kein offizielles Regelwerk.` };
+		return { ok: false, message: notPublished(year) };
 	}
 	if (!response.ok) return { ok: false, message: DOWNLOAD_FAILED };
 	return readRulebookFile(officialFileName(year), new Uint8Array(await response.arrayBuffer()));

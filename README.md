@@ -77,6 +77,26 @@ Berechnet die Entfernung jeder gemeldeten Gliederung nach Bad Nauheim anhand
 der öffentlichen DLRG-Standortdaten. Der letzte Datenstand bleibt auch ohne
 Internet verfügbar.
 
+### Rec-Werte fürs neue Jahr
+
+Erstellt aus dem bisherigen Vereins-Regelwerk ein neues Regelwerk (.rwm) zum
+Import in JAuswertung; nur Rec-Werte und Beschreibung ändern sich.
+
+- **Rettungsdisziplinen:** Werte aus dem offiziellen DLRG-Regelwerk, das
+  JAuswertung mitbringt (z. B. „DLRG 2026.rwm“). Eine einmal gepflegte
+  Zuordnung legt fest, welche offizielle Altersklasse und welcher
+  Disziplinname gilt (z. B. AK 10 nutzt die Werte der AK 12).
+- **Wellendisziplinen:** Bestzeit des Vorjahres plus 5 Sekunden (Zuschlag
+  einstellbar). Die Bestzeiten speichert die App automatisch, sobald die
+  Ergebnisdatei geladen wird – nur Zeiten, keine Namen.
+- **Vergleich:** Je Wert alt, neu, Änderung und Herkunft (z. B. „DLRG 2026 ·
+  AK 12“ oder „Bestzeit 2025: 1:18,40 + 5,00 s“); jeder Wert lässt sich von
+  Hand ändern.
+- **Automatisch fürs nächste Jahr:** Das Regelwerk für das neue Jahr lädt die
+  App direkt aus JAuswertung, sobald es dort veröffentlicht ist; die
+  Bestzeiten des Vorjahres sind bereits ausgewählt. Bis zum Wettkampftag
+  erinnert die Startseite daran.
+
 ### Einstellungen
 
 Altersklassen, Senioren-Altersklassen, Starterlaubnis für die Welle,

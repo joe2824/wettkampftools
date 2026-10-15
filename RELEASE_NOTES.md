@@ -38,6 +38,10 @@ schneller und mit allem, was die bisherige Version konnte.
   und sofort gespeichert. ‚Neuer Wettkampf‘ zählt die Nummer hoch und leert das
   Datum; die Startseite zeigt die aktuelle Veranstaltung, fehlt das Datum, gibt
   es einen Hinweis.
+- **Rec-Werte fürs neue Jahr:** Die Rettungsdisziplinen übernehmen die Werte
+  aus dem offiziellen DLRG-Regelwerk von JAuswertung, die Wellendisziplinen die
+  Bestzeit des Vorjahres plus 5 Sekunden. Eine Vergleichstabelle zeigt je Wert
+  die Änderung zum Vorjahr und die Herkunft; die Startseite erinnert daran.
 - **Einstellungen** lassen sich als Datei sichern und auf einem anderen
   Rechner wieder einlesen.
 - **Automatische Updates:** Neue Versionen werden beim Start gemeldet und

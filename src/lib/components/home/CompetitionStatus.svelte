@@ -16,7 +16,9 @@
 
 	async function startNew() {
 		await competitionStore.newCompetition();
-		toast.success("Bereit für einen neuen Wettkampf");
+		toast.success("Bereit für einen neuen Wettkampf", {
+			description: "Tipp: Vorher die Rec-Werte fürs neue Jahr aktualisieren."
+		});
 	}
 </script>
 

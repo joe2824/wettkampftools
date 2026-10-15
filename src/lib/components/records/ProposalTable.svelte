@@ -5,8 +5,8 @@
 	import { Button } from "$lib/components/ui/button";
 	import { Input } from "$lib/components/ui/input";
 	import * as Table from "$lib/components/ui/table";
-	import { formatRecTime, parseRecTime } from "$lib/format/time";
-	import type { EditedRecRow, RecSource } from "$lib/records/proposal";
+	import { formatRecDifference, formatRecTime, parseRecTime } from "$lib/format/time";
+	import { difference, type EditedRecRow, type RecSource } from "$lib/records/proposal";
 	import { recKey, type RecordGender } from "$lib/records/rulebookRecords";
 	import { cn } from "$lib/utils.js";
 
@@ -20,8 +20,8 @@
 
 	const GENDER_LABELS: Record<RecordGender, string> = { female: "weiblich", male: "männlich" };
 	const SOURCES: Record<RecSource, { label: string; variant: BadgeVariant }> = {
-		official: { label: "Offiziell", variant: "secondary" },
-		bestTime: { label: "Bestzeit + Zuschlag", variant: "secondary" },
+		official: { label: "DLRG (offiziell)", variant: "secondary" },
+		bestTime: { label: "Welle: Bestzeit + Zuschlag", variant: "secondary" },
 		unchanged: { label: "Keine Quelle", variant: "destructive" }
 	};
 
@@ -44,13 +44,17 @@
 			<Table.Head>Disziplin</Table.Head>
 			<Table.Head class="text-right">Alt</Table.Head>
 			<Table.Head class="w-36">Neu</Table.Head>
+			<Table.Head class="text-right">Änderung</Table.Head>
 			<Table.Head>Quelle</Table.Head>
 		</Table.Row>
 	</Table.Header>
 	<Table.Body>
 		{#each rows as row (recKey(row))}
 			{@const source = SOURCES[row.source]}
-			<Table.Row class={cn(row.source === "unchanged" && !row.edited && "bg-destructive/5")}>
+			{@const change = difference(row)}
+			<Table.Row
+				class={cn(change !== 0 && "bg-primary/5", row.source === "unchanged" && !row.edited && "bg-destructive/5")}
+			>
 				<Table.Cell class="whitespace-nowrap">
 					{row.ageGroup}
 					<span class="text-muted-foreground">{GENDER_LABELS[row.gender]}</span>
@@ -60,7 +64,7 @@
 				<Table.Cell>
 					<div class="flex items-center gap-1">
 						<Input
-							class={cn("h-8 w-28 tabular-nums", row.newRec !== row.oldRec && "font-semibold")}
+							class={cn("h-8 w-28 tabular-nums", change !== 0 && "font-semibold")}
 							value={formatRecTime(row.newRec)}
 							aria-label="Neuer Rec-Wert {row.ageGroup} {GENDER_LABELS[row.gender]} {row.discipline}"
 							onchange={(event) => commit(row, event.currentTarget)}
@@ -76,6 +80,9 @@
 							</Button>
 						{/if}
 					</div>
+				</Table.Cell>
+				<Table.Cell class={cn("text-right whitespace-nowrap tabular-nums", change === 0 ? "text-muted-foreground" : "font-medium")}>
+					{formatRecDifference(change)}
 				</Table.Cell>
 				<Table.Cell>
 					<div class="flex flex-col items-start gap-0.5">

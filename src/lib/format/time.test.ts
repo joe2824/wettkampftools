@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatRecTime, parseRecTime } from "./time";
+import { formatRecDifference, formatRecTime, formatSeconds, parseRecTime } from "./time";
 
 describe("formatRecTime", () => {
 	it("zeigt Zeiten unter einer Minute in Sekunden", () => {
@@ -35,5 +35,24 @@ describe("parseRecTime", () => {
 		for (const text of ["", "abc", "0", "1:60,00", "1:2,00", "58,123", "-5"]) {
 			expect(parseRecTime(text)).toBeNull();
 		}
+	});
+});
+
+describe("formatSeconds", () => {
+	it("zeigt Hundertstel immer als Sekunden mit Komma", () => {
+		expect(formatSeconds(500)).toBe("5,00 s");
+		expect(formatSeconds(250)).toBe("2,50 s");
+		expect(formatSeconds(8345)).toBe("83,45 s");
+	});
+});
+
+describe("formatRecDifference", () => {
+	it("zeigt Änderungen mit Vorzeichen", () => {
+		expect(formatRecDifference(500)).toBe("+5,00 s");
+		expect(formatRecDifference(-696)).toBe("\u22126,96 s");
+	});
+
+	it("zeigt keine Änderung als ±0", () => {
+		expect(formatRecDifference(0)).toBe("±0");
 	});
 });
