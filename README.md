@@ -129,8 +129,16 @@ Meldedaten und Ergebnisse werden nur auf dem eigenen Rechner verarbeitet und
 nirgendwohin übertragen. Damit ein Wettkampf über mehrere Tage bearbeitet werden
 kann, bleiben Meldedaten lokal auf diesem Rechner, bis ‚Neuer Wettkampf‘
 gewählt wird; sie werden nie in Logs oder Exporte der Einstellungen geschrieben.
-Erzeugte Dateien liegen dort, wo man sie selbst ablegt. Aus dem Internet geladen werden nur die öffentlichen
-DLRG-Standortdaten und Updates.
+Erzeugte Dateien liegen dort, wo man sie selbst ablegt.
+
+Aus dem Internet geladen werden nur die öffentlichen DLRG-Standortdaten, das
+offizielle DLRG-Regelwerk aus JAuswertung (von `raw.githubusercontent.com`, für
+die Rec-Werte) und Updates; hochgeladen wird dabei nichts.
+
+Für die Rec-Werte bleiben im App-Datenordner dauerhaft gespeichert, auch nach
+‚Neuer Wettkampf‘: die Bestzeiten je Altersklasse und Disziplin aus geladenen
+Ergebnissen (ohne Namen), eine Kopie des Vereins-Regelwerks und die Zuordnung
+der Rec-Werte.
 
 ## Entwicklung
 

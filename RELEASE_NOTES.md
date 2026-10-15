@@ -14,12 +14,15 @@ schneller und mit allem, was die bisherige Version konnte.
 
 - **Vorbereitung:** Die Meldedatei wird nach denselben Regeln wie in
   JAuswertung geprüft, auffällige Zeilen werden verständlich erklärt. Nach dem
-  Export zeigt die Anwendung eine Kontrollzahl: So viele Meldungen muss
-  JAuswertung nach dem Import anzeigen.
+  Export liest die Anwendung die gespeicherte Datei noch einmal ein und zeigt
+  eine Kontrollzahl: So viele Meldungen muss JAuswertung nach dem Import
+  anzeigen.
 - **Altersklassen:** Die Zuordnung ist verbessert. Ältere Meldedateien mit
   Umlauten werden richtig gelesen, die Altersklassen AK 100 und AK 120 werden
   für die Welle richtig berücksichtigt, und nach dem Zusammenfassen der
-  Senioren stimmt die Nummerierung der Mannschaften.
+  Senioren stimmt die Nummerierung der Mannschaften. Wird die Start-AK der
+  Welle nachträglich geändert, werden Wellen-Ergebnisse trotzdem gewertet und
+  beurkundet.
 - **Pokalwertung:** Für jede Ortsgruppe lässt sich aufklappen, wie die Punkte
   zustande kommen. Bei Punktgleichheit teilen sich Ortsgruppen den Rang, ein
   Gleichstand um Platz 1 wird deutlich markiert. Neu ist ein Aushang als PDF
@@ -33,7 +36,14 @@ schneller und mit allem, was die bisherige Version konnte.
   (z. B. „Sulzbach / Saar“ statt „Sulzbach“) oder per Klick aus der Meldung
   übernehmen. Er wird gemerkt und in den folgenden Jahren automatisch verwendet.
 - Der Arbeitsstand bleibt über mehrere Tage erhalten; ‚Neuer Wettkampf‘ auf der
-  Startseite beginnt von vorn.
+  Startseite beginnt von vorn. Die Bestätigung einer Ergebnisdatei aus einem
+  anderen Jahr bleibt nach einem Neustart erhalten, solange das Dateijahr
+  dasselbe ist.
+- Einstellungen, Layout und Arbeitsstand werden ausfallsicher gespeichert. Kann
+  eine gespeicherte Datei nicht gelesen werden, wird sie nicht überschrieben,
+  sondern aufbewahrt, und beim Start erscheint ein Hinweis.
+- Ein neu erzeugtes Regelwerk lässt sich nach dem Speichern direkt öffnen oder
+  im Ordner anzeigen.
 - Die **Veranstaltung** wird als erster Schritt der Vorbereitung eingetragen
   und sofort gespeichert. ‚Neuer Wettkampf‘ zählt die Nummer hoch und leert das
   Datum; die Startseite zeigt die aktuelle Veranstaltung, fehlt das Datum, gibt

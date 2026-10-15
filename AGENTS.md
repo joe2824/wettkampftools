@@ -92,9 +92,16 @@ Meldedateien enthalten Daten von **Minderjährigen**. Dateien mit den Endungen
 ## Datenschutz
 
 - Logs enthalten keine Namen und keinen Zeileninhalt, nur Codes und Anzahlen.
-- Der Wettkampfstand (Original-Meldedatei, Ergebnisse, Urkunden-Auswahl) liegt im
-  App-Datenordner (`competition/state.json`), bis „Neuer Wettkampf“ gewählt wird.
-  Er erscheint nie in Logs, Einstellungs- oder Layout-Exporten.
+- Der Wettkampfstand liegt im App-Datenordner, bis „Neuer Wettkampf“ gewählt
+  wird: `competition/state.json` (Original-Meldedatei, Wellen- und
+  Urkunden-Auswahl) und `competition/results.json` (Ergebnisse). Er erscheint nie
+  in Logs, Einstellungs- oder Layout-Exporten.
+- Dauerhaft, auch nach „Neuer Wettkampf“, liegen unter `records/`:
+  `best-times-<Jahr>.json` (Bestzeiten ohne Namen), `club.rwm` und `club.json`
+  (Kopie des Vereins-Regelwerks samt Dateiname) sowie `mapping.json` (Zuordnung
+  der Rec-Werte).
+- Unlesbare Dateien (`settings.json`, `layout.json`, `competition/*.json`) werden
+  nicht überschrieben, sondern als `<Name>.unreadable-<Zeitstempel>` aufbewahrt.
 - Exporte enthalten keine Bilder.
 
 ## Fachbegriffe
