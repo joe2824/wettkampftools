@@ -61,3 +61,4 @@ schneller und mit allem, was die bisherige Version konnte.
 - **Automatische Updates:** Neue Versionen werden beim Start gemeldet und
   lassen sich direkt aus der Anwendung installieren.
 - Entfernungen: Gibt es mehrere DLRG-Gliederungen gleichen Namens, werden sie markiert und lassen sich zuordnen; ein Zusatz im Mannschaftsnamen (z. B. „Saar“) führt zu einem Vorschlag zum Prüfen. Gliederungen wie Dorheim, die zusammen mit ihrer Jugend eingetragen sind, werden jetzt gefunden.
+- Projektdateien (.wwkprojekt) lassen sich per Doppelklick im Explorer öffnen: Wettkampftools startet bzw. holt das offene Fenster nach vorn und fragt vor dem Ersetzen des aktuellen Stands nach.

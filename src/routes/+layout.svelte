@@ -1,12 +1,14 @@
 <script lang="ts">
 	import "../app.css";
 	import { ModeWatcher } from "mode-watcher";
+	import ProjectOpenDialog from "$lib/components/home/ProjectOpenDialog.svelte";
 	import AppSidebar from "$lib/components/shell/AppSidebar.svelte";
 	import * as Sidebar from "$lib/components/ui/sidebar";
 	import { Toaster } from "$lib/components/ui/sonner";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 	import { initApp, migrationMessage, setAsideMessage } from "$lib/appInit";
+	import { defaultLaunchDeps, startProjectLaunch } from "$lib/workflows/projectLaunch";
 
 	const TOAST_BOTTOM_OFFSET = "5rem";
 
@@ -18,9 +20,12 @@
 			const { title, description } = setAsideMessage(notice);
 			toast.warning(title, { description, duration: Infinity });
 		}
-		if (migration === null) return;
-		const { title, description } = migrationMessage(migration);
-		toast.success(title, { description });
+		if (migration !== null) {
+			const { title, description } = migrationMessage(migration);
+			toast.success(title, { description });
+		}
+		// Erst nach dem Laden, sonst überschriebe der gespeicherte Stand das per Doppelklick geöffnete Projekt.
+		void startProjectLaunch(defaultLaunchDeps((message) => toast.error(message)));
 	});
 </script>
 
@@ -32,6 +37,7 @@
 	offset={{ bottom: TOAST_BOTTOM_OFFSET }}
 	mobileOffset={{ bottom: TOAST_BOTTOM_OFFSET }}
 />
+<ProjectOpenDialog />
 <Sidebar.Provider>
 	<AppSidebar />
 	<Sidebar.Inset>

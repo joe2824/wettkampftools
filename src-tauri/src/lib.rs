@@ -1,5 +1,6 @@
 mod file_check;
 mod input;
+mod launch_file;
 mod legacy_settings;
 mod logging;
 mod output;
@@ -25,8 +26,9 @@ pub fn run() {
     #[cfg(desktop)]
     {
         builder = builder
-            .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            .plugin(tauri_plugin_single_instance::init(|app, args, cwd| {
                 focus_main(app);
+                launch_file::open_from_args(app, &args, std::path::Path::new(&cwd));
             }))
             .plugin(tauri_plugin_updater::Builder::new().build())
             .plugin(tauri_plugin_process::init());
@@ -47,7 +49,9 @@ pub fn run() {
             output::reveal_output_file,
             input::read_input_file,
             input::input_file_info,
+            launch_file::take_pending_project_file,
         ])
+        .manage(launch_file::PendingProjectFile::default())
         .on_window_event(|window, event| {
             use tauri::{DragDropEvent, Manager, WindowEvent};
             if let WindowEvent::DragDrop(DragDropEvent::Drop { paths, .. }) = event {
@@ -59,8 +63,17 @@ pub fn run() {
             if let Ok(dir) = app.path().app_data_dir() {
                 logging::init(dir);
             }
+            launch_file::open_from_startup(app.handle());
             Ok(())
         })
-        .run(tauri::generate_context!())
-        .expect("Fehler beim Starten von Wettkampftools");
+        .build(tauri::generate_context!())
+        .expect("Fehler beim Starten von Wettkampftools")
+        .run(|_app, _event| {
+            // Doppelklick auf eine Projektdatei unter macOS.
+            #[cfg(target_os = "macos")]
+            if let tauri::RunEvent::Opened { urls } = _event {
+                focus_main(_app);
+                launch_file::open_from_urls(_app, &urls);
+            }
+        });
 }

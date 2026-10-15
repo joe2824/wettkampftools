@@ -18,7 +18,7 @@ const INPUT_EXTENSIONS: [&str; 10] = [
 ];
 
 /// Projektdatei mit dem ganzen Wettkampfstand; darf größer sein.
-const PROJECT_EXTENSION: &str = "wwkprojekt";
+pub const PROJECT_EXTENSION: &str = "wwkprojekt";
 
 const BYTES_PER_MB: u64 = 1024 * 1024;
 const MAX_INPUT_MB: u64 = 20;

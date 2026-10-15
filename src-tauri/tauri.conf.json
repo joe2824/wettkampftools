@@ -56,6 +56,15 @@
 		"active": true,
 		"targets": ["nsis"],
 		"createUpdaterArtifacts": true,
+		"fileAssociations": [
+			{
+				"ext": ["wwkprojekt"],
+				"name": "Wettkampf-Projekt",
+				"description": "Wettkampftools-Projekt",
+				"role": "Editor",
+				"mimeType": "application/x-wwkprojekt"
+			}
+		],
 		"windows": {
 			"nsis": {
 				"installMode": "currentUser"

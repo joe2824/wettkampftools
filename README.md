@@ -113,8 +113,9 @@ Mannschaftsnamen, Urkunden-Layout, Unterschriften (abwählbar), Meldedatei mit
 Wellenauswahl, Ergebnisse samt Jahresprüfung und Urkunden-Auswahl. Der
 Hintergrund-Scan ist nicht enthalten.
 
-Auf dem anderen Rechner die Datei unter **Projekt öffnen …** auswählen oder
-auf die Fläche ziehen. Nach einer Rückfrage ersetzt das Projekt den dortigen
+Auf dem anderen Rechner die Datei unter **Projekt öffnen …** auswählen, auf
+die Fläche ziehen oder im Explorer doppelt anklicken; ein Doppelklick startet
+Wettkampftools oder holt das offene Fenster nach vorn. Nach einer Rückfrage ersetzt das Projekt den dortigen
 Stand; enthält es keine Unterschriften, bleiben die vorhandenen erhalten. Die
 Datei enthält Namen und Jahrgänge der Teilnehmenden und gehört nur in die
 Hände von Berechtigten.
