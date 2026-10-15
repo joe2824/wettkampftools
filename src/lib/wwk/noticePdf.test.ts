@@ -119,7 +119,6 @@ describe("buildNoticePages – Aufbau", () => {
       "7. Wellenwettkampf · DLRG Musterstadt · 14. November 2026 · Beispielhausen",
       "Rettungswertung – Pokal",
       "Wellenwertung – Pokal",
-      "Aufschlüsselung",
       "Nicht gewertet",
       "Regeln",
     ].map((heading) => lines.indexOf(heading));
@@ -127,6 +126,15 @@ describe("buildNoticePages – Aufbau", () => {
     expect([...order].sort((a, b) => a - b)).toEqual(order);
     expect(lines).toContain("Altersklasse unbekannt");
     expect(lines).toContain("Beispielhausen 2");
+    expect(lines).not.toContain("Rechnung");
+  });
+
+  it("erzeugt die Aufschlüsselung als eigenes Dokument ohne Ranglisten", () => {
+    const lines = allTexts(buildNoticePages(input(), metrics, "breakdown"));
+    expect(lines[0]).toBe("Aufschlüsselung der Gesamtwertung");
+    expect(lines).toContain("Rechnung");
+    expect(lines).not.toContain("Rettungswertung – Pokal");
+    expect(lines).toContain("Regeln");
   });
 
   it("lässt leere Teile der Veranstaltungszeile weg", () => {
@@ -135,8 +143,8 @@ describe("buildNoticePages – Aufbau", () => {
     expect(lines).toContain("Wellenwettkampf · Beispielhausen");
   });
 
-  it("zeigt Wertung, Aufschlüsselung mit Rechnung und Wellen-AK in Anzeigeform", () => {
-    const lines = allTexts(buildNoticePages(input(), metrics));
+  it("zeigt in der Aufschlüsselung Rechnung und Wellen-AK in Anzeigeform", () => {
+    const lines = allTexts(buildNoticePages(input(), metrics, "breakdown"));
     for (const header of [
       "Platz",
       "Ortsgruppe",
@@ -150,7 +158,6 @@ describe("buildNoticePages – Aufbau", () => {
       expect(lines).toContain(header);
     }
     expect(lines).toContain("Musterstadt 3");
-    expect(lines).toContain("100");
     expect(lines).toContain("3 + 1 − 1 = 3");
     expect(lines).toContain("AK 12");
     expect(lines.some((text) => text.includes("AkW"))).toBe(false);
@@ -178,10 +185,11 @@ describe("buildNoticePages – Aufbau", () => {
       buildNoticePages(
         input({ rescue: { standings: [], tieForFirst: false } }),
         metrics,
+        "breakdown",
       ),
     );
     expect(lines.filter((text) => text.endsWith("…"))).toEqual([]);
-    expect(lines.filter((text) => text === "Pokalpunkte").length).toBe(2);
+    expect(lines.filter((text) => text === "Pokalpunkte").length).toBe(1);
   });
 
   it("meldet eine leere Wertung und zeigt fehlenden Platz als Strich", () => {
@@ -199,18 +207,14 @@ describe("buildNoticePages – Aufbau", () => {
         teams: [unplaced],
       },
     ];
-    const lines = allTexts(
-      buildNoticePages(
-        input({
-          rescue: { standings: [], tieForFirst: false },
-          wave: { standings: wave, tieForFirst: false },
-        }),
-        metrics,
-      ),
-    );
-    expect(lines).toContain("Keine gewerteten Mannschaften.");
-    expect(lines).toContain("–");
-    expect(lines).toContain("ohne Platz = 0");
+    const data = input({
+      rescue: { standings: [], tieForFirst: false },
+      wave: { standings: wave, tieForFirst: false },
+    });
+    expect(allTexts(buildNoticePages(data, metrics))).toContain("Keine gewerteten Mannschaften.");
+    const breakdown = allTexts(buildNoticePages(data, metrics, "breakdown"));
+    expect(breakdown).toContain("–");
+    expect(breakdown).toContain("ohne Platz = 0");
   });
 
   it("lässt „Nicht gewertet“ ohne Einträge weg", () => {
@@ -256,13 +260,13 @@ describe("buildNoticePages – Seitenfluss", () => {
     expect(pages.every((page) => texts(page).length > 2)).toBe(true);
   });
 
-  it("führt jede Ortsgruppe in Rangliste und Aufschlüsselung", () => {
-    const lines = allTexts(pages);
+  it("führt jede Ortsgruppe im Aushang und in der Aufschlüsselung je Wertung", () => {
+    const notice = allTexts(pages);
+    const breakdown = allTexts(buildNoticePages(big, metrics, "breakdown"));
     for (let index = 1; index <= 40; index += 1) {
-      // Rangliste und Aufschlüsselung je Wertung
-      expect(
-        lines.filter((text) => text === `Musterstadt ${index}`).length,
-      ).toBe(4);
+      const name = `Musterstadt ${index}`;
+      expect(notice.filter((text) => text === name).length).toBe(2);
+      expect(breakdown.filter((text) => text === name).length).toBe(2);
     }
   });
 

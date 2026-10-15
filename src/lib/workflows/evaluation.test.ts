@@ -174,6 +174,15 @@ describe("saveNoticePdf", () => {
 		expect(outputMock.openOutputFile).toHaveBeenCalledWith("/tmp/WWK_Gesamtwertung.pdf");
 	});
 
+	it("speichert die Aufschlüsselung als eigenes PDF", async () => {
+		filesMock.saveFile.mockResolvedValue("/tmp/WWK_Aufschluesselung.pdf");
+		const outcome = await saveNoticePdf(ready(), defaultSettings(), NOW, "breakdown");
+		expect(outcome.status).toBe("saved");
+		expect(savedRequest().defaultName).toBe("20261114_WWK_Aufschluesselung.pdf");
+		const pdf = await PDFDocument.load(savedRequest().bytes);
+		expect(pdf.getTitle()).toBe("Aufschlüsselung der Gesamtwertung");
+	});
+
 	it("bleibt gespeichert, wenn das Öffnen scheitert", async () => {
 		filesMock.saveFile.mockResolvedValue("/tmp/WWK_Gesamtwertung.pdf");
 		outputMock.openOutputFile.mockRejectedValue("kein Programm");

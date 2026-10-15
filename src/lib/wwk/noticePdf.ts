@@ -28,6 +28,10 @@ export interface NoticeInput {
 }
 
 const TITLE = "Gesamtwertung";
+const BREAKDOWN_TITLE = "Aufschlüsselung der Gesamtwertung";
+
+/** Aushang mit Ranglisten oder Aufschlüsselung je Mannschaft für Rückfragen. */
+export type NoticeVariant = "notice" | "breakdown";
 const FOOTER_CREDIT = "Erstellt mit Wettkampftools";
 const TIE_LINE =
   "Gleichstand um Platz 1 – Entscheidung durch die Wettkampfleitung.";
@@ -210,7 +214,6 @@ function addRanking(flow: PageFlow, heading: string, ranking: Ranking): void {
 }
 
 function addBreakdown(flow: PageFlow, input: NoticeInput): void {
-  flow.heading("Aufschlüsselung", SIZE.heading);
   const parts: [string, Ranking][] = [
     ["Rettungswertung", input.rescue],
     ["Wellenwertung", input.wave],
@@ -259,15 +262,19 @@ function footerOps(
 export function buildNoticePages(
   input: NoticeInput,
   metrics: TextMetrics,
+  variant: NoticeVariant = "notice",
 ): DrawOp[][] {
   const flow = new PageFlow(metrics);
-  flow.paragraph(TITLE, "black", SIZE.title);
+  flow.paragraph(variant === "notice" ? TITLE : BREAKDOWN_TITLE, "black", SIZE.title);
   const line = eventLine(input.event);
   if (line !== "") flow.paragraph(line, "regular", SIZE.event);
   flow.gap(SECTION_GAP_MM);
-  addRanking(flow, "Rettungswertung – Pokal", input.rescue);
-  addRanking(flow, "Wellenwertung – Pokal", input.wave);
-  addBreakdown(flow, input);
+  if (variant === "notice") {
+    addRanking(flow, "Rettungswertung – Pokal", input.rescue);
+    addRanking(flow, "Wellenwertung – Pokal", input.wave);
+  } else {
+    addBreakdown(flow, input);
+  }
   if (input.notScored.length > 0) {
     flow.heading("Nicht gewertet", SIZE.heading);
     flow.table(NOT_SCORED_COLUMNS, notScoredRows(input.notScored), SIZE.table);
@@ -284,7 +291,9 @@ export function buildNoticePages(
 export async function buildNoticePdf(
   input: NoticeInput,
   fonts: FontBytes,
+  variant: NoticeVariant = "notice",
 ): Promise<Uint8Array> {
-  const pages = buildNoticePages(input, createMetrics(fonts));
-  return renderPdf(pages, { fonts, images: {} }, { title: TITLE });
+  const pages = buildNoticePages(input, createMetrics(fonts), variant);
+  const title = variant === "notice" ? TITLE : BREAKDOWN_TITLE;
+  return renderPdf(pages, { fonts, images: {} }, { title });
 }

@@ -8,7 +8,7 @@ import type { SessionResults } from "$lib/session.svelte";
 import type { Settings } from "$lib/settings/settings";
 import { buildAgeGroupOrder } from "$lib/wwk/ageGroups";
 import { buildEvaluationSheets } from "$lib/wwk/evaluationExport";
-import { buildNoticePdf } from "$lib/wwk/noticePdf";
+import { buildNoticePdf, type NoticeVariant } from "$lib/wwk/noticePdf";
 import { findSheet } from "$lib/wwk/results";
 import { trophyRulesText } from "$lib/wwk/rulesText";
 import { rankOrganisations, scoreTeams, type NotScored, type Ranking, type ScoredTeam } from "$lib/wwk/scoring";
@@ -16,6 +16,7 @@ import { userMessage } from "./errors";
 
 export const EVALUATION_FILE_NAME = "WWK_Auswertung.xlsx";
 export const NOTICE_FILE_NAME = "WWK_Gesamtwertung.pdf";
+export const BREAKDOWN_FILE_NAME = "WWK_Aufschluesselung.pdf";
 export const INDIVIDUAL_COMPETITION_MESSAGE =
 	"Diese Datei stammt aus einem Einzelwettkampf. Die Pokalwertung gilt für Mannschaften – Urkunden gibt es unter ‚Urkunden‘.";
 const EXCEL_FILTER = { name: "Excel-Datei", extensions: ["xlsx"] };
@@ -99,7 +100,8 @@ async function openSaved(path: string): Promise<boolean> {
 export async function saveNoticePdf(
 	evaluation: Evaluation,
 	settings: Settings,
-	now: Date = new Date()
+	now: Date = new Date(),
+	variant: NoticeVariant = "notice"
 ): Promise<NoticeOutcome> {
 	try {
 		const input = {
@@ -109,8 +111,9 @@ export async function saveNoticePdf(
 			wave: evaluation.wave,
 			notScored: evaluation.notScored
 		};
-		const bytes = await buildNoticePdf(input, await loadAppFonts());
-		const path = await saveFile({ defaultName: datedFileName(NOTICE_FILE_NAME, now), filters: [PDF_FILTER], bytes });
+		const bytes = await buildNoticePdf(input, await loadAppFonts(), variant);
+		const fileName = variant === "notice" ? NOTICE_FILE_NAME : BREAKDOWN_FILE_NAME;
+		const path = await saveFile({ defaultName: datedFileName(fileName, now), filters: [PDF_FILTER], bytes });
 		if (path === null) return { status: "cancelled" };
 		logInfo("notice.saved", { organisations: evaluation.rescue.standings.length + evaluation.wave.standings.length });
 		return { status: "saved", path, opened: await openSaved(path) };
