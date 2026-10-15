@@ -41,10 +41,11 @@
 	const PERCENT = 100;
 	const DEFAULT_OPACITY_PERCENT = 50;
 	const GUIDES_KEY = "layoutEditor.guides";
+	const MEMBER_NAMES_KEY = "layoutEditor.memberNames";
 	const MODIFIER = typeof navigator !== "undefined" && isApplePlatform(navigator.userAgent) ? "⌘" : "Strg+";
 
 	const editor = new LayoutEditorSession();
-	let withMemberNames = $state(true);
+	let withMemberNames = $state(readStoredFlag(MEMBER_NAMES_KEY, true));
 	let zoom = $state<CanvasZoom>("fit");
 	let guides = $state(readStoredFlag(GUIDES_KEY, true));
 	let alignReference = $state<AlignReference>("selection");
@@ -73,6 +74,7 @@
 	});
 
 	$effect(() => writeStoredFlag(GUIDES_KEY, guides));
+	$effect(() => writeStoredFlag(MEMBER_NAMES_KEY, withMemberNames));
 
 	// Schließen des Fensters ist ausgenommen: dort gibt es keine eigene Rückfrage.
 	beforeNavigate(({ cancel, type }) => {
