@@ -7,10 +7,12 @@
   <br>
 </div>
 
-# Wettkampftools
+# DLRG Dorheim Wettkampftools
 
 Desktop-Anwendung für Vorbereitung, Auswertung und Urkunden beim
-Wellenwettkampf der DLRG Ortsgruppe Dorheim e.V. in Bad Nauheim.
+Wellenwettkampf der DLRG Ortsgruppe Dorheim e.V. in Bad Nauheim. Die Seiten
+führen Schritt für Schritt durch den Ablauf; die Seitenleiste ordnet sie in
+**Wellenwettkampf** (Vorbereitung, Auswertung, Urkunden) und **Werkzeuge**.
 
 ## Download
 
@@ -43,10 +45,14 @@ können direkt aus der Anwendung installiert werden.
 
 - Excel-Export aus JAuswertung laden; stammt die Datei nicht aus dem
   aktuellen Jahr, warnt die Anwendung.
-- Gesamtwertung je Ortsgruppe, getrennt für Rettungswertung und Wellenwertung.
+- Gesamtwertung je Ortsgruppe, getrennt für Rettungswertung und Wellenwertung;
+  die Plätze 1 bis 3 sind gold, silber und bronze markiert.
 - Jede Ortsgruppe lässt sich aufklappen: Team, Altersklasse, Geschlecht, Platz
   und die Rechnung der Pokalpunkte mit eingesetzten Zahlen.
-- Ausgabe als Excel-Datei und als Aushang-PDF (ohne Mitgliedernamen).
+- Ausgabe als Excel-Datei und als Aushang-PDF (ohne Mitgliedernamen) mit dem
+  Rechenbeispiel der Pokalpunkte.
+- Beim Laden der Ergebnisdatei meldet die Anwendung **neue Rekorde in der
+  Welle** gegenüber allen bisherigen Wettkämpfen (siehe Wellen-Zeiten).
 
 **Regel der Pokalwertung:** In jeder Gruppe (Altersklasse und Geschlecht)
 erhält ein Team `n + 1 − Platz` Pokalpunkte, wobei `n` die Anzahl der Teams mit
@@ -67,6 +73,8 @@ Gesamtwertung um den Pokal und erscheinen nie auf einer Urkunde.
 - Reihenfolge wie bei der Siegerehrung vorgelesen.
 - Auswahl nach Wertung und Altersklasse, Mitgliedernamen wahlweise mit
   ausgeben.
+- Vorschau jeder Urkunde; „Nächster Platz“ und „Vorheriger Platz“ (oder Bild
+  auf und ab) springen über die Mehrfach-Urkunden einer Mannschaft hinweg.
 - Layout-Editor mit A4-Vorschau: Texte und Unterschriften frei positionieren,
   den Scan der vorbedruckten Urkunde zur Ausrichtung einblenden.
 - Im Layout-Editor: Hilfslinien mit Einrasten (Kanten, Mitten, Grundlinien,
@@ -89,10 +97,28 @@ Tabelle, dazu eine Übersicht (Anzahl, weiteste Anreise, Durchschnitt,
 Bundesländer). Die Karte lässt sich als PNG-Bild oder PDF speichern. Sie kommt
 ohne Online-Kartendienst aus.
 
+### Wellen-Zeiten
+
+Unter **Werkzeuge → Wellen-Zeiten** stehen die Zeiten der Wellendisziplinen
+aller bisherigen Wellenwettkämpfe seit 2000, je Altersklasse, Geschlecht und
+Disziplin und ohne Namen: Rekord (schnellste Zeit ohne Strafe) mit Jahr,
+Durchschnitt und längste Zeit aller Mannschaften, Mannschaften je Wettkampf.
+
+- Filter nach Altersklasse, Geschlecht und Disziplinen (Mehrfachauswahl); ein
+  **Verlauf als Grafik** zeigt für eine Gruppe schnellste, durchschnittliche
+  und längste Zeit je Jahr.
+- **Grobe Dauer der Welle:** Sind in der Vorbereitung Meldedatei und
+  Wellenstarter geladen, schätzt die Anwendung je Disziplin Läufe und Dauer
+  aus Mannschaften je Lauf, Pause und den Durchschnittszeiten der
+  Altersklassen.
+- Jede bei Auswertung oder Urkunden geladene Ergebnisdatei zählt automatisch
+  mit; ältere Ergebnisdateien lassen sich hier nachtragen. Die Geschichte bis
+  2025 ist mitgeliefert.
+
 ### Regelwerk fürs neue Jahr
 
 Unter **Werkzeuge → Regelwerk fürs neue Jahr** entstehen Rec-Werte und
-Strafenkatalog für die nächste Saison.
+Strafenkatalog für die nächste Saison, Schritt für Schritt.
 
 #### Rec-Werte
 
@@ -103,16 +129,16 @@ Import in JAuswertung; nur Rec-Werte und Beschreibung ändern sich.
   JAuswertung mitbringt (z. B. „DLRG 2026.rwm“). Eine einmal gepflegte
   Zuordnung legt fest, welche offizielle Altersklasse und welcher
   Disziplinname gilt (z. B. AK 10 nutzt die Werte der AK 12).
-- **Wellendisziplinen:** Bestzeit des Vorjahres plus 5 Sekunden (Zuschlag
-  einstellbar). Die Bestzeiten speichert die App automatisch, sobald die
-  Ergebnisdatei geladen wird – nur Zeiten, keine Namen.
-- **Vergleich:** Je Wert alt, neu, Änderung und Herkunft (z. B. „DLRG 2026 ·
-  AK 12“ oder „Bestzeit 2025: 1:18,40 + 5,00 s“); jeder Wert lässt sich von
-  Hand ändern.
+- **Wellendisziplinen:** der Rekord aller bisherigen Wettkämpfe (siehe
+  Wellen-Zeiten). Ein neuer Rekord zählt nur, wenn er schneller ist als der
+  bisherige Rec-Wert, und wird einzeln oder gesammelt per Klick übernommen.
+- **Vergleich:** Je Wert alt, neu, Änderung und Stand („Übernommen“,
+  „Unverändert“, „Neuer Rekord“, „Bitte prüfen“, „Eigener Wert“) samt
+  Herkunft (z. B. „DLRG 2026 · AK 12“ oder „Rekord 2019: 1:39,13“). Offene
+  Werte stehen oben zusammengefasst; jeder Wert lässt sich von Hand ändern.
 - **Automatisch fürs nächste Jahr:** Das Regelwerk für das neue Jahr lädt die
-  App direkt aus JAuswertung, sobald es dort veröffentlicht ist; die
-  Bestzeiten des Vorjahres sind bereits ausgewählt. Bis zum Wettkampftag
-  erinnert die Startseite daran.
+  App direkt aus JAuswertung, sobald es dort veröffentlicht ist. Bis zum
+  Wettkampftag erinnert die Startseite daran.
 
 #### Regelwerk und Strafenkatalog fürs neue Jahr
 
@@ -145,7 +171,8 @@ Beschreibung des eingebetteten Regelwerks und speichert das Ergebnis als
 **neue** Datei; alles andere bleibt zeichengenau erhalten. Sie lehnt ab, wenn
 noch Strafen vergeben sind, der Katalog mit anderen Daten verknüpft ist, die
 Altersklassen nicht zum Vereins-Regelwerk passen oder es ein Einzelwettkampf
-ist. Nach dem Schreiben liest sie die Datei zur Kontrolle erneut ein.
+ist. Nach dem Schreiben liest sie die Datei zur Kontrolle erneut ein. Dieser
+Schritt ist optional und bleibt auch nach dem Speichern erreichbar.
 
 ### Einstellungen
 
@@ -169,7 +196,7 @@ Hintergrund-Scan ist nicht enthalten.
 
 Auf dem anderen Rechner die Datei unter **Projekt öffnen …** auswählen, auf
 die Fläche der Startseite ziehen oder im Explorer doppelt anklicken; ein Doppelklick startet
-Wettkampftools oder holt das offene Fenster nach vorn. Nach einer Rückfrage ersetzt das Projekt den dortigen
+die Wettkampftools oder holt das offene Fenster nach vorn. Nach einer Rückfrage ersetzt das Projekt den dortigen
 Stand; enthält es keine Unterschriften, bleiben die vorhandenen erhalten. Die
 Datei enthält Namen und Jahrgänge der Teilnehmenden und gehört nur in die
 Hände von Berechtigten.
@@ -207,10 +234,11 @@ offizielle DLRG-Regelwerk und der offizielle Strafenkatalog aus JAuswertung (von
 hochgeladen wird dabei nichts. Der Strafenkatalog wird nicht mit der App
 ausgeliefert.
 
-Für die Rec-Werte bleiben im App-Datenordner dauerhaft gespeichert, auch nach
-‚Neuer Wettkampf‘: die Bestzeiten je Altersklasse und Disziplin aus geladenen
-Ergebnissen (ohne Namen), eine Kopie des Vereins-Regelwerks und die Zuordnung
-der Rec-Werte.
+Für Wellen-Zeiten und Rec-Werte bleiben im App-Datenordner dauerhaft
+gespeichert, auch nach ‚Neuer Wettkampf‘: je Jahr, Altersklasse, Geschlecht und
+Wellendisziplin die schnellste Zeit ohne Strafe, die längste Zeit, der
+Durchschnitt und die Zahl der Mannschaften (ohne Namen), eine Kopie des
+Vereins-Regelwerks und die Zuordnung der Rec-Werte.
 
 ## Entwicklung
 
@@ -287,7 +315,7 @@ Schlüssel steht in `tauri.conf.json`). `GITHUB_TOKEN` stellt GitHub selbst.
 
 ## Lizenzen
 
-Wettkampftools ist unter der MIT-Lizenz veröffentlicht, siehe
+DLRG Dorheim Wettkampftools ist unter der MIT-Lizenz veröffentlicht, siehe
 [`LICENSE.txt`](LICENSE.txt).
 
 - **Schrift Nunito**: SIL Open Font License 1.1, siehe

@@ -1,7 +1,8 @@
-# Wettkampftools v2.0.0
+# DLRG Dorheim Wettkampftools v2.0.0
 
-Wettkampftools ist komplett neu als Desktop-App aufgebaut: übersichtlicher,
-schneller und mit allem, was die bisherige Version konnte.
+Die Wettkampftools sind komplett neu als Desktop-App aufgebaut: übersichtlicher,
+schneller und mit allem, was die bisherige Version konnte. Neuer Name, neues
+Logo, und die Seiten führen Schritt für Schritt durch den Ablauf.
 
 ### Wichtig vor dem Update
 
@@ -31,7 +32,10 @@ schneller und mit allem, was die bisherige Version konnte.
 
 ### Auswertung und Pokalwertung
 
-- Für jede Ortsgruppe lässt sich aufklappen, wie die Punkte zustande kommen.
+- Für jede Ortsgruppe lässt sich aufklappen, wie die Punkte zustande kommen;
+  die Plätze 1 bis 3 sind gold, silber und bronze markiert.
+- Beim Laden der Ergebnisdatei meldet die App **neue Rekorde in der Welle**
+  gegenüber allen bisherigen Wettkämpfen.
 - Bei Punktgleichheit teilen sich Ortsgruppen den Rang; ein Gleichstand um
   Platz 1 wird deutlich markiert.
 - Neu ist ein **Aushang als PDF** mit Ergebnis, Aufschlüsselung und Regeln.
@@ -52,6 +56,8 @@ schneller und mit allem, was die bisherige Version konnte.
   entfernen und duplizieren, Mehrfachauswahl per Rahmen (mit Umschalt oder
   Strg zum Ergänzen), Ausrichten, gleichmäßig Verteilen und Gruppieren.
 - Das Layout wird automatisch gespeichert.
+- In der Vorschau springen „Nächster Platz“ und „Vorheriger Platz“ direkt zur
+  nächsten Mannschaft, auch wenn sie mehrere Urkunden hat.
 - Auf Wunsch eine **Deutschlandkarte** mit allen teilnehmenden Gliederungen
   auf der Urkunde.
 
@@ -66,13 +72,23 @@ schneller und mit allem, was die bisherige Version konnte.
 - Gliederungen, die zusammen mit ihrer Jugend eingetragen sind (z. B.
   Dorheim), werden jetzt gefunden.
 
-### Rec-Werte fürs neue Jahr
+### Wellen-Zeiten
+
+- Neue Seite unter **Werkzeuge** mit den Zeiten der Wellendisziplinen aller
+  Wellenwettkämpfe seit 2000: Rekord mit Jahr, Durchschnitt, längste Zeit und
+  Mannschaften je Wettkampf, je Altersklasse und Disziplin, ohne Namen.
+- Filter nach Altersklasse, Geschlecht und Disziplinen, ein Verlauf als Grafik
+  und eine grobe Dauerabschätzung der Welle aus den geladenen Meldungen.
+
+### Regelwerk fürs neue Jahr
 
 - Die Rettungsdisziplinen übernehmen die Werte aus dem offiziellen
-  DLRG-Regelwerk von JAuswertung, die Wellendisziplinen die Bestzeit des
-  Vorjahres plus 5 Sekunden.
-- Eine Vergleichstabelle zeigt je Wert die Änderung zum Vorjahr und die
-  Herkunft; die Startseite erinnert rechtzeitig daran.
+  DLRG-Regelwerk von JAuswertung sofort. Für die Wellendisziplinen gilt der
+  Rekord aller bisherigen Wettkämpfe; ist er schneller als der bisherige
+  Rec-Wert, wird er per Klick übernommen.
+- Jeder Wert zeigt seinen Stand (übernommen, unverändert, neuer Rekord, bitte
+  prüfen, eigener Wert) und seine Herkunft; offene Werte stehen oben
+  zusammengefasst. Die Startseite erinnert rechtzeitig daran.
 - Das neue Regelwerk lässt sich nach dem Speichern direkt öffnen oder im
   Ordner anzeigen.
 
@@ -110,6 +126,6 @@ schneller und mit allem, was die bisherige Version konnte.
   Datenquellen und alle mitgelieferten Bibliotheken samt Lizenztexten.
 - Die Seiten nutzen breite Fenster besser aus.
 - Beim Öffnen einer Projektdatei wird der bisherige Stand vorher gesichert; schlägt das Übernehmen fehl, wird er automatisch wiederhergestellt.
-- Projektdateien nehmen auch die Gliederungswahl der Entfernungen sowie Zuordnung, Wellen-Zuschlag, Vereins-Regelwerk und Bestzeiten der Rec-Werte mit.
+- Projektdateien nehmen auch die Gliederungswahl der Entfernungen sowie Zuordnung, Vereins-Regelwerk und Wellen-Zeiten der Rec-Werte mit.
 - Das Werkzeug **„Regelwerk fürs neue Jahr“** (bisher „Rec-Werte“) erstellt jetzt auch den Strafenkatalog mit den Vereinsregeln (Fehlstart 100 Strafpunkte, neuer Eintrag für das Herausbringen beim Retten in der Welle) und speichert ihn neben dem Regelwerk.
 - Eine kopierte JAuswertung-Wettkampfdatei des Vorjahres lässt sich fürs neue Jahr aktualisieren: Strafenkatalog und Rec-Werte werden getauscht, Bahn-Einstellungen und alles andere bleiben erhalten. Gespeichert wird als neue Datei.
