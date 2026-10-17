@@ -10,10 +10,16 @@
 	const eventHint = $derived(nextCompetitionHint(settingsStore.settings.event));
 
 	async function startNew() {
-		await competitionStore.newCompetition();
-		toast.success("Bereit für einen neuen Wettkampf", {
-			description: "Tipp: Vorher die Rec-Werte fürs neue Jahr aktualisieren."
-		});
+		// Sofort schließen, unabhängig davon, wie lange das Leeren dauert.
+		open = false;
+		try {
+			await competitionStore.newCompetition();
+			toast.success("Bereit für einen neuen Wettkampf", {
+				description: "Tipp: Vorher die Rec-Werte fürs neue Jahr aktualisieren."
+			});
+		} catch {
+			toast.error("Der Wettkampfstand konnte nicht vollständig geleert werden.");
+		}
 	}
 </script>
 
