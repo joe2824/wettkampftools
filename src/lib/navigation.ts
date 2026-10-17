@@ -1,6 +1,8 @@
 import type { Component } from "svelte";
 import Award from "@lucide/svelte/icons/award";
+import ChartLine from "@lucide/svelte/icons/chart-line";
 import ClipboardList from "@lucide/svelte/icons/clipboard-list";
+import House from "@lucide/svelte/icons/house";
 import LayoutTemplate from "@lucide/svelte/icons/layout-template";
 import Ruler from "@lucide/svelte/icons/ruler";
 import Settings from "@lucide/svelte/icons/settings";
@@ -18,6 +20,8 @@ export type NavigationGroup = {
 	items: readonly NavigationItem[];
 };
 
+export const HOME_ITEM: NavigationItem = { label: "Übersicht", href: "/", icon: House };
+
 export const NAVIGATION_GROUPS: readonly NavigationGroup[] = [
 	{
 		label: "Wellenwettkampf",
@@ -32,6 +36,7 @@ export const NAVIGATION_GROUPS: readonly NavigationGroup[] = [
 		items: [
 			{ label: "Entfernungen", href: "/distances", icon: Ruler },
 			{ label: "Urkunden-Layout", href: "/certificates/layout", icon: LayoutTemplate },
+			{ label: "Wellen-Zeiten", href: "/wave-times", icon: ChartLine },
 			{ label: "Regelwerk fürs neue Jahr", href: "/records", icon: Timer }
 		]
 	}

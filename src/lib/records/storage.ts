@@ -3,13 +3,11 @@ import { appDataStore } from "$lib/platform/fs";
 import type { Workbook } from "$lib/platform/workbook";
 import { extractBestTimes, parseBestTimes, type BestTimes } from "./bestTimes";
 import { DEFAULT_REC_MAPPING, parseRecMapping, type RecMapping } from "./mapping";
-import { DEFAULT_WAVE_SURCHARGE_S } from "./proposal";
 
 const DIR = "records";
 export const MAPPING_PATH = `${DIR}/mapping.json`;
 export const CLUB_RULEBOOK_PATH = `${DIR}/club.rwm`;
 export const CLUB_INFO_PATH = `${DIR}/club.json`;
-export const OPTIONS_PATH = `${DIR}/options.json`;
 const BEST_TIMES_FILE = /^best-times-(\d{4})\.json$/;
 const BEST_TIMES_PATH = new RegExp(`^${DIR}/${BEST_TIMES_FILE.source.slice(1)}`);
 const bestTimesPath = (year: number): string => `${DIR}/best-times-${year}.json`;
@@ -65,6 +63,12 @@ export async function listBestTimeYears(): Promise<number[]> {
 	return years.filter((year): year is number => year !== null).sort((a, b) => b - a);
 }
 
+/** Alle gespeicherten Bestzeiten; unlesbare Dateien bleiben weg. */
+export async function loadAllBestTimes(): Promise<BestTimes[]> {
+	const loaded = await Promise.all((await listBestTimeYears()).map(loadBestTimes));
+	return loaded.filter((bestTimes): bestTimes is BestTimes => bestTimes !== null);
+}
+
 export async function loadRecMapping(): Promise<RecMapping> {
 	return parseRecMapping(await readJson(MAPPING_PATH)) ?? structuredClone(DEFAULT_REC_MAPPING);
 }
@@ -83,28 +87,4 @@ export async function loadClubRulebook(): Promise<StoredRulebook | null> {
 	if (bytes === null) return null;
 	const info = (await readJson(CLUB_INFO_PATH)) as { name?: unknown } | null;
 	return { name: typeof info?.name === "string" ? info.name : "Vereins-Regelwerk.rwm", bytes };
-}
-
-/** Zuschlag auf die Wellen-Bestzeit; ausgeschaltet gilt die echte Bestzeit. */
-export interface WaveSurcharge {
-	enabled: boolean;
-	seconds: number;
-}
-
-const DEFAULT_SURCHARGE: WaveSurcharge = { enabled: true, seconds: DEFAULT_WAVE_SURCHARGE_S };
-
-/** Gespeicherter Zuschlag; null bei ungültigem Inhalt. */
-export function parseWaveSurcharge(value: unknown): WaveSurcharge | null {
-	if (typeof value !== "object" || value === null) return null;
-	const { enabled, seconds } = value as Record<string, unknown>;
-	const valid = typeof enabled === "boolean" && typeof seconds === "number" && Number.isFinite(seconds) && seconds >= 0;
-	return valid ? { enabled, seconds } : null;
-}
-
-export async function loadWaveSurcharge(): Promise<WaveSurcharge> {
-	return parseWaveSurcharge(await readJson(OPTIONS_PATH)) ?? { ...DEFAULT_SURCHARGE };
-}
-
-export function saveWaveSurcharge(surcharge: WaveSurcharge): Promise<void> {
-	return writeJson(OPTIONS_PATH, surcharge);
 }

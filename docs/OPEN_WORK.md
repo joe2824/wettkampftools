@@ -73,6 +73,11 @@ Weiteres:
      entfernt) aktualisieren und in JAuswertung öffnen: Bahn-Einstellungen,
      Strafenkatalog und Rec-Werte stimmen.
    - Aktionsleiste unten, Schritt-Assistent, Urkunden-Vorschau.
+   - Wellen-Rekorde: Ergebnisdatei 2025 bei der Auswertung laden → Hinweis
+     „Neuer Rekord in der Welle“ nur für Zeiten, die alle anderen Jahre
+     unterbieten; Werkzeuge → Wellen-Zeiten zeigt Verlauf, Rekord, Durchschnitt, längste Zeit und die grobe Dauer der Welle aus den Meldungen; beim
+     Regelwerk fürs neue Jahr erscheinen schnellere Rekorde mit Button
+     „übernehmen“.
 
 ## Nächste Schritte
 

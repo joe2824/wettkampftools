@@ -128,8 +128,8 @@ describe("importBestTimesFile", () => {
 	const sheet: Sheet = {
 		name: "Daten",
 		rows: [
-			["Altersklasse", "Geschlecht", "Zeit 1", "Strafe 1"],
-			["AkW offen", "männlich", "2:40,00", ""]
+			["Altersklasse", "Geschlecht", "Disziplinen", "Zeit 1", "Strafe 1"],
+			["AkW offen", "männlich", "4*50m Retten in der Welle", "2:40,00", ""]
 		]
 	};
 	const file = (sheets: Sheet[], modifiedMs: number) => ({

@@ -4,7 +4,7 @@ import { setWorkbookAdapter, type Cell, type Sheet, type WorkbookAdapter } from 
 import { session } from "$lib/session.svelte";
 import { createFakeStore, type FakeStore } from "$lib/testing/fakeFs";
 import { createFakeWorkbookAdapter } from "$lib/testing/fakeWorkbook";
-import { confirmResultsYear, loadResultsFile, needsYearConfirmation } from "./results";
+import { confirmResultsYear, findNewWaveRecords, loadResultsFile, needsYearConfirmation } from "./results";
 
 const TODAY = new Date(2026, 10, 14);
 const MODIFIED_2026 = new Date(2026, 10, 14).getTime();
@@ -167,12 +167,24 @@ describe("Bestätigung des Dateijahrs", () => {
 });
 
 describe("Bestzeiten für die Rec-Werte", () => {
-	const WAVE_TIME = 20000 / (24 * 60 * 60 * 100);
+	const WAVE_TIME = 15000 / (24 * 60 * 60 * 100);
 	const timedSheet = (): Sheet => ({
 		name: "Daten",
 		rows: [
-			[...TEAM_HEADER, "Zeit 1", "Strafe 1"],
-			[1, "Musterstadt", "Anna Meier", "Max Mustermann", "Musterstadt", "AkW offen", "weiblich", 1234.5, WAVE_TIME, ""]
+			[...TEAM_HEADER, "Disziplinen", "Zeit 1", "Strafe 1"],
+			[
+				1,
+				"Musterstadt",
+				"Anna Meier",
+				"Max Mustermann",
+				"Musterstadt",
+				"AkW offen",
+				"weiblich",
+				1234.5,
+				"4*50m Retten in der Welle",
+				WAVE_TIME,
+				""
+			]
 		]
 	});
 	const stored = (year: number) => store.readText(`records/best-times-${year}.json`);
@@ -182,7 +194,17 @@ describe("Bestzeiten für die Rec-Werte", () => {
 		const text = await stored(2026);
 		expect(JSON.parse(text!)).toEqual({
 			year: 2026,
-			entries: [{ ageGroup: "AkW offen", gender: "female", disciplineIndex: 0, time: 20000 }]
+			entries: [
+				{
+					ageGroup: "AkW offen",
+					gender: "female",
+					discipline: "4*50m Retten in der Welle",
+					time: 15000,
+					slowest: 15000,
+					average: 15000,
+					teams: 1
+				}
+			]
 		});
 		expect(text).not.toContain("Musterstadt");
 		expect(text).not.toContain("Anna Meier");
@@ -198,5 +220,33 @@ describe("Bestzeiten für die Rec-Werte", () => {
 	it("legt ohne Zeiten nichts ab", async () => {
 		await loadResultsFile(fileOf([teamSheet()]), TODAY);
 		expect(await store.list("records")).toEqual([]);
+	});
+
+	it("meldet einen neuen Wellen-Rekord gegenüber allen anderen Jahren", async () => {
+		await loadResultsFile(fileOf([timedSheet()]), TODAY);
+		const records = await findNewWaveRecords(session.results!, TODAY);
+		expect(records).toEqual([
+			{
+				record: {
+					ageGroup: "AkW offen",
+					gender: "female",
+					discipline: "4*50m Retten in der Welle",
+					time: 15000,
+					slowest: 15000,
+					average: 15000,
+					teams: 1,
+					year: 2026
+				},
+				previous: expect.objectContaining({ time: expect.any(Number), year: expect.any(Number) })
+			}
+		]);
+		expect(records[0].previous!.time).toBeGreaterThan(15000);
+	});
+
+	it("meldet keinen Rekord, wenn die Zeit langsamer ist als bekannte Rekorde", async () => {
+		const slow = { ...timedSheet() };
+		slow.rows = [slow.rows[0], [...slow.rows[1].slice(0, 9), 30000 / (24 * 60 * 60 * 100), ""]];
+		await loadResultsFile(fileOf([slow]), TODAY);
+		expect(await findNewWaveRecords(session.results!, TODAY)).toEqual([]);
 	});
 });

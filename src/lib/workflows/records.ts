@@ -10,7 +10,23 @@ import {
 	writeRulebookRecords,
 	type RulebookRecord
 } from "$lib/records/rulebookRecords";
-import { loadClubRulebook, rememberBestTimes, saveClubRulebook, type StoredRulebook } from "$lib/records/storage";
+import {
+	loadAllBestTimes,
+	loadClubRulebook,
+	rememberBestTimes,
+	saveClubRulebook,
+	type StoredRulebook
+} from "$lib/records/storage";
+import { WAVE_HISTORY } from "$lib/records/waveHistory";
+import {
+	currentDisciplines,
+	mergeYears,
+	waveRecordTable,
+	waveStatistics,
+	type WaveRecord,
+	type WaveStatistic
+} from "$lib/records/waveRecords";
+import type { BestTimes } from "$lib/records/bestTimes";
 import { workbookYear } from "$lib/wwk/results";
 import { userMessage } from "./errors";
 import type { ResultsFile } from "./results";
@@ -30,6 +46,19 @@ export interface SavedRulebook {
 
 export type BestTimesOutcome = { ok: true; year: number; entries: number } | { ok: false; message: string };
 
+export interface WaveRecords {
+	table: WaveRecord[];
+	statistics: WaveStatistic[];
+	/** Zeiten je Jahr, aufsteigend; Grundlage für Verläufe. */
+	history: BestTimes[];
+	/** Disziplinen des jüngsten Jahres. */
+	disciplines: string[];
+	/** Jahre, aus denen Zeiten vorliegen, aufsteigend. */
+	years: number[];
+}
+
+export const EMPTY_WAVE_RECORDS: WaveRecords = { table: [], statistics: [], history: [], disciplines: [], years: [] };
+
 const OFFICIAL_BASE_URL =
 	"https://raw.githubusercontent.com/dennisfabri/JAuswertung/main/jauswertung-files/src/main/resources/aks/";
 const HTTP_NOT_FOUND = 404;
@@ -37,7 +66,7 @@ const RULEBOOK_FILTERS = [{ name: "JAuswertung-Regelwerk", extensions: ["rwm"] }
 const UNREADABLE_RULEBOOK = "Die Datei ist kein JAuswertung-Regelwerk.";
 const DOWNLOAD_FAILED = "Das offizielle Regelwerk konnte nicht geladen werden. Besteht eine Internetverbindung?";
 const UNREADABLE_RESULTS = "Die Ergebnisdatei konnte nicht gelesen werden.";
-const NO_TIMES = "Die Ergebnisdatei enthält keine gültigen Zeiten.";
+const NO_TIMES = "Die Ergebnisdatei enthält keine gültigen Zeiten aus der Welle.";
 const PENALTY_WRITE_FAILED = "Der Strafenkatalog konnte nicht neben das Regelwerk geschrieben werden.";
 
 const RULEBOOK_EXTENSION = /\.rwm$/i;
@@ -101,6 +130,27 @@ export async function downloadOfficialRulebook(year: number): Promise<RulebookOu
 	}
 	if (!response.ok) return { ok: false, message: DOWNLOAD_FAILED };
 	return readRulebookFile(officialFileName(year), new Uint8Array(await response.arrayBuffer()));
+}
+
+/** Gespeicherte Bestzeiten; ohne Datenordner (etwa im Browser) nur die mitgelieferte Geschichte. */
+async function storedBestTimes(): Promise<BestTimes[]> {
+	try {
+		return await loadAllBestTimes();
+	} catch {
+		return [];
+	}
+}
+
+/** Rekorde der Wellendisziplinen aus der mitgelieferten Geschichte und den gespeicherten Bestzeiten. */
+export async function loadWaveRecords(): Promise<WaveRecords> {
+	const years = mergeYears(WAVE_HISTORY, await storedBestTimes());
+	return {
+		table: waveRecordTable(years),
+		statistics: waveStatistics(years),
+		history: years,
+		disciplines: currentDisciplines(years),
+		years: years.map((bestTimes) => bestTimes.year)
+	};
 }
 
 /** Bestzeiten aus einer älteren Ergebnisdatei nachtragen; Jahr aus den Dateidaten. */

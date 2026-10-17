@@ -18,6 +18,7 @@ describe("Navigation", () => {
 			"Urkunden",
 			"Entfernungen",
 			"Urkunden-Layout",
+			"Wellen-Zeiten",
 			"Regelwerk fürs neue Jahr",
 			"Einstellungen"
 		]);

@@ -6,10 +6,11 @@
 	import { Button } from "$lib/components/ui/button";
 	import Dropzone from "$lib/components/Dropzone.svelte";
 	import LoadedFileCard from "$lib/components/LoadedFileCard.svelte";
+	import WaveRecordNotice from "$lib/components/WaveRecordNotice.svelte";
 	import YearCheckNotice from "$lib/components/YearCheckNotice.svelte";
 	import type { CheckedFile } from "$lib/components/fileCheck";
 	import type { SessionResults } from "$lib/session.svelte";
-	import { loadResultsFile } from "$lib/workflows/results";
+	import { loadResultsFile, needsYearConfirmation } from "$lib/workflows/results";
 
 	interface Props {
 		results: SessionResults | null;
@@ -69,5 +70,8 @@
 
 	{#if results && !replacing}
 		<YearCheckNotice {results} onreplace={() => (replacing = true)} />
+		{#if !needsYearConfirmation(results)}
+			<WaveRecordNotice {results} />
+		{/if}
 	{/if}
 </div>

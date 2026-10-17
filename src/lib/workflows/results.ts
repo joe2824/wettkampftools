@@ -1,7 +1,10 @@
 // Ergebnisdatei aus JAuswertung laden; genutzt von Auswertung und Urkunden.
 import { logError, logInfo } from "$lib/log";
 import { readWorkbook, type Workbook } from "$lib/platform/workbook";
-import { rememberBestTimes } from "$lib/records/storage";
+import { extractBestTimes } from "$lib/records/bestTimes";
+import { loadAllBestTimes, rememberBestTimes } from "$lib/records/storage";
+import { WAVE_HISTORY } from "$lib/records/waveHistory";
+import { findNewRecords, mergeYears, type NewWaveRecord } from "$lib/records/waveRecords";
 import { session, type SessionResults } from "$lib/session.svelte";
 import { readJAuswertungResults, workbookYear, type CompetitionKind, type FileDates } from "$lib/wwk/results";
 import { userMessage } from "./errors";
@@ -44,6 +47,22 @@ export function needsYearConfirmation(results: SessionResults | null): boolean {
 	return results !== null && results.yearWarning !== null && !results.yearConfirmed;
 }
 
+/** Jahr, unter dem die Zeiten der Datei zählen: das Dateijahr, wenn es abweicht, sonst das laufende. */
+export const resultsYear = (results: Pick<SessionResults, "yearWarning">, today: Date): number =>
+	results.yearWarning ?? today.getFullYear();
+
+/** Wellen-Rekorde, die diese Ergebnisdatei gegenüber allen anderen Jahren aufstellt. */
+export async function findNewWaveRecords(results: SessionResults, today: Date = new Date()): Promise<NewWaveRecord[]> {
+	try {
+		const current = extractBestTimes(results.workbook, resultsYear(results, today));
+		if (current.entries.length === 0) return [];
+		return findNewRecords(current, mergeYears(WAVE_HISTORY, await loadAllBestTimes()));
+	} catch {
+		logError("records.recordCheckFailed");
+		return [];
+	}
+}
+
 /** Bestzeiten fürs Rec-Werte-Werkzeug merken; ein Fehler dabei stört das Laden nicht. */
 async function keepBestTimes(workbook: Workbook, year: number): Promise<void> {
 	try {
@@ -60,7 +79,7 @@ export async function confirmResultsYear(): Promise<void> {
 	if (results === null) return;
 	session.setResults({ ...results, yearConfirmed: true });
 	logInfo("results.yearConfirmed");
-	if (results.yearWarning !== null) await keepBestTimes(results.workbook, results.yearWarning);
+	if (results.yearWarning !== null) await keepBestTimes(results.workbook, resultsYear(results, new Date()));
 }
 
 /** Liest die Datei; nur bei Erfolg wird die Sitzung ersetzt. */
@@ -73,7 +92,7 @@ export async function loadResultsFile(file: ResultsFile, today: Date = new Date(
 		const { name: fileName, createdMs, modifiedMs } = file;
 		session.setResults({ fileName, createdMs, modifiedMs, workbook, kind, rows, ...check, yearConfirmed: false });
 		logInfo("results.loaded", { rows: rows.length, team: kind === "team", creationUnknown: check.creationUnknown });
-		if (check.yearWarning === null) await keepBestTimes(workbook, today.getFullYear());
+		if (check.yearWarning === null) await keepBestTimes(workbook, resultsYear(check, today));
 		return { ok: true, summary: { kind, rowCount: rows.length, ...check } };
 	} catch (error) {
 		return { ok: false, message: userMessage(error, UNREADABLE) };

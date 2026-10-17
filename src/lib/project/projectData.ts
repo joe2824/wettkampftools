@@ -11,9 +11,7 @@ import {
 	CLUB_INFO_PATH,
 	CLUB_RULEBOOK_PATH,
 	listBestTimePaths,
-	MAPPING_PATH,
-	OPTIONS_PATH,
-	parseWaveSurcharge
+	MAPPING_PATH
 } from "$lib/records/storage";
 import { isRecord } from "$lib/settings/validate";
 
@@ -47,7 +45,6 @@ function isRulebook(bytes: Uint8Array): boolean {
 const CLUB_RULEBOOK = "Vereins-Regelwerk";
 const FIXED_FILES: Record<string, DataFile> = {
 	[CHOICES_FILE]: { label: "Gliederungswahl der Entfernungen", isValid: jsonCheck(parseChoiceMap) },
-	[OPTIONS_PATH]: { label: "Zuschlag für die Welle", isValid: jsonCheck(parseWaveSurcharge) },
 	[MAPPING_PATH]: { label: "Zuordnung der Rec-Werte", isValid: jsonCheck(parseRecMapping) },
 	[CLUB_RULEBOOK_PATH]: { label: CLUB_RULEBOOK, isValid: isRulebook },
 	[CLUB_INFO_PATH]: {

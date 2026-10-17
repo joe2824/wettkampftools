@@ -4,15 +4,14 @@ import { createFakeStore, type FakeStore } from "$lib/testing/fakeFs";
 import { DEFAULT_REC_MAPPING } from "./mapping";
 import {
 	listBestTimeYears,
+	loadAllBestTimes,
 	loadBestTimes,
 	loadClubRulebook,
 	loadRecMapping,
-	loadWaveSurcharge,
 	rememberBestTimes,
 	saveBestTimes,
 	saveClubRulebook,
-	saveRecMapping,
-	saveWaveSurcharge
+	saveRecMapping
 } from "./storage";
 
 let store: FakeStore;
@@ -27,7 +26,17 @@ afterEach(() => resetAppDataStore());
 describe("Bestzeiten", () => {
 	const best = {
 		year: 2025,
-		entries: [{ ageGroup: "AkW offen", gender: "male" as const, disciplineIndex: 0, time: 16510 }]
+		entries: [
+			{
+				ageGroup: "AkW offen",
+				gender: "male" as const,
+				discipline: "4*50m Retten in der Welle",
+				time: 16510,
+				slowest: 18000,
+				average: 17200,
+				teams: 3
+			}
+		]
 	};
 
 	it("speichert je Jahr und listet die Jahre absteigend", async () => {
@@ -47,6 +56,12 @@ describe("Bestzeiten", () => {
 	it("übergeht fremde Dateien beim Auflisten", async () => {
 		await store.writeText("records/mapping.json", "{}");
 		expect(await listBestTimeYears()).toEqual([]);
+	});
+
+	it("lädt alle lesbaren Jahre auf einmal", async () => {
+		await saveBestTimes(best);
+		await store.writeText("records/best-times-2023.json", "{kaputt");
+		expect(await loadAllBestTimes()).toEqual([best]);
 	});
 });
 
@@ -77,33 +92,19 @@ describe("Vereins-Regelwerk", () => {
 
 describe("rememberBestTimes", () => {
 	const workbook = (rows: (string | number)[][]) => ({
-		sheets: [{ name: "Daten", rows: [["Altersklasse", "Geschlecht", "Zeit 1", "Strafe 1"], ...rows] }],
+		sheets: [{ name: "Daten", rows: [["Altersklasse", "Geschlecht", "Disziplinen", "Zeit 1", "Strafe 1"], ...rows] }],
 		properties: { created: null, modified: null }
 	});
 
 	it("speichert die Bestzeiten und meldet die Anzahl", async () => {
-		expect(await rememberBestTimes(workbook([["AkW offen", "weiblich", "3:20,00", ""]]), 2025)).toBe(1);
+		expect(
+			await rememberBestTimes(workbook([["AkW offen", "weiblich", "4*50m Retten in der Welle", "3:20,00", ""]]), 2025)
+		).toBe(1);
 		expect((await loadBestTimes(2025))?.entries[0].time).toBe(20000);
 	});
 
 	it("legt ohne Zeiten nichts an", async () => {
 		expect(await rememberBestTimes(workbook([]), 2025)).toBe(0);
 		expect(store.files.size).toBe(0);
-	});
-});
-
-describe("Wellen-Zuschlag", () => {
-	it("ist ohne Datei eingeschaltet mit 5 s", async () => {
-		expect(await loadWaveSurcharge()).toEqual({ enabled: true, seconds: 5 });
-	});
-
-	it("merkt sich Schalter und Sekunden", async () => {
-		await saveWaveSurcharge({ enabled: false, seconds: 3.5 });
-		expect(await loadWaveSurcharge()).toEqual({ enabled: false, seconds: 3.5 });
-	});
-
-	it("fällt bei kaputter Datei auf den Standard zurück", async () => {
-		await store.writeText("records/options.json", JSON.stringify({ enabled: "ja", seconds: -1 }));
-		expect(await loadWaveSurcharge()).toEqual({ enabled: true, seconds: 5 });
 	});
 });

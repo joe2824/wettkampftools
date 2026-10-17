@@ -7,13 +7,25 @@ import { collectProjectData, isValidProjectData, projectDataLabel, writeProjectD
 
 const json = (value: unknown): Uint8Array => strToU8(JSON.stringify(value));
 const RULEBOOK = rulebookFile([{ name: "AK 12", female: [{ name: "50m Schwimmen", rec: 0 }], male: [] }]);
-const BEST_TIMES = { year: 2025, entries: [{ ageGroup: "AK 12", gender: "female", disciplineIndex: 0, time: 3550 }] };
+const BEST_TIMES = {
+	year: 2025,
+	entries: [
+		{
+			ageGroup: "AkW 12",
+			gender: "female",
+			discipline: "4*50m Retten in der Welle",
+			time: 20550,
+			slowest: 22000,
+			average: 21000,
+			teams: 2
+		}
+	]
+};
 
 /** Gültige Dateien aller Arten, wie sie im Datenordner liegen. */
 function validFiles(): Record<string, Uint8Array> {
 	return {
 		"distances/choices.json": json({ beispielhausen: "3" }),
-		"records/options.json": json({ enabled: false, seconds: 5 }),
 		"records/mapping.json": json({ ageGroups: { "AK 12": "AK 12" }, disciplineAliases: {} }),
 		"records/club.rwm": RULEBOOK,
 		"records/club.json": json({ name: "Verein.rwm" }),
@@ -28,7 +40,7 @@ describe("isValidProjectData", () => {
 
 	it.each([
 		["distances/choices.json", strToU8("kaputt")],
-		["records/options.json", json({ enabled: "ja", seconds: 5 })],
+		["records/options.json", json({ enabled: false, seconds: 5 })],
 		["records/mapping.json", json({ ageGroups: 1 })],
 		["records/club.rwm", strToU8("kein Regelwerk")],
 		["records/club.json", json({ name: 3 })],
