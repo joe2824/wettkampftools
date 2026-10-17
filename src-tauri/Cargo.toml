@@ -1,6 +1,6 @@
 [package]
 name = "wettkampftools"
-version = "2.0.0-beta.2"
+version = "2.0.0-beta.3"
 description = "Wettkampftools für den DLRG Wellenwettkampf"
 authors = ["Joel Klein"]
 license = "MIT"
