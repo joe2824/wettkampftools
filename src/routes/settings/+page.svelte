@@ -3,6 +3,7 @@
 	import { toast } from "svelte-sonner";
 	import * as Tabs from "$lib/components/ui/tabs";
 	import AgeGroupsTab from "$lib/components/settings/AgeGroupsTab.svelte";
+	import AppearanceTab from "$lib/components/settings/AppearanceTab.svelte";
 	import CertificatesTab from "$lib/components/settings/CertificatesTab.svelte";
 	import RulebookTab from "$lib/components/settings/RulebookTab.svelte";
 	import SeniorsTab from "$lib/components/settings/SeniorsTab.svelte";
@@ -20,7 +21,8 @@
 		{ value: "ageGroups", label: "Altersklassen", component: AgeGroupsTab },
 		{ value: "seniors", label: "Senioren", component: SeniorsTab },
 		{ value: "certificates", label: "Urkunden", component: CertificatesTab },
-		{ value: "rulebook", label: "Regelwerk", component: RulebookTab }
+		{ value: "rulebook", label: "Regelwerk", component: RulebookTab },
+		{ value: "appearance", label: "Darstellung", component: AppearanceTab }
 	];
 
 	let active = $state("wave");
