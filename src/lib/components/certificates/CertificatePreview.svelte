@@ -9,7 +9,14 @@
 	import { Switch } from "$lib/components/ui/switch";
 	import { previewOps } from "$lib/workflows/layoutEditor";
 	import CertificatePageView from "./CertificatePageView.svelte";
-	import { clampPage, pageCaption, pageForKey } from "./certificatePreview";
+	import {
+		clampPage,
+		hasMultiplePagesPerEntry,
+		nextEntryPage,
+		pageCaption,
+		pageForKey,
+		previousEntryPage
+	} from "./certificatePreview";
 	import FontsUnavailableAlert from "./FontsUnavailableAlert.svelte";
 	import { ImageUrls } from "./imageUrls.svelte";
 	import PreviewNavigation from "./PreviewNavigation.svelte";
@@ -43,6 +50,10 @@
 			: []
 	);
 	const caption = $derived(pageCaption(pages, index));
+	// Sprung von Platz zu Platz lohnt nur bei mehreren Urkunden je Eintrag.
+	const entryJumps = $derived(hasMultiplePagesPerEntry(pages));
+	const previousEntry = $derived(entryJumps ? previousEntryPage(pages, index) : null);
+	const nextEntry = $derived(entryJumps ? nextEntryPage(pages, index) : null);
 	const hasBackground = $derived(images.urls.background !== undefined);
 
 	onMount(() => {
@@ -51,7 +62,7 @@
 	});
 
 	function handleKeyDown(event: KeyboardEvent) {
-		const target = pageForKey(event.key, index, pages.length);
+		const target = pageForKey(event.key, index, pages);
 		if (target === null) return;
 		event.preventDefault();
 		requested = target;
@@ -59,7 +70,13 @@
 </script>
 
 <div class="flex flex-col gap-4">
-	<PreviewNavigation {index} count={pages.length} onchange={(next) => (requested = clampPage(next, pages.length))} />
+	<PreviewNavigation
+		{index}
+		count={pages.length}
+		{previousEntry}
+		{nextEntry}
+		onchange={(next) => (requested = clampPage(next, pages.length))}
+	/>
 
 	<p class="text-center text-sm font-medium" aria-live="polite">{caption}</p>
 
@@ -71,7 +88,7 @@
 		<div
 			class="rounded-lg bg-muted/50 p-4 outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
 			role="group"
-			aria-label="Urkunden-Vorschau. Mit den Pfeiltasten blättern."
+			aria-label="Urkunden-Vorschau. Mit den Pfeiltasten blättern, mit Bild auf und ab von Platz zu Platz springen."
 			tabindex="0"
 			onkeydown={handleKeyDown}
 		>
