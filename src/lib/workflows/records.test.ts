@@ -98,7 +98,7 @@ describe("downloadOfficialRulebook", () => {
 		expect(await downloadOfficialRulebook(2030)).toEqual({
 			ok: false,
 			message:
-				"Das Regelwerk „DLRG 2030.rwm“ ist bei JAuswertung noch nicht veröffentlicht. Bitte später erneut versuchen oder die Datei aus dem JAuswertung-Programmordner wählen."
+				"Das Regelwerk „DLRG 2030.rwm“ ist im JAuswertung-Projekt noch nicht veröffentlicht. Bitte später erneut versuchen oder die Datei aus einem JAuswertung-Programmordner wählen."
 		});
 	});
 

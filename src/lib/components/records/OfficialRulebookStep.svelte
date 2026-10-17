@@ -45,11 +45,11 @@
 	<RulebookSource
 		rulebook={official}
 		title="Offizielles Regelwerk (.rwm)"
-		hint="Aus JAuswertung, z. B. „DLRG {year}.rwm“."
+		hint="Datei aus dem JAuswertung-Projekt, z. B. „DLRG {year}.rwm“."
 		onfile={handleFile}
 	>
 		{#snippet actions()}
-			<DownloadButton {downloading} onclick={download}>„DLRG {year}“ von JAuswertung laden</DownloadButton>
+			<DownloadButton {downloading} onclick={download}>„DLRG {year}“ aus dem Internet laden</DownloadButton>
 		{/snippet}
 	</RulebookSource>
 
@@ -62,9 +62,10 @@
 				gilt der Rekord aller bisherigen Wettkämpfe (Werkzeuge → Wellen-Zeiten).
 			</p>
 			<p>
-				Das Regelwerk für das Jahr {year} lädt die App direkt aus JAuswertung („DLRG {year}.rwm“), sobald es dort
-				veröffentlicht ist. Ist es noch nicht da, erscheint ein Hinweis – dann später erneut versuchen oder die Datei
-				aus dem JAuswertung-Programmordner wählen.
+				Das Regelwerk für das Jahr {year} („DLRG {year}.rwm“) lädt die App aus dem Internet, aus dem öffentlichen
+				JAuswertung-Projekt auf GitHub; eine Installation von JAuswertung ist dafür nicht nötig. Ist es dort noch nicht
+				veröffentlicht, erscheint ein Hinweis – dann später erneut versuchen oder die Datei aus einem
+				JAuswertung-Programmordner wählen.
 			</p>
 		</Alert.Description>
 	</Alert.Root>

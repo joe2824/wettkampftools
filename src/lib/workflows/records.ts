@@ -74,8 +74,8 @@ const RULEBOOK_EXTENSION = /\.rwm$/i;
 const officialFileName = (year: number): string => `DLRG ${year}.rwm`;
 
 const notPublished = (year: number): string =>
-	`Das Regelwerk „${officialFileName(year)}“ ist bei JAuswertung noch nicht veröffentlicht. ` +
-	"Bitte später erneut versuchen oder die Datei aus dem JAuswertung-Programmordner wählen.";
+	`Das Regelwerk „${officialFileName(year)}“ ist im JAuswertung-Projekt noch nicht veröffentlicht. ` +
+	"Bitte später erneut versuchen oder die Datei aus einem JAuswertung-Programmordner wählen.";
 
 /** Name für die Herkunft der Rec-Werte: Dateiname ohne Endung, sonst die Beschreibung. */
 export function officialRulebookName(rulebook: Pick<LoadedRulebook, "name" | "description"> | null): string | null {

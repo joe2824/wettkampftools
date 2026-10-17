@@ -61,13 +61,13 @@
 		<Dropzone
 			kinds={["penalties"]}
 			title="Strafenkatalog (.def)"
-			hint="Offizieller Mannschafts-Katalog aus JAuswertung, „defaultm.def“."
+			hint="Offizieller Mannschafts-Katalog des JAuswertung-Projekts, „defaultm.def“."
 			compact={penalties !== null}
 			onfile={handleFile}
 		/>
 	{/if}
 
-	<DownloadButton {downloading} onclick={download}>Von JAuswertung laden</DownloadButton>
+	<DownloadButton {downloading} onclick={download}>Aus dem Internet laden</DownloadButton>
 
 	{#if error}
 		<Alert.Root variant="destructive">
