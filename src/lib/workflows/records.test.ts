@@ -172,9 +172,7 @@ describe("saveNewRulebook", () => {
 		const request = filesMock.saveFile.mock.calls[0][0];
 		expect(request.defaultName).toBe("Regelwerk_2026.rwm");
 		expect(parseRulebookRecords(request.bytes)[1].rec).toBe(16500);
-		expect(strFromU8(unzipSync(request.bytes)["data.xml"])).toContain(
-			"<beschreibung>Wellen-Wk 2026 (mit Rec-Werten für 2025)</beschreibung>"
-		);
+		expect(strFromU8(unzipSync(request.bytes)["data.xml"])).toContain("<beschreibung>Wellen-Wk 2026</beschreibung>");
 	});
 
 	it("schreibt den Strafenkatalog neben das Regelwerk", async () => {
@@ -229,6 +227,6 @@ describe("saveNewRulebook", () => {
 	});
 
 	it("beschreibt das neue Regelwerk mit Jahr und Vorjahr", () => {
-		expect(newRulebookDescription(2027)).toBe("Wellen-Wk 2027 (mit Rec-Werten für 2026)");
+		expect(newRulebookDescription(2027)).toBe("Wellen-Wk 2027");
 	});
 });

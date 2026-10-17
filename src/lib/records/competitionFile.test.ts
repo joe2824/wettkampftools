@@ -43,7 +43,7 @@ const update = (): CompetitionUpdate => ({
 	catalog: catalog(),
 	clubRecords,
 	updates: [{ ageGroup: "AkW offen", gender: "male", disciplineIndex: 0, rec: 15000 }],
-	description: "Wellen-Wk 2026 (mit Rec-Werten für 2025)"
+	description: "Wellen-Wk 2026"
 });
 
 const rootOf = (bytes: Uint8Array): Element =>
@@ -59,7 +59,7 @@ describe("updateCompetitionFile", () => {
 		expect(readCatalogElement(childOf(root, "strafen"))).toEqual(update().catalog);
 		const records = readRulebookElementRecords(childOf(root, "aks"));
 		expect(records.map((r) => r.rec)).toEqual([5817, 5674, 20894, 15000]);
-		expect(childOf(childOf(root, "aks"), "beschreibung").textContent).toBe("Wellen-Wk 2026 (mit Rec-Werten für 2025)");
+		expect(childOf(childOf(root, "aks"), "beschreibung").textContent).toBe("Wellen-Wk 2026");
 		expect(outcome).toMatchObject({ teams: 2, ageGroups: 2 });
 	});
 

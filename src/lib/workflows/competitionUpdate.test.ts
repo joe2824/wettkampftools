@@ -52,7 +52,7 @@ describe("saveUpdatedCompetition", () => {
 		const xml = strFromU8(unzipSync(request.bytes)["data.xml"]);
 		expect(xml).toContain("<rec>16500</rec>");
 		expect(xml).toContain("<shortname>RW1#4</shortname>");
-		expect(xml).toContain("<beschreibung>Wellen-Wk 2026 (mit Rec-Werten für 2025)</beschreibung>");
+		expect(xml).toContain("<beschreibung>Wellen-Wk 2026</beschreibung>");
 	});
 
 	it("speichert nichts bei Ablehnung", async () => {

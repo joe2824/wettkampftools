@@ -88,7 +88,12 @@ export function officialRulebookName(rulebook: Pick<LoadedRulebook, "name" | "de
 export const officialRulebookUrl = (year: number): string =>
 	OFFICIAL_BASE_URL + encodeURIComponent(officialFileName(year));
 
-export const newRulebookDescription = (year: number): string => `Wellen-Wk ${year} (mit Rec-Werten für ${year - 1})`;
+/**
+ * Nur das Zieljahr, kein Vorjahr: JAuswertung vergleicht ein Regelwerk, dessen Beschreibung sein
+ * Prüfjahr nennt, beim Start mit dem offiziellen Regelwerk dieses Jahres und bietet an, die Rec-Werte
+ * darauf zurückzusetzen. Mit „(mit Rec-Werten für 2025)“ traf das jedes neue Regelwerk.
+ */
+export const newRulebookDescription = (year: number): string => `Wellen-Wk ${year}`;
 
 export const newRulebookFileName = (year: number): string => `Regelwerk_${year}.rwm`;
 

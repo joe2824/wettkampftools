@@ -84,12 +84,12 @@ describe("writeRulebookRecords", () => {
 				{ ageGroup: "AK 12", gender: "male", disciplineIndex: 1, rec: 7999 },
 				{ ageGroup: "AkW offen", gender: "female", disciplineIndex: 0, rec: 20500 }
 			],
-			"Wellen-Wk 2026 (mit Rec-Werten für 2025)"
+			"Wellen-Wk 2026"
 		);
 		const expected = dataXml(original)
 			.replace("<rec>8026</rec>", "<rec>7999</rec>")
 			.replace("<rec>20894</rec>", "<rec>20500</rec>")
-			.replace("Wellen-Wk 2025", "Wellen-Wk 2026 (mit Rec-Werten für 2025)");
+			.replace("Wellen-Wk 2025", "Wellen-Wk 2026");
 		expect(dataXml(updated)).toBe(expected);
 		expect(Object.keys(unzipSync(updated))).toEqual(["data.xml"]);
 	});
