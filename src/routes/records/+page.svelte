@@ -23,6 +23,7 @@
 		type RecDecisions
 	} from "$lib/records/proposal";
 	import { loadRecMapping, saveRecMapping } from "$lib/records/storage";
+	import { settingsStore } from "$lib/settings/settingsStore.svelte";
 	import {
 		EMPTY_WAVE_RECORDS,
 		loadWaveRecords,
@@ -157,7 +158,14 @@
 			{:else if step.id === "save"}
 				<SaveStep {club} {penalties} {rows} {year} bind:saved />
 			{:else if step.id === "competition"}
-				<CompetitionFileStep {club} {penalties} {rows} {year} onupdated={() => (competitionUpdated = true)} />
+				<CompetitionFileStep
+					{club}
+					{penalties}
+					{rows}
+					{year}
+					event={settingsStore.settings.event}
+					onupdated={() => (competitionUpdated = true)}
+				/>
 			{/if}
 		{/snippet}
 	</Stepper>

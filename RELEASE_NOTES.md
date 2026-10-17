@@ -128,4 +128,4 @@ Logo, und die Seiten führen Schritt für Schritt durch den Ablauf.
 - Beim Öffnen einer Projektdatei wird der bisherige Stand vorher gesichert; schlägt das Übernehmen fehl, wird er automatisch wiederhergestellt.
 - Projektdateien nehmen auch die Gliederungswahl der Entfernungen sowie Zuordnung, Vereins-Regelwerk und Wellen-Zeiten der Rec-Werte mit.
 - Das Werkzeug **„Regelwerk fürs neue Jahr“** (bisher „Rec-Werte“) erstellt jetzt auch den Strafenkatalog mit den Vereinsregeln (Fehlstart 100 Strafpunkte, neuer Eintrag für das Herausbringen beim Retten in der Welle) und speichert ihn neben dem Regelwerk.
-- Eine kopierte JAuswertung-Wettkampfdatei des Vorjahres lässt sich fürs neue Jahr aktualisieren: Strafenkatalog und Rec-Werte werden getauscht, Bahn-Einstellungen und alles andere bleiben erhalten. Gespeichert wird als neue Datei.
+- Aus der Wettkampfdatei des Vorjahres entsteht eine frische Datei fürs neue Jahr: neues Regelwerk mit Altersklassen und Rec-Werten, neuer Strafenkatalog, Name, Datum und Ausrichter aus der Veranstaltung; Bahn-Einstellungen, Becken und Logo bleiben, Mannschaften und Ergebnisse sind leer.

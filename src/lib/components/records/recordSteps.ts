@@ -58,7 +58,7 @@ export function recordSteps(input: RecordStepInput): Step[] {
 		needsClub({
 			id: "competition",
 			label: "Wettkampfdatei",
-			description: "Optional: eine bestehende JAuswertung-Datei fürs neue Jahr weiterverwenden.",
+			description: "Frische JAuswertung-Datei fürs neue Jahr mit den Einstellungen und dem Logo des Vorjahres.",
 			status: input.competitionUpdated ? "done" : "open"
 		})
 	];

@@ -163,16 +163,19 @@ enthielten einen veralteten Katalog (Fehlstart als Disqualifikation, kein
 Eintrag für das Herausbringen in der Welle). Die App warnt, falls im
 Regelwerk für eine Altersklasse „jede Strafe disqualifiziert“ eingestellt ist.
 
-**Bestehende Wettkampfdatei weiterverwenden:** Wer die Vorjahresdatei mit
-ihren Bahn- und anderen Einstellungen behalten will, kopiert sie, entfernt in
-JAuswertung alle Mannschaften und Ergebnisse, speichert und legt die Kopie in
-Schritt 7 ab. Die App ersetzt darin den Strafenkatalog sowie Rec-Werte und
-Beschreibung des eingebetteten Regelwerks und speichert das Ergebnis als
-**neue** Datei; alles andere bleibt zeichengenau erhalten. Sie lehnt ab, wenn
-noch Strafen vergeben sind, der Katalog mit anderen Daten verknüpft ist, die
-Altersklassen nicht zum Vereins-Regelwerk passen oder es ein Einzelwettkampf
-ist. Nach dem Schreiben liest sie die Datei zur Kontrolle erneut ein. Dieser
-Schritt ist optional und bleibt auch nach dem Speichern erreichbar.
+**Frische Wettkampfdatei fürs neue Jahr:** Im letzten Schritt die
+Wettkampfdatei des Vorjahres ablegen, so wie sie ist. Die App erzeugt daraus
+eine **neue** `.wk` mit dem neuen Regelwerk (Altersklassen und Rec-Werte), dem
+neuen Strafenkatalog und den Angaben der Veranstaltung (Name, Datum,
+Ausrichter); Bahn-Einstellungen, Becken, Logo und alle übrigen Eigenschaften
+bleiben aus dem Vorjahr. Mannschaften, Läufe, Ergebnisse, Strafen, Einsprüche
+und Kampfrichter sind leer. Die App ändert nur die Blöcke, die sie kennt, und
+lässt alles andere unverändert stehen; ändert sich die Zahl der Altersklassen
+und die Datei enthält eine unbekannte Liste je Altersklasse (etwa aus einer
+neueren JAuswertung-Version), bricht sie ab, statt eine unlesbare Datei zu
+schreiben. Nach dem Schreiben liest sie die Datei zur Kontrolle erneut ein. Das
+Original bleibt unverändert; die neue Datei in JAuswertung öffnen und die
+Meldungen importieren.
 
 ### Einstellungen
 

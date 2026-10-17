@@ -53,7 +53,7 @@
 	{#if !club}
 		<p class="text-sm text-muted-foreground">Zuerst das Vereins-Regelwerk laden.</p>
 	{:else if !penalties}
-		<p class="text-sm text-muted-foreground">Ohne Strafenkatalog (Schritt 5) wird nur das Regelwerk gespeichert.</p>
+		<p class="text-sm text-muted-foreground">Ohne Strafenkatalog (Schritt 4) wird nur das Regelwerk gespeichert.</p>
 	{:else}
 		<p class="text-sm text-muted-foreground">
 			Der Strafenkatalog wird als „{newPenaltyCatalogFileName(year)}“ in denselben Ordner gelegt.

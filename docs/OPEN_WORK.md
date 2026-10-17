@@ -69,9 +69,11 @@ Weiteres:
      Position auf dem vorgedruckten Papier.
    - Regelwerk fürs neue Jahr: Regelwerk + Strafenkatalog (`…m.def`) erzeugen,
      neuen Wettkampf in JAuswertung anlegen → Fehlstart 100 Strafpunkte, RW1 vorhanden.
-   - Kopierte Vorjahres-`.wk` (Mannschaften/Ergebnisse vorher in JAuswertung
-     entfernt) aktualisieren und in JAuswertung öffnen: Bahn-Einstellungen,
-     Strafenkatalog und Rec-Werte stimmen.
+   - Vorjahres-`.wk` (mit Mannschaften und Ergebnissen) in Schritt 6 ablegen,
+     neue Datei erzeugen und in JAuswertung öffnen: keine Mannschaften, neue
+     Altersklassen und Rec-Werte, Strafenkatalog, Name und Datum der
+     Veranstaltung, Bahn-Einstellungen und Logo wie im Vorjahr; Meldungen
+     importieren und einen Lauf anlegen.
    - Aktionsleiste unten, Schritt-Assistent, Urkunden-Vorschau.
    - Wellen-Rekorde: Ergebnisdatei 2025 bei der Auswertung laden → Hinweis
      „Neuer Rekord in der Welle“ nur für Zeiten, die alle anderen Jahre
