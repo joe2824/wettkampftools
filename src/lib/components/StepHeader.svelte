@@ -16,7 +16,7 @@
 	<span
 		class={cn(
 			"flex size-8 shrink-0 items-center justify-center rounded-full border text-sm font-semibold tabular-nums",
-			done ? "border-primary bg-primary text-primary-foreground" : "border-border bg-muted text-muted-foreground"
+			done ? "border-brand bg-brand text-brand-foreground" : "border-border bg-muted text-muted-foreground"
 		)}
 	>
 		{#if done}

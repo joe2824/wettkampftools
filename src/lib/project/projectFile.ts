@@ -13,6 +13,7 @@ import { issueMessages } from "$lib/settings/issueMessages";
 import { parseSettings, serializeSettingsForExport, type Settings } from "$lib/settings/settings";
 import { isRecord } from "$lib/settings/validate";
 import { isProjectDataPath, isValidProjectData, projectDataLabel, type ProjectData } from "./projectData";
+import { APP_NAME } from "$lib/release/appName";
 
 export const PROJECT_EXTENSION = "wwkprojekt";
 export const PROJECT_FORMAT = "wettkampftools-projekt";
@@ -59,9 +60,8 @@ const PART_NAMES: Record<string, string> = {
 	signature2: "Unterschrift 2"
 };
 
-const NOT_A_PROJECT = "Die Datei ist keine Projektdatei der Wettkampftools.";
-const TOO_NEW =
-	"Die Projektdatei stammt aus einer neueren Version der Wettkampftools. Bitte zuerst das Programm aktualisieren.";
+const NOT_A_PROJECT = `Die Datei ist keine Projektdatei von ${APP_NAME}.`;
+const TOO_NEW = `Die Projektdatei stammt aus einer neueren Version von ${APP_NAME}. Bitte zuerst das Programm aktualisieren.`;
 const TOO_LARGE = "Die Projektdatei ist zu groß.";
 const brokenNamed = (name: string): string => `Die Projektdatei ist beschädigt: ${name} konnte nicht gelesen werden.`;
 const brokenPart = (key: string): string => brokenNamed(PART_NAMES[key]);

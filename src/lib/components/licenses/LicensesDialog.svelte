@@ -10,7 +10,7 @@
 	<Dialog.Content class="flex max-h-[85vh] flex-col sm:max-w-2xl">
 		<Dialog.Header>
 			<Dialog.Title>Lizenzen und Quellen</Dialog.Title>
-			<Dialog.Description>Was in Wettkampftools steckt und woher die Daten kommen.</Dialog.Description>
+			<Dialog.Description>Was in DLRG Dorheim Wettkampftools steckt und woher die Daten kommen.</Dialog.Description>
 		</Dialog.Header>
 		<div class="-mx-4 flex min-h-0 flex-col gap-6 overflow-y-auto px-4">
 			<section class="flex flex-col gap-3" aria-labelledby="credits-heading">

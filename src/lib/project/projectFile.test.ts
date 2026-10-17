@@ -47,7 +47,7 @@ function sampleSnapshot(): ProjectSnapshot {
 function sampleData(): Record<string, Uint8Array> {
 	return {
 		"distances/choices.json": strToU8(JSON.stringify({ beispielhausen: "3" })),
-		"records/options.json": strToU8(JSON.stringify({ enabled: false, seconds: 5 }))
+		"records/mapping.json": strToU8(JSON.stringify({ ageGroups: {}, disciplineAliases: {} }))
 	};
 }
 
@@ -93,7 +93,7 @@ describe("buildProjectFile", () => {
 		const entries = unzipSync(build());
 		expect(Object.keys(entries).sort()).toEqual([
 			"appdata/distances/choices.json",
-			"appdata/records/options.json",
+			"appdata/records/mapping.json",
 			"competition/results.json",
 			"competition/state.json",
 			"images/signature1.png",
@@ -156,7 +156,7 @@ describe("readProjectFile", () => {
 		const bytes = rebuild(build(), (entries) => (entries["appdata/competition/state.json"] = strToU8("{}")));
 		const result = readProjectFile(bytes);
 		if (!result.ok) throw new Error(result.message);
-		expect(Object.keys(result.project.data).sort()).toEqual(["distances/choices.json", "records/options.json"]);
+		expect(Object.keys(result.project.data).sort()).toEqual(["distances/choices.json", "records/mapping.json"]);
 	});
 
 	it("kennzeichnet Projekte ohne Unterschriften", () => {
@@ -178,7 +178,7 @@ describe("readProjectFile", () => {
 	});
 
 	it("lehnt Dateien ab, die kein Projekt sind", () => {
-		const notProject = "Die Datei ist keine Projektdatei der Wettkampftools.";
+		const notProject = "Die Datei ist keine Projektdatei von DLRG Dorheim Wettkampftools.";
 		expectError(strToU8("kein zip"), notProject);
 		expectError(zipSync({ "a.txt": strToU8("x") }), notProject);
 		const foreign = rebuild(build(), (entries) => {
@@ -194,7 +194,7 @@ describe("readProjectFile", () => {
 		});
 		expectError(
 			newer,
-			"Die Projektdatei stammt aus einer neueren Version der Wettkampftools. Bitte zuerst das Programm aktualisieren."
+			"Die Projektdatei stammt aus einer neueren Version von DLRG Dorheim Wettkampftools. Bitte zuerst das Programm aktualisieren."
 		);
 	});
 
@@ -215,7 +215,7 @@ describe("readProjectFile", () => {
 		const withCopy = rebuild(build(), (entries) => (entries["settingsXjson"] = entries["settings.json"]));
 		expect(readProjectFile(withCopy).ok).toBe(true);
 		const bytes = renameEntry(withCopy, "settingsXjson", "settings.json");
-		expectError(bytes, "Die Datei ist keine Projektdatei der Wettkampftools.");
+		expectError(bytes, "Die Datei ist keine Projektdatei von DLRG Dorheim Wettkampftools.");
 	});
 
 	it.each([
@@ -224,7 +224,7 @@ describe("readProjectFile", () => {
 		["competition/state.json", "Wettkampfstand"],
 		["competition/results.json", "Ergebnisse"],
 		["images/signature1.png", "Unterschrift 1"],
-		["appdata/records/options.json", "Zuschlag für die Welle"]
+		["appdata/records/mapping.json", "Zuordnung der Rec-Werte"]
 	])("nennt den beschädigten Teil %s", (entry, part) => {
 		const broken = rebuild(build(), (entries) => (entries[entry] = strToU8("{kaputt")));
 		expectError(broken, `Die Projektdatei ist beschädigt: ${part} konnte nicht gelesen werden.`);

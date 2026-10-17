@@ -24,7 +24,7 @@
 				{#if prerelease}<Badge variant="outline">Beta</Badge>{/if}
 			</Dialog.Title>
 			<Dialog.Description>
-				Wettkampftools {updater.version} kann jetzt installiert werden. Die Anwendung startet danach neu.
+				DLRG Dorheim Wettkampftools {updater.version} kann jetzt installiert werden. Die Anwendung startet danach neu.
 				{#if prerelease}
 					Das ist eine Vorabversion zum Ausprobieren; sie kann noch Fehler enthalten.
 				{/if}

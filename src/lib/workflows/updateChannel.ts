@@ -4,7 +4,8 @@ import { flushLog, logError, logInfo } from "$lib/log";
 import type { Settings } from "$lib/settings/settings";
 
 export const CHANNEL_SAVE_ERROR = "Die Einstellung konnte nicht gespeichert werden. Bitte erneut versuchen.";
-export const RESTART_ERROR = "Der Neustart hat nicht geklappt. Bitte Wettkampftools schließen und wieder öffnen.";
+export const RESTART_ERROR =
+	"Der Neustart hat nicht geklappt. Bitte DLRG Dorheim Wettkampftools schließen und wieder öffnen.";
 
 interface ChannelStore {
 	settings: Pick<Settings, "betaUpdates">;

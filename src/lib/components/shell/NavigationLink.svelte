@@ -7,7 +7,11 @@
 </script>
 
 <Sidebar.MenuItem>
-	<Sidebar.MenuButton isActive={isActiveRoute(page.url.pathname, item.href)} tooltipContent={item.label}>
+	<Sidebar.MenuButton
+		isActive={isActiveRoute(page.url.pathname, item.href)}
+		tooltipContent={item.label}
+		class="h-9 data-active:bg-sidebar-primary/15 data-active:text-sidebar-primary data-active:hover:bg-sidebar-primary/20 data-active:hover:text-sidebar-primary"
+	>
 		{#snippet child({ props })}
 			<a href={item.href} {...props}>
 				<item.icon />

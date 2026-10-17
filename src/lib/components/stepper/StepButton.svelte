@@ -39,10 +39,10 @@
 		<span
 			class={cn(
 				"relative flex size-8 items-center justify-center rounded-full border text-sm font-semibold tabular-nums transition-colors",
-				step.status === "done" && "border-primary bg-primary text-primary-foreground",
+				step.status === "done" && "border-brand bg-brand text-brand-foreground",
 				step.status !== "done" && "border-border bg-muted text-muted-foreground",
-				active && step.status !== "done" && "border-primary bg-background text-foreground",
-				active && "ring-3 ring-ring/40",
+				active && step.status !== "done" && "border-brand bg-background text-foreground",
+				active && "ring-3 ring-brand/40",
 				locked && "opacity-60"
 			)}
 			aria-hidden="true"

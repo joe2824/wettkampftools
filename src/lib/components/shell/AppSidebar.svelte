@@ -1,11 +1,12 @@
 <script lang="ts">
 	import * as Sidebar from "$lib/components/ui/sidebar";
-	import { FOOTER_ITEMS, NAVIGATION_GROUPS } from "$lib/navigation";
+	import { FOOTER_ITEMS, HOME_ITEM, NAVIGATION_GROUPS } from "$lib/navigation";
 	import InfoIcon from "@lucide/svelte/icons/info";
 	import { onMount } from "svelte";
 	import InfoDialog from "$lib/components/InfoDialog.svelte";
 	import UpdateDialog from "$lib/components/UpdateDialog.svelte";
 	import { updater } from "$lib/release/updater.svelte";
+	import { APP_VERSION } from "$lib/version";
 	import NavigationLink from "./NavigationLink.svelte";
 
 	let infoOpen = $state(false);
@@ -15,19 +16,10 @@
 	});
 </script>
 
-<Sidebar.Root collapsible="icon">
-	<Sidebar.Header>
+<Sidebar.Root collapsible="icon" variant="inset">
+	<Sidebar.Header class="border-b border-sidebar-border">
 		<Sidebar.Menu>
-			<Sidebar.MenuItem>
-				<Sidebar.MenuButton size="lg">
-					{#snippet child({ props })}
-						<a href="/" {...props}>
-							<img src="/logo.png" alt="" class="size-8 shrink-0" />
-							<span class="font-bold">Wettkampftools</span>
-						</a>
-					{/snippet}
-				</Sidebar.MenuButton>
-			</Sidebar.MenuItem>
+			<NavigationLink item={HOME_ITEM} />
 		</Sidebar.Menu>
 	</Sidebar.Header>
 	<Sidebar.Content>
@@ -44,18 +36,19 @@
 			</Sidebar.Group>
 		{/each}
 	</Sidebar.Content>
-	<Sidebar.Footer>
+	<Sidebar.Footer class="border-t border-sidebar-border">
 		<Sidebar.Menu>
 			{#each FOOTER_ITEMS as item (item.href)}
 				<NavigationLink {item} />
 			{/each}
 			<Sidebar.MenuItem>
-				<Sidebar.MenuButton tooltipContent="Info" onclick={() => (infoOpen = true)}>
+				<Sidebar.MenuButton tooltipContent="Info" class="h-9" onclick={() => (infoOpen = true)}>
 					<InfoIcon />
 					<span>Info</span>
 				</Sidebar.MenuButton>
 			</Sidebar.MenuItem>
 		</Sidebar.Menu>
+		<p class="px-2 text-xs text-sidebar-foreground/60 group-data-[collapsible=icon]:hidden">Version {APP_VERSION}</p>
 	</Sidebar.Footer>
 	<Sidebar.Rail />
 </Sidebar.Root>

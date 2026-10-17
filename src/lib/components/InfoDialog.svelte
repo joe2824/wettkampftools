@@ -21,20 +21,20 @@
 
 	async function searchUpdates() {
 		const phase = await updater.check();
-		if (phase === "upToDate") toast.success("Wettkampftools ist auf dem neuesten Stand.");
+		if (phase === "upToDate") toast.success("DLRG Dorheim Wettkampftools ist auf dem neuesten Stand.");
 		else if (phase === "error" && updater.error) toast.error(updater.error);
 		else if (phase === "available") open = false;
 	}
 </script>
 
 <Dialog.Root bind:open>
-	<Dialog.Content class="sm:max-w-sm">
+	<Dialog.Content class="sm:max-w-md">
 		<Dialog.Header class="items-center text-center">
-			<img src="/logo.png" alt="" class="size-16" />
+			<img src="/logo.svg" alt="" class="size-16" />
 			<Dialog.Title class="text-xl">{APP_NAME}</Dialog.Title>
 			<Dialog.Description>Vorbereitung, Auswertung und Urkunden für den DLRG Wellenwettkampf.</Dialog.Description>
 		</Dialog.Header>
-		<dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+		<dl class="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-1 text-sm">
 			<dt class="text-muted-foreground">Version</dt>
 			<dd class="flex items-center gap-2 tabular-nums">
 				{APP_VERSION}
@@ -43,12 +43,12 @@
 			<dt class="text-muted-foreground">Autor</dt>
 			<dd>{AUTHOR}</dd>
 			<dt class="text-muted-foreground">Projektseite</dt>
-			<dd>
+			<dd class="min-w-0 break-all">
 				<ExternalLink url={PROJECT_URL}>{PROJECT_URL.replace("https://", "")}</ExternalLink>
 			</dd>
 		</dl>
 		<UpdateChannelSwitch />
-		<Dialog.Footer>
+		<Dialog.Footer class="flex-wrap sm:justify-center">
 			<Button variant="ghost" onclick={() => (licensesOpen = true)}>
 				<ScaleIcon data-icon="inline-start" />
 				Lizenzen und Quellen

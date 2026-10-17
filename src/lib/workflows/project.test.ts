@@ -213,7 +213,10 @@ describe("openProject", () => {
 	it("ändert nichts an einer ungültigen Datei", async () => {
 		await deps.settings.load();
 		const outcome = await openProject(zipSync({ "a.txt": strToU8("x") }), deps);
-		expect(outcome).toEqual({ ok: false, message: "Die Datei ist keine Projektdatei der Wettkampftools." });
+		expect(outcome).toEqual({
+			ok: false,
+			message: "Die Datei ist keine Projektdatei von DLRG Dorheim Wettkampftools."
+		});
 		expect(fs.files.has(SETTINGS_FILE)).toBe(false);
 	});
 

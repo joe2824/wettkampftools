@@ -20,7 +20,7 @@ const urls = [...new Set([...CREDITS.flatMap((credit) => credit.links.map((link)
 describe("CREDITS", () => {
 	it("nennt Programm, Schrift, Karte, Datenquellen und Oberfläche", () => {
 		expect(CREDITS.map((credit) => credit.title)).toEqual([
-			"Wettkampftools",
+			"DLRG Dorheim Wettkampftools",
 			"Schrift Nunito",
 			"Deutschlandkarte",
 			"DLRG-Standortdaten",

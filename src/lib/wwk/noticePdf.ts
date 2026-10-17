@@ -10,6 +10,7 @@ import { lineHeightMm, paragraphOps } from "$lib/pdf/text";
 import type { EventInfo } from "$lib/settings/settings";
 import { displayAgeGroup } from "./ageGroups";
 import type { NotScored, Ranking, Standing } from "./scoring";
+import { APP_NAME } from "$lib/release/appName";
 
 export interface NoticeInput {
 	event: EventInfo;
@@ -24,7 +25,7 @@ const BREAKDOWN_TITLE = "Aufschlüsselung der Gesamtwertung";
 
 /** Aushang mit Ranglisten oder Aufschlüsselung je Mannschaft für Rückfragen. */
 export type NoticeVariant = "notice" | "breakdown";
-const FOOTER_CREDIT = "Erstellt mit Wettkampftools";
+const FOOTER_CREDIT = `Erstellt mit ${APP_NAME}`;
 const TIE_LINE = "Gleichstand um Platz 1 – Entscheidung durch die Wettkampfleitung.";
 const NO_STANDINGS = "Keine gewerteten Mannschaften.";
 const EVENT_SEPARATOR = " · ";

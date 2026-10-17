@@ -7,13 +7,12 @@
 	import EventSummary from "$lib/components/home/EventSummary.svelte";
 	import ProjectDrop from "$lib/components/home/ProjectDrop.svelte";
 	import RecUpdateHint from "$lib/components/records/RecUpdateHint.svelte";
-	import { FOOTER_ITEMS, NAVIGATION_GROUPS } from "$lib/navigation";
+	import { NAVIGATION_GROUPS } from "$lib/navigation";
 	import { shouldShowRecUpdateHint } from "$lib/records/updateHint";
 	import { session } from "$lib/session.svelte";
 	import { settingsStore } from "$lib/settings/settingsStore.svelte";
 
-	const [competition, toolGroup] = NAVIGATION_GROUPS;
-	const tools = [...toolGroup.items, ...FOOTER_ITEMS];
+	const [competition] = NAVIGATION_GROUPS;
 
 	const STEP_DETAILS: Record<string, { description: string; loaded: () => boolean }> = {
 		"/preparation": {
@@ -50,14 +49,11 @@
 </script>
 
 <div class="page-width flex flex-col gap-8">
-	<header class="flex items-center gap-4">
-		<img src="/logo.png" alt="" class="size-14 shrink-0" />
-		<div class="flex flex-col gap-1">
-			<h1 class="text-2xl font-bold">Willkommen bei den Wettkampftools</h1>
-			<p class="text-muted-foreground">
-				Vorbereitung, Auswertung und Urkunden für den DLRG Wellenwettkampf – Schritt für Schritt.
-			</p>
-		</div>
+	<header class="flex flex-col gap-1">
+		<h1 class="text-2xl font-bold">Willkommen bei den DLRG Dorheim Wettkampftools</h1>
+		<p class="text-muted-foreground">
+			Vorbereitung, Auswertung und Urkunden für den DLRG Ortsgruppe Dorheim Wellenwettkampf.
+		</p>
 	</header>
 
 	<EventSummary />
@@ -92,16 +88,4 @@
 	</section>
 
 	<ProjectDrop />
-
-	<section aria-labelledby="tools-heading" class="flex flex-col gap-3">
-		<h2 id="tools-heading" class="text-sm font-medium text-muted-foreground">Werkzeuge</h2>
-		<div class="flex flex-wrap gap-2">
-			{#each tools as tool (tool.href)}
-				<a href={tool.href} class={buttonVariants({ variant: "outline" })}>
-					<tool.icon data-icon="inline-start" />
-					{tool.label}
-				</a>
-			{/each}
-		</div>
-	</section>
 </div>

@@ -1,6 +1,7 @@
 // Lizenzen und Quellen, die nicht aus Paketen stammen (von Hand gepflegt).
 // Jede Adresse muss im Opener freigegeben sein (src-tauri/capabilities/default.json).
 import { AUTHOR, PROJECT_URL } from "./about";
+import { APP_NAME } from "./appName";
 
 export interface CreditLink {
 	label: string;
@@ -20,7 +21,7 @@ export const NUNITO_DOWNLOAD_URL = "https://fonts.google.com/specimen/Nunito";
 
 export const CREDITS: Credit[] = [
 	{
-		title: "Wettkampftools",
+		title: APP_NAME,
 		license: "MIT",
 		copyright: `Copyright (c) 2023 ${AUTHOR} (joe2824)`,
 		text: "Dieses Programm ist freie Software unter der MIT-Lizenz.",

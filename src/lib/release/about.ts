@@ -2,7 +2,7 @@
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { isTauri } from "$lib/platform/env";
 
-export const APP_NAME = "Wettkampftools";
+export { APP_NAME } from "./appName";
 export const AUTHOR = "Joel Klein";
 export const PROJECT_URL = "https://github.com/joe2824/wettkampftools";
 

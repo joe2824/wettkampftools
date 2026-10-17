@@ -5,6 +5,7 @@
 	import StepHeader from "$lib/components/StepHeader.svelte";
 	import * as Card from "$lib/components/ui/card";
 	import DataStep from "$lib/components/distances/DataStep.svelte";
+	import SetupRow from "$lib/components/distances/SetupRow.svelte";
 	import DistanceMapPanel from "$lib/components/distances/DistanceMapPanel.svelte";
 	import DistanceTable from "$lib/components/distances/DistanceTable.svelte";
 	import { readMapVisible, writeMapVisible } from "$lib/components/distances/mapPreference";
@@ -30,6 +31,8 @@
 	let loading = $state(false);
 	let highlighted = $state<string | null>(null);
 	let mapVisible = $state(readMapVisible());
+	// Nach der Wahl der Gliederungen rücken die ersten Schritte in eine Zeile zusammen.
+	let editingSource = $state(false);
 
 	const result = $derived(
 		source && organisations?.data
@@ -54,6 +57,7 @@
 	function handleSource(next: DistanceSource, label: string) {
 		source = next;
 		sourceLabel = label;
+		editingSource = false;
 	}
 
 	async function choose(name: string, id: string) {
@@ -88,33 +92,52 @@
 		<p class="text-muted-foreground">Wie weit reisen die Gliederungen nach Bad Nauheim an?</p>
 	</header>
 
-	<Card.Root>
-		<Card.Header>
-			<StepHeader
-				step={1}
-				title="Gliederungen wählen"
-				description="Aus der Vorbereitung übernehmen oder eine Meldedatei laden."
-				done={source !== null}
-			/>
-		</Card.Header>
-		<Card.Content>
-			<SourceStep {sourceLabel} onnames={handleSource} />
-		</Card.Content>
-	</Card.Root>
+	{#if source !== null && !editingSource}
+		<Card.Root class="gap-3 py-4">
+			<Card.Content class="flex flex-col gap-3">
+				<SetupRow label="Gliederungen" done>
+					<span class="truncate text-muted-foreground" title={sourceLabel}>{sourceLabel}</span>
+					<Button variant="ghost" size="sm" onclick={() => (editingSource = true)}>Ändern</Button>
+				</SetupRow>
+				<SetupRow label="Standortdaten" done={organisations?.data != null}>
+					<DataStep {organisations} {loading} onrefresh={() => load(true)} />
+				</SetupRow>
+			</Card.Content>
+		</Card.Root>
+	{:else}
+		<Card.Root>
+			<Card.Header>
+				<StepHeader
+					step={1}
+					title="Gliederungen wählen"
+					description="Aus der Vorbereitung übernehmen oder eine Meldedatei laden."
+					done={source !== null}
+				/>
+			</Card.Header>
+			<Card.Content class="flex flex-col gap-3">
+				<SourceStep {sourceLabel} onnames={handleSource} />
+				{#if source !== null}
+					<Button variant="ghost" size="sm" class="self-start" onclick={() => (editingSource = false)}>
+						Bei {sourceLabel} bleiben
+					</Button>
+				{/if}
+			</Card.Content>
+		</Card.Root>
 
-	<Card.Root>
-		<Card.Header>
-			<StepHeader
-				step={2}
-				title="Standortdaten"
-				description="Öffentliche Standorte der DLRG-Gliederungen. Werden für die Nutzung ohne Internet gespeichert."
-				done={organisations?.data != null}
-			/>
-		</Card.Header>
-		<Card.Content>
-			<DataStep {organisations} {loading} onrefresh={() => load(true)} />
-		</Card.Content>
-	</Card.Root>
+		<Card.Root>
+			<Card.Header>
+				<StepHeader
+					step={2}
+					title="Standortdaten"
+					description="Öffentliche Standorte der DLRG-Gliederungen. Werden für die Nutzung ohne Internet gespeichert."
+					done={organisations?.data != null}
+				/>
+			</Card.Header>
+			<Card.Content>
+				<DataStep {organisations} {loading} onrefresh={() => load(true)} />
+			</Card.Content>
+		</Card.Root>
+	{/if}
 
 	<Card.Root>
 		<Card.Header>
