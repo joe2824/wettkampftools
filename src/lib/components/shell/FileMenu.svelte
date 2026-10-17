@@ -4,7 +4,7 @@
 	import FolderOpenIcon from "@lucide/svelte/icons/folder-open";
 	import SaveIcon from "@lucide/svelte/icons/save";
 	import { toast } from "svelte-sonner";
-	import { acceptAttribute, readCheckedFile, type FileKind } from "$lib/components/fileCheck";
+	import { acceptAttribute, readCheckedFile, takeInputFile, type FileKind } from "$lib/components/fileCheck";
 	import { chooseNativeFile, loadNativeFile } from "$lib/components/nativeFile";
 	import NewCompetitionDialog from "$lib/components/project/NewCompetitionDialog.svelte";
 	import SaveProjectDialog from "$lib/components/project/SaveProjectDialog.svelte";
@@ -49,9 +49,7 @@
 	}
 
 	async function handleInput(event: Event) {
-		const target = event.currentTarget as HTMLInputElement;
-		const file = target.files?.[0];
-		target.value = "";
+		const file = takeInputFile(event);
 		if (file) menu.take(await readCheckedFile(file, PROJECT_KINDS, MAX_PROJECT_BYTES));
 	}
 </script>

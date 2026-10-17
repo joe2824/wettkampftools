@@ -3,7 +3,14 @@
 	import type { Snippet } from "svelte";
 	import { Button, type ButtonVariant } from "$lib/components/ui/button";
 	import { isTauri } from "$lib/platform/env";
-	import { acceptAttribute, readCheckedFile, type CheckedFile, type FileKind, type ReadFileResult } from "./fileCheck";
+	import {
+		acceptAttribute,
+		readCheckedFile,
+		takeInputFile,
+		type CheckedFile,
+		type FileKind,
+		type ReadFileResult
+	} from "./fileCheck";
 	import { chooseNativeFile, loadNativeFile } from "./nativeFile";
 
 	// Schlanke Dateiauswahl ohne Ablagefläche, z. B. für schmale Seitenspalten.
@@ -44,9 +51,7 @@
 	}
 
 	function handleInput(event: Event) {
-		const target = event.currentTarget as HTMLInputElement;
-		const file = target.files?.[0];
-		target.value = "";
+		const file = takeInputFile(event);
 		if (file) handle(readCheckedFile(file, kinds));
 	}
 </script>

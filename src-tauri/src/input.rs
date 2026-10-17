@@ -177,6 +177,15 @@ mod tests {
         TempFile::with_bytes("input", file_name, b"x")
     }
 
+    fn grow_to(file: &TempFile, bytes: u64) {
+        std::fs::OpenOptions::new()
+            .write(true)
+            .open(&file.0)
+            .unwrap()
+            .set_len(bytes)
+            .unwrap();
+    }
+
     #[test]
     fn input_accepts_allowed_extensions() {
         for name in [
@@ -239,11 +248,7 @@ mod tests {
     #[test]
     fn input_rejects_too_large_file() {
         let file = temp_file("gross.csv");
-        let handle = std::fs::OpenOptions::new()
-            .write(true)
-            .open(&file.0)
-            .unwrap();
-        handle.set_len(MAX_INPUT_MB * BYTES_PER_MB + 1).unwrap();
+        grow_to(&file, MAX_INPUT_MB * BYTES_PER_MB + 1);
         let err = check_input_target(&file.0, allow_all).unwrap_err();
         assert!(err.contains("größer als 20 MB"), "{err}");
     }
@@ -251,13 +256,9 @@ mod tests {
     #[test]
     fn project_files_may_be_larger() {
         let file = temp_file("gross.wwkprojekt");
-        let handle = std::fs::OpenOptions::new()
-            .write(true)
-            .open(&file.0)
-            .unwrap();
-        handle.set_len(MAX_INPUT_MB * BYTES_PER_MB + 1).unwrap();
+        grow_to(&file, MAX_INPUT_MB * BYTES_PER_MB + 1);
         assert!(check_input_target(&file.0, allow_all).is_ok());
-        handle.set_len(MAX_PROJECT_MB * BYTES_PER_MB + 1).unwrap();
+        grow_to(&file, MAX_PROJECT_MB * BYTES_PER_MB + 1);
         let err = check_input_target(&file.0, allow_all).unwrap_err();
         assert!(err.contains("größer als 50 MB"), "{err}");
     }
@@ -265,11 +266,7 @@ mod tests {
     #[test]
     fn competition_files_may_be_larger() {
         let file = temp_file("gross.wk");
-        let handle = std::fs::OpenOptions::new()
-            .write(true)
-            .open(&file.0)
-            .unwrap();
-        handle.set_len(MAX_INPUT_MB * BYTES_PER_MB + 1).unwrap();
+        grow_to(&file, MAX_INPUT_MB * BYTES_PER_MB + 1);
         assert!(check_input_target(&file.0, allow_all).is_ok());
     }
 

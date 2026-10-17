@@ -101,6 +101,14 @@ export function checkFile(
 	return { ok: true, kind };
 }
 
+/** Erste gewählte Datei eines Datei-Eingabefelds; das Feld wird geleert, damit dieselbe Datei erneut wählbar ist. */
+export function takeInputFile(event: Event): File | undefined {
+	const target = event.currentTarget as HTMLInputElement;
+	const file = target.files?.[0];
+	target.value = "";
+	return file;
+}
+
 /** Liest eine Datei aus Ablage oder Auswahl und prüft sie. Zu große Dateien werden nicht gelesen. */
 export async function readCheckedFile(
 	file: File,

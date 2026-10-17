@@ -5,7 +5,8 @@ import {
 	checkInputFile,
 	DEFAULT_MAX_BYTES,
 	dialogFilters,
-	readCheckedFile
+	readCheckedFile,
+	takeInputFile
 } from "./fileCheck";
 
 const ZIP = [0x50, 0x4b, 0x03, 0x04];
@@ -137,6 +138,20 @@ describe("checkFile", () => {
 describe("acceptAttribute", () => {
 	it("listet alle Endungen der erlaubten Arten", () => {
 		expect(acceptAttribute(["excel", "csv"])).toBe(".xlsx,.xlsm,.xls,.csv");
+	});
+});
+
+describe("takeInputFile", () => {
+	it("liefert die gewählte Datei und leert das Feld", () => {
+		const file = new File(["a"], "export.csv");
+		const target = { files: [file], value: "C:\\fakepath\\export.csv" };
+		expect(takeInputFile({ currentTarget: target } as unknown as Event)).toBe(file);
+		expect(target.value).toBe("");
+	});
+
+	it("liefert ohne Auswahl nichts", () => {
+		const target = { files: null, value: "" };
+		expect(takeInputFile({ currentTarget: target } as unknown as Event)).toBeUndefined();
 	});
 });
 

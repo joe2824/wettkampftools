@@ -1,21 +1,19 @@
 <script lang="ts">
-	import DownloadIcon from "@lucide/svelte/icons/download";
 	import FileWarningIcon from "@lucide/svelte/icons/file-warning";
 	import InfoIcon from "@lucide/svelte/icons/info";
-	import LoaderCircleIcon from "@lucide/svelte/icons/loader-circle";
 	import ScaleIcon from "@lucide/svelte/icons/scale";
 	import { toast } from "svelte-sonner";
 	import Dropzone from "$lib/components/Dropzone.svelte";
 	import LoadedFileCard from "$lib/components/LoadedFileCard.svelte";
 	import type { CheckedFile } from "$lib/components/fileCheck";
 	import * as Alert from "$lib/components/ui/alert";
-	import { Button } from "$lib/components/ui/button";
 	import {
 		downloadOfficialPenalties,
 		preparePenalties,
 		type LoadedPenalties,
 		type PenaltyOutcome
 	} from "$lib/workflows/penalties";
+	import DownloadButton from "./DownloadButton.svelte";
 	import PenaltyChangesTable from "./PenaltyChangesTable.svelte";
 
 	interface Props {
@@ -69,14 +67,7 @@
 		/>
 	{/if}
 
-	<Button variant="outline" class="self-start" onclick={download} disabled={downloading}>
-		{#if downloading}
-			<LoaderCircleIcon class="animate-spin" data-icon="inline-start" />
-		{:else}
-			<DownloadIcon data-icon="inline-start" />
-		{/if}
-		Von JAuswertung laden
-	</Button>
+	<DownloadButton {downloading} onclick={download}>Von JAuswertung laden</DownloadButton>
 
 	{#if error}
 		<Alert.Root variant="destructive">
