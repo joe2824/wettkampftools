@@ -5145,7 +5145,7 @@ dependencies = [
 
 [[package]]
 name = "wettkampftools"
-version = "2.0.0-beta.1"
+version = "2.0.0-beta.2"
 dependencies = [
  "calamine",
  "chrono",
