@@ -1,4 +1,5 @@
 <script lang="ts">
+	import CheckIcon from "@lucide/svelte/icons/check";
 	import RotateCcwIcon from "@lucide/svelte/icons/rotate-ccw";
 	import { toast } from "svelte-sonner";
 	import { Badge, type BadgeVariant } from "$lib/components/ui/badge";
@@ -6,26 +7,41 @@
 	import { Input } from "$lib/components/ui/input";
 	import * as Table from "$lib/components/ui/table";
 	import { formatRecDifference, formatRecTime, parseRecTime } from "$lib/format/time";
-	import { difference, type EditedRecRow, type RecSource } from "$lib/records/proposal";
+	import { difference, type RecStatus, type ResolvedRecRow } from "$lib/records/proposal";
 	import { recKey, type RecordGender } from "$lib/records/rulebookRecords";
 	import { cn } from "$lib/utils.js";
 
 	interface Props {
-		rows: EditedRecRow[];
+		rows: ResolvedRecRow[];
 		/** null setzt den Vorschlag wieder ein. */
 		onedit: (key: string, rec: number | null) => void;
+		/** Wellen-Rekord übernehmen. */
+		onaccept: (key: string) => void;
 	}
 
-	let { rows, onedit }: Props = $props();
+	let { rows, onedit, onaccept }: Props = $props();
 
 	const GENDER_LABELS: Record<RecordGender, string> = { female: "weiblich", male: "männlich" };
-	const SOURCES: Record<RecSource, { label: string; variant: BadgeVariant }> = {
-		official: { label: "DLRG (offiziell)", variant: "secondary" },
-		bestTime: { label: "Welle: Bestzeit + Zuschlag", variant: "secondary" },
-		unchanged: { label: "Keine Quelle", variant: "destructive" }
+	const STATUS: Record<RecStatus, { label: string; variant: BadgeVariant }> = {
+		adopted: { label: "Übernommen", variant: "default" },
+		unchanged: { label: "Unverändert", variant: "secondary" },
+		record: { label: "Neuer Rekord", variant: "outline" },
+		noRecord: { label: "Kein neuer Rekord", variant: "secondary" },
+		missing: { label: "Bitte prüfen", variant: "destructive" },
+		edited: { label: "Eigener Wert", variant: "outline" }
+	};
+	const ROW_CLASSES: Partial<Record<RecStatus, string>> = {
+		adopted: "bg-primary/5",
+		record: "bg-primary/10",
+		missing: "bg-destructive/5",
+		edited: "bg-primary/5"
 	};
 
-	function commit(row: EditedRecRow, input: HTMLInputElement) {
+	/** Übernommene Rekorde und eigene Werte lassen sich auf den Vorschlag zurücksetzen. */
+	const canRestore = (row: ResolvedRecRow): boolean =>
+		row.status === "edited" || (row.status === "adopted" && row.source === "bestTime");
+
+	function commit(row: ResolvedRecRow, input: HTMLInputElement) {
 		const rec = parseRecTime(input.value);
 		if (rec === null) {
 			toast.error("Bitte eine Zeit wie 58,17 oder 1:23,45 eingeben.");
@@ -43,18 +59,16 @@
 			<Table.Head>Altersklasse</Table.Head>
 			<Table.Head>Disziplin</Table.Head>
 			<Table.Head class="text-right">Alt</Table.Head>
-			<Table.Head class="w-36">Neu</Table.Head>
+			<Table.Head class="w-56">Neu</Table.Head>
 			<Table.Head class="text-right">Änderung</Table.Head>
-			<Table.Head>Quelle</Table.Head>
+			<Table.Head>Stand</Table.Head>
 		</Table.Row>
 	</Table.Header>
 	<Table.Body>
 		{#each rows as row (recKey(row))}
-			{@const source = SOURCES[row.source]}
+			{@const status = STATUS[row.status]}
 			{@const change = difference(row)}
-			<Table.Row
-				class={cn(change !== 0 && "bg-primary/5", row.source === "unchanged" && !row.edited && "bg-destructive/5")}
-			>
+			<Table.Row class={ROW_CLASSES[row.status]} data-status={row.status}>
 				<Table.Cell class="whitespace-nowrap">
 					{row.ageGroup}
 					<span class="text-muted-foreground">{GENDER_LABELS[row.gender]}</span>
@@ -69,7 +83,12 @@
 							aria-label="Neuer Rec-Wert {row.ageGroup} {GENDER_LABELS[row.gender]} {row.discipline}"
 							onchange={(event) => commit(row, event.currentTarget)}
 						/>
-						{#if row.edited}
+						{#if row.status === "record" && row.proposedRec !== null}
+							<Button size="sm" onclick={() => onaccept(recKey(row))}>
+								<CheckIcon data-icon="inline-start" />
+								{formatRecTime(row.proposedRec)} übernehmen
+							</Button>
+						{:else if canRestore(row)}
 							<Button
 								variant="ghost"
 								size="icon-sm"
@@ -91,13 +110,12 @@
 				</Table.Cell>
 				<Table.Cell>
 					<div class="flex flex-col items-start gap-0.5">
-						{#if row.edited}
-							<Badge variant="outline">Eigener Wert</Badge>
-						{:else}
-							<Badge variant={source.variant}>{source.label}</Badge>
-						{/if}
+						<Badge variant={status.variant}>{status.label}</Badge>
 						{#if row.note}
 							<span class="text-xs text-muted-foreground">{row.note}</span>
+						{/if}
+						{#if row.status === "edited" && change > 0}
+							<span class="text-xs text-destructive">Langsamer als bisher.</span>
 						{/if}
 					</div>
 				</Table.Cell>

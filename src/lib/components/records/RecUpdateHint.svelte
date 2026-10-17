@@ -11,7 +11,7 @@
 	<span class="flex min-w-0 flex-1 flex-col">
 		<span class="font-medium">Rec-Werte fürs neue Jahr aktualisieren</span>
 		<span class="text-sm text-muted-foreground">
-			Neue offizielle Werte und die Bestzeiten des Vorjahres ins Regelwerk für JAuswertung übernehmen.
+			Neue offizielle Werte und die Wellen-Rekorde ins Regelwerk für JAuswertung übernehmen.
 		</span>
 	</span>
 	<ArrowRightIcon

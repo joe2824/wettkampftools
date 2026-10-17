@@ -23,9 +23,11 @@
 		penalties: LoadedPenalties | null;
 		rows: readonly RecChange[];
 		year: number;
+		/** Neue Wettkampfdatei wurde gespeichert. */
+		onupdated?: () => void;
 	}
 
-	let { club, penalties, rows, year }: Props = $props();
+	let { club, penalties, rows, year, onupdated }: Props = $props();
 
 	let file = $state.raw<CheckedFile | null>(null);
 	let busy = $state(false);
@@ -49,6 +51,7 @@
 		busy = true;
 		outcome = await saveUpdatedCompetition(file, { club, penalties, rows, year });
 		busy = false;
+		if (outcome.ok && outcome.path !== null) onupdated?.();
 	}
 </script>
 

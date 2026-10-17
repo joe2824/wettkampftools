@@ -2,35 +2,37 @@
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 	import type { CheckedFile } from "$lib/components/fileCheck";
-	import BestTimesStep from "$lib/components/records/BestTimesStep.svelte";
 	import CompetitionFileStep from "$lib/components/records/CompetitionFileStep.svelte";
 	import OfficialRulebookStep from "$lib/components/records/OfficialRulebookStep.svelte";
 	import PenaltyStep from "$lib/components/records/PenaltyStep.svelte";
 	import ProposalStep from "$lib/components/records/ProposalStep.svelte";
 	import RulebookSource from "$lib/components/records/RulebookSource.svelte";
+	import { recordSteps } from "$lib/components/records/recordSteps";
 	import SaveStep from "$lib/components/records/SaveStep.svelte";
-	import StepCard from "$lib/components/records/StepCard.svelte";
+	import Stepper from "$lib/components/stepper/Stepper.svelte";
 	import { Input } from "$lib/components/ui/input";
 	import { Label } from "$lib/components/ui/label";
-	import type { BestTimes } from "$lib/records/bestTimes";
 	import { DEFAULT_REC_MAPPING, type RecMapping } from "$lib/records/mapping";
-	import { applyRecOverrides, buildRecProposal, DEFAULT_WAVE_SURCHARGE_S } from "$lib/records/proposal";
 	import {
-		listBestTimeYears,
-		loadBestTimes,
-		loadRecMapping,
-		loadWaveSurcharge,
-		saveRecMapping,
-		saveWaveSurcharge
-	} from "$lib/records/storage";
+		buildRecProposal,
+		EMPTY_DECISIONS,
+		openCount,
+		pendingRecordKeys,
+		resolveRecRows,
+		summarizeProposal,
+		type RecDecisions
+	} from "$lib/records/proposal";
+	import { loadRecMapping, saveRecMapping } from "$lib/records/storage";
 	import {
-		importBestTimesFile,
+		EMPTY_WAVE_RECORDS,
+		loadWaveRecords,
 		officialRulebookName,
 		restoreClubRulebook,
 		useClubRulebook,
 		type LoadedRulebook,
 		type RulebookOutcome,
-		type SavedRulebook
+		type SavedRulebook,
+		type WaveRecords
 	} from "$lib/workflows/records";
 	import type { LoadedPenalties } from "$lib/workflows/penalties";
 
@@ -39,82 +41,55 @@
 	let yearInput = $state<number | null>(currentYear);
 	let club = $state.raw<LoadedRulebook | null>(null);
 	let official = $state.raw<LoadedRulebook | null>(null);
-	let years = $state.raw<number[]>([]);
-	let bestYear = $state("");
-	let bestTimes = $state.raw<BestTimes | null>(null);
+	let waveRecords = $state.raw<WaveRecords>(EMPTY_WAVE_RECORDS);
 	let mapping = $state.raw<RecMapping>(DEFAULT_REC_MAPPING);
-	let surcharge = $state<number | null>(DEFAULT_WAVE_SURCHARGE_S);
-	let surchargeEnabled = $state(true);
-	let surchargeLoaded = false;
-	let overrides = $state.raw<ReadonlyMap<string, number>>(new Map());
+	let decisions = $state.raw<RecDecisions>(EMPTY_DECISIONS);
 	let saved = $state.raw<SavedRulebook | null>(null);
 	let penalties = $state.raw<LoadedPenalties | null>(null);
+	let competitionUpdated = $state(false);
 
 	const year = $derived(yearInput !== null && Number.isInteger(yearInput) ? yearInput : currentYear);
 	const rows = $derived(
 		club
-			? applyRecOverrides(
+			? resolveRecRows(
 					buildRecProposal({
 						club: club.records,
 						official: official?.records ?? null,
 						officialName: officialRulebookName(official),
-						bestTimes,
-						mapping,
-						waveSurchargeS: surchargeEnabled ? (surcharge ?? 0) : 0
+						records: waveRecords.table,
+						mapping
 					}),
-					overrides
+					decisions
 				)
 			: []
 	);
-
-	async function refreshYears(preferred: number) {
-		years = await listBestTimeYears();
-		bestYear = String(years.includes(preferred) ? preferred : (years[0] ?? ""));
-	}
-
-	$effect(() => {
-		const selected = Number(bestYear);
-		if (!selected) {
-			bestTimes = null;
-			return;
-		}
-		void loadBestTimes(selected).then((loaded) => (bestTimes = loaded));
-	});
-
-	// Zuschlag-Einstellung merken, sobald sie geladen ist.
-	$effect(() => {
-		const current = { enabled: surchargeEnabled, seconds: surcharge ?? 0 };
-		if (surchargeLoaded) void saveWaveSurcharge(current);
-	});
+	const steps = $derived(
+		recordSteps({
+			hasClub: club !== null,
+			hasOfficial: official !== null,
+			openValues: openCount(summarizeProposal(rows)),
+			hasPenalties: penalties !== null,
+			penaltyIssues: penalties?.issues.length ?? 0,
+			saved: saved !== null,
+			competitionUpdated
+		})
+	);
 
 	onMount(async () => {
 		club = await restoreClubRulebook();
 		mapping = await loadRecMapping();
-		const stored = await loadWaveSurcharge();
-		surchargeEnabled = stored.enabled;
-		surcharge = stored.seconds;
-		surchargeLoaded = true;
-		await refreshYears(year - 1);
+		waveRecords = await loadWaveRecords();
 	});
 
 	async function handleClub(file: CheckedFile): Promise<RulebookOutcome> {
 		const outcome = await useClubRulebook(file);
 		if (outcome.ok) {
 			club = outcome.rulebook;
-			overrides = new Map();
+			decisions = EMPTY_DECISIONS;
 			saved = null;
+			competitionUpdated = false;
 		}
 		return outcome;
-	}
-
-	async function importBestTimes(file: CheckedFile) {
-		const outcome = await importBestTimesFile(file);
-		if (!outcome.ok) {
-			toast.error(outcome.message);
-			return;
-		}
-		toast.success(`Bestzeiten ${outcome.year} gespeichert`, { description: `${outcome.entries} Bestzeiten.` });
-		await refreshYears(outcome.year);
 	}
 
 	function changeMapping(next: RecMapping) {
@@ -122,11 +97,21 @@
 		saveRecMapping(next).catch(() => toast.error("Die Zuordnung konnte nicht gespeichert werden."));
 	}
 
+	/** null setzt die Zeile auf den Vorschlag zurück, auch eine übernommene Bestzeit. */
 	function edit(key: string, rec: number | null) {
-		const next = new Map(overrides);
-		if (rec === null) next.delete(key);
-		else next.set(key, rec);
-		overrides = next;
+		const overrides = new Map(decisions.overrides);
+		const accepted = new Set(decisions.accepted);
+		if (rec === null) {
+			overrides.delete(key);
+			accepted.delete(key);
+		} else {
+			overrides.set(key, rec);
+		}
+		decisions = { accepted, overrides };
+	}
+
+	function accept(keys: readonly string[]) {
+		decisions = { ...decisions, accepted: new Set([...decisions.accepted, ...keys]) };
 	}
 </script>
 
@@ -137,7 +122,7 @@
 			<p class="text-muted-foreground">
 				Neue Rec-Werte und den aktuellen Strafenkatalog fürs Vereins-Regelwerk, zum Import in JAuswertung.
 			</p>
-			<p class="text-sm font-medium" aria-live="polite">Regelwerk für das Jahr {year} (Rec-Werte aus {year - 1})</p>
+			<p class="text-sm font-medium" aria-live="polite">Regelwerk für das Jahr {year}</p>
 		</div>
 		<div class="flex flex-col gap-2">
 			<Label for="target-year">Regelwerk für das Jahr</Label>
@@ -145,78 +130,35 @@
 		</div>
 	</header>
 
-	<StepCard
-		step={1}
-		title="Vereins-Regelwerk"
-		description="Das bisherige Regelwerk des Wellenwettkampfs."
-		done={club !== null}
-	>
-		<RulebookSource
-			rulebook={club}
-			title="Vereins-Regelwerk (.rwm)"
-			hint="Wird gespeichert und beim nächsten Mal wieder angeboten."
-			onfile={handleClub}
-		/>
-	</StepCard>
-
-	<StepCard
-		step={2}
-		title="Offizielles DLRG-Regelwerk"
-		description="Liefert die Rec-Werte der Rettungsdisziplinen."
-		done={official !== null}
-	>
-		<OfficialRulebookStep bind:official {year} />
-	</StepCard>
-
-	<StepCard
-		step={3}
-		title="Bestzeiten des Vorjahres"
-		description="Grundlage für die Wellendisziplinen."
-		done={bestTimes !== null}
-	>
-		<BestTimesStep {years} bind:year={bestYear} {bestTimes} expectedYear={year - 1} onimport={importBestTimes} />
-	</StepCard>
-
-	<StepCard step={4} title="Vergleich" description="Alte und neue Werte; jeder neue Wert lässt sich ändern.">
-		{#if club}
-			<ProposalStep
-				{rows}
-				{mapping}
-				club={club.records}
-				official={official?.records ?? null}
-				bind:surcharge
-				bind:surchargeEnabled
-				onmapping={changeMapping}
-				onedit={edit}
-			/>
-		{:else}
-			<p class="text-sm text-muted-foreground">Zuerst das Vereins-Regelwerk laden.</p>
-		{/if}
-	</StepCard>
-
-	<StepCard
-		step={5}
-		title="Strafenkatalog"
-		description="Offizieller Katalog mit den Vereinsregeln: Fehlstart 100 Strafpunkte, Retten in der Welle."
-		done={penalties !== null && penalties.issues.length === 0}
-	>
-		<PenaltyStep bind:penalties />
-	</StepCard>
-
-	<StepCard
-		step={6}
-		title="Neues Regelwerk speichern"
-		description="Regelwerk mit neuen Rec-Werten und Beschreibung, daneben der Strafenkatalog."
-		done={saved !== null}
-	>
-		<SaveStep {club} {penalties} {rows} {year} bind:saved />
-	</StepCard>
-
-	<StepCard
-		step={7}
-		title="Wettkampfdatei fürs neue Jahr aktualisieren"
-		description="Optional: eine bestehende JAuswertung-Datei weiterverwenden."
-	>
-		<CompetitionFileStep {club} {penalties} {rows} {year} />
-	</StepCard>
+	<Stepper page="records" {steps}>
+		{#snippet children(step)}
+			{#if step.id === "club"}
+				<RulebookSource
+					rulebook={club}
+					title="Vereins-Regelwerk (.rwm)"
+					hint="Wird gespeichert und beim nächsten Mal wieder angeboten."
+					onfile={handleClub}
+				/>
+			{:else if step.id === "official"}
+				<OfficialRulebookStep bind:official {year} />
+			{:else if step.id === "proposal" && club}
+				<ProposalStep
+					{rows}
+					{mapping}
+					club={club.records}
+					official={official?.records ?? null}
+					onmapping={changeMapping}
+					onedit={edit}
+					onaccept={(key) => accept([key])}
+					onacceptall={() => accept(pendingRecordKeys(rows))}
+				/>
+			{:else if step.id === "penalties"}
+				<PenaltyStep bind:penalties />
+			{:else if step.id === "save"}
+				<SaveStep {club} {penalties} {rows} {year} bind:saved />
+			{:else if step.id === "competition"}
+				<CompetitionFileStep {club} {penalties} {rows} {year} onupdated={() => (competitionUpdated = true)} />
+			{/if}
+		{/snippet}
+	</Stepper>
 </div>

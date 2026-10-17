@@ -1,10 +1,7 @@
 <script lang="ts">
-	import DownloadIcon from "@lucide/svelte/icons/download";
 	import InfoIcon from "@lucide/svelte/icons/info";
-	import LoaderCircleIcon from "@lucide/svelte/icons/loader-circle";
 	import { toast } from "svelte-sonner";
 	import * as Alert from "$lib/components/ui/alert";
-	import { Button } from "$lib/components/ui/button";
 	import type { CheckedFile } from "$lib/components/fileCheck";
 	import {
 		downloadOfficialRulebook,
@@ -12,6 +9,7 @@
 		type LoadedRulebook,
 		type RulebookOutcome
 	} from "$lib/workflows/records";
+	import DownloadButton from "./DownloadButton.svelte";
 	import RulebookSource from "./RulebookSource.svelte";
 
 	interface Props {
@@ -51,14 +49,7 @@
 		onfile={handleFile}
 	>
 		{#snippet actions()}
-			<Button variant="outline" class="self-start" onclick={download} disabled={downloading}>
-				{#if downloading}
-					<LoaderCircleIcon class="animate-spin" data-icon="inline-start" />
-				{:else}
-					<DownloadIcon data-icon="inline-start" />
-				{/if}
-				„DLRG {year}“ von JAuswertung laden
-			</Button>
+			<DownloadButton {downloading} onclick={download}>„DLRG {year}“ von JAuswertung laden</DownloadButton>
 		{/snippet}
 	</RulebookSource>
 
@@ -67,8 +58,8 @@
 		<Alert.Title>Woher kommen die Werte?</Alert.Title>
 		<Alert.Description>
 			<p>
-				Die Rettungsdisziplinen übernehmen die Rec-Werte aus dem offiziellen DLRG-Regelwerk. Die Wellendisziplinen
-				bekommen die Bestzeit des Vorjahres plus Zuschlag (üblich 5 Sekunden).
+				Die Rettungsdisziplinen übernehmen die Rec-Werte aus dem offiziellen DLRG-Regelwerk. Für die Wellendisziplinen
+				gilt der Rekord aller bisherigen Wettkämpfe (Werkzeuge → Wellen-Zeiten).
 			</p>
 			<p>
 				Das Regelwerk für das Jahr {year} lädt die App direkt aus JAuswertung („DLRG {year}.rwm“), sobald es dort

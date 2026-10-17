@@ -1,87 +1,95 @@
 <script lang="ts">
-	import { Input } from "$lib/components/ui/input";
+	import CheckCheckIcon from "@lucide/svelte/icons/check-check";
+	import TriangleAlertIcon from "@lucide/svelte/icons/triangle-alert";
+	import * as Alert from "$lib/components/ui/alert";
+	import { Button } from "$lib/components/ui/button";
 	import { Label } from "$lib/components/ui/label";
 	import { Switch } from "$lib/components/ui/switch";
 	import type { RecMapping } from "$lib/records/mapping";
-	import { displayRows, formatProposalSummary, summarizeProposal, type EditedRecRow } from "$lib/records/proposal";
+	import {
+		displayRows,
+		formatProposalSummary,
+		openCount,
+		summarizeProposal,
+		type ResolvedRecRow
+	} from "$lib/records/proposal";
 	import type { RulebookRecord } from "$lib/records/rulebookRecords";
 	import MappingEditor from "./MappingEditor.svelte";
 	import ProposalTable from "./ProposalTable.svelte";
 
 	interface Props {
-		rows: EditedRecRow[];
+		rows: ResolvedRecRow[];
 		mapping: RecMapping;
 		club: readonly RulebookRecord[];
 		official: readonly RulebookRecord[] | null;
-		/** Zuschlag auf die Bestzeit in Sekunden. */
-		surcharge: number | null;
-		/** Aus: die echte Bestzeit wird neuer Rec-Wert. */
-		surchargeEnabled: boolean;
 		onmapping: (mapping: RecMapping) => void;
 		onedit: (key: string, rec: number | null) => void;
+		onaccept: (key: string) => void;
+		onacceptall: () => void;
 	}
 
-	let {
-		rows,
-		mapping,
-		club,
-		official,
-		surcharge = $bindable(),
-		surchargeEnabled = $bindable(),
-		onmapping,
-		onedit
-	}: Props = $props();
+	let { rows, mapping, club, official, onmapping, onedit, onaccept, onacceptall }: Props = $props();
 
-	let onlyChanges = $state(false);
+	let hideSettled = $state(false);
 
 	const summary = $derived(summarizeProposal(rows));
-	const visibleRows = $derived(displayRows(rows, onlyChanges));
+	const open = $derived(openCount(summary));
+	const visibleRows = $derived(displayRows(rows, hideSettled));
 </script>
 
 <div class="flex flex-col gap-4">
-	<div class="flex flex-wrap items-end gap-6">
-		<div class="flex flex-col gap-2">
-			<div class="flex items-center gap-2">
-				<Switch id="wave-surcharge-enabled" bind:checked={surchargeEnabled} />
-				<Label for="wave-surcharge-enabled">Zuschlag auf die Wellen-Bestzeit</Label>
-			</div>
-			<p class="text-xs text-muted-foreground">
-				{surchargeEnabled
-					? "Neuer Rec-Wert = Bestzeit des Vorjahres + Zuschlag."
-					: "Neuer Rec-Wert = echte Bestzeit des Vorjahres."}
-			</p>
-		</div>
-		<div class="flex flex-col gap-2">
-			<Label for="wave-surcharge">Zuschlag (Sekunden)</Label>
-			<Input
-				id="wave-surcharge"
-				type="number"
-				min="0"
-				step="0.5"
-				class="w-32"
-				disabled={!surchargeEnabled}
-				bind:value={surcharge}
-			/>
-		</div>
-	</div>
-
 	<MappingEditor {mapping} {club} {official} onchange={onmapping} />
 
+	<p class="text-sm text-muted-foreground">
+		Rettungswerte kommen direkt aus dem DLRG-Regelwerk und gelten sofort. Für die Welle gilt der Rekord aller bisherigen
+		Wettkämpfe; er wird erst per Klick übernommen, wenn er schneller ist als der bisherige Rec-Wert.
+	</p>
+
+	{#if open > 0}
+		<Alert.Root>
+			<TriangleAlertIcon aria-hidden="true" />
+			<Alert.Title>Noch {open === 1 ? "ein Wert" : `${open} Werte`} offen</Alert.Title>
+			<Alert.Description>
+				<ul class="list-disc pl-4">
+					{#if summary.record > 0}
+						<li>
+							{summary.record === 1 ? "Ein neuer Wellen-Rekord wartet" : `${summary.record} neue Wellen-Rekorde warten`}
+							auf die Übernahme.
+						</li>
+					{/if}
+					{#if summary.missing > 0}
+						<li>
+							{summary.missing === 1 ? "Ein Wert hat" : `${summary.missing} Werte haben`} keine Quelle: alten Wert behalten
+							oder selbst eintragen.
+						</li>
+					{/if}
+				</ul>
+			</Alert.Description>
+		</Alert.Root>
+	{/if}
+
 	<div class="flex flex-wrap items-center justify-between gap-3">
-		<p class="text-sm text-muted-foreground" aria-live="polite">
-			{formatProposalSummary(summary)}
-			{#if summary.noSource > 0}
-				<span class="font-medium text-destructive">– bitte die Werte ohne Quelle prüfen.</span>
+		<p class="text-sm text-muted-foreground" aria-live="polite">{formatProposalSummary(summary)}</p>
+		<div class="flex flex-wrap items-center gap-4">
+			{#if summary.record > 0}
+				<Button variant="outline" size="sm" onclick={onacceptall}>
+					<CheckCheckIcon data-icon="inline-start" />
+					Alle Wellen-Rekorde übernehmen ({summary.record})
+				</Button>
 			{/if}
-		</p>
-		<div class="flex items-center gap-2">
-			<Switch id="only-changes" bind:checked={onlyChanges} />
-			<Label for="only-changes">Nur Änderungen zeigen</Label>
+			<div class="flex items-center gap-2">
+				<Switch id="hide-settled" bind:checked={hideSettled} />
+				<Label for="hide-settled">Unveränderte ausblenden</Label>
+			</div>
 		</div>
 	</div>
 
-	<ProposalTable rows={visibleRows} {onedit} />
+	<ProposalTable rows={visibleRows} {onedit} {onaccept} />
 	{#if visibleRows.length === 0}
-		<p class="text-sm text-muted-foreground">Keine geänderten Werte.</p>
+		<p class="text-sm text-muted-foreground">Keine geänderten oder offenen Werte.</p>
 	{/if}
+	<p class="text-xs text-muted-foreground">
+		Jeder Wert in der Spalte „Neu“ lässt sich überschreiben; die Eingabe gilt nach Enter oder beim Verlassen des Felds
+		und wird als „Eigener Wert“ angezeigt.
+	</p>
 </div>

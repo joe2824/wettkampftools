@@ -1,16 +1,19 @@
-// Vorschlag neuer Rec-Werte: Rettung aus dem offiziellen Regelwerk, Welle aus der Vorjahres-Bestzeit.
-import { formatRecTime, formatSeconds } from "$lib/format/time";
-import type { BestTimes } from "./bestTimes";
+// Vorschlag neuer Rec-Werte: Rettung aus dem offiziellen Regelwerk, Welle aus dem Rekord aller Jahre.
+// Offizielle Werte gelten sofort; ein Wellen-Rekord zählt nur, wenn er schneller ist, und wird erst
+// auf Wunsch übernommen.
+import { formatRecTime } from "$lib/format/time";
 import { isWaveDiscipline, type RecMapping } from "./mapping";
 import { recKey, type RecTarget, type RecUpdate, type RulebookRecord } from "./rulebookRecords";
+import { findRecord, type WaveRecord } from "./waveRecords";
 
-export type RecSource = "official" | "bestTime" | "unchanged";
+export type RecSource = "official" | "bestTime" | "none";
 
 export interface RecProposalRow extends Omit<RulebookRecord, "rec"> {
 	oldRec: number;
-	newRec: number;
+	/** Wert aus der Quelle; null ohne Quelle. */
+	proposedRec: number | null;
 	source: RecSource;
-	/** Herkunft oder Grund, warum der alte Wert bleibt. */
+	/** Herkunft oder Grund, warum keine Quelle gefunden wurde. */
 	note: string | null;
 }
 
@@ -19,26 +22,19 @@ export interface RecProposalInput {
 	official: readonly RulebookRecord[] | null;
 	/** Name des offiziellen Regelwerks für die Herkunft, z. B. „DLRG 2026“. */
 	officialName: string | null;
-	bestTimes: BestTimes | null;
+	/** Rekorde der Wellendisziplinen über alle Jahre. */
+	records: readonly WaveRecord[];
 	mapping: RecMapping;
-	/** Zuschlag auf die Bestzeit in Sekunden. */
-	waveSurchargeS?: number;
 }
 
-export const DEFAULT_WAVE_SURCHARGE_S = 5;
-const HUNDREDTHS_PER_SECOND = 100;
 const OFFICIAL_FALLBACK_NAME = "Offizielles Regelwerk";
 const NOTE_SEPARATOR = " · ";
 
 const normalize = (text: string): string => text.trim().toLowerCase();
 
-type Outcome = Pick<RecProposalRow, "newRec" | "source" | "note">;
+type Outcome = Pick<RecProposalRow, "proposedRec" | "source" | "note">;
 
-const unchanged = (record: RulebookRecord, note: string): Outcome => ({
-	newRec: record.rec,
-	source: "unchanged",
-	note
-});
+const noSource = (note: string): Outcome => ({ proposedRec: null, source: "none", note });
 
 function officialAgeGroup(
 	ageGroup: string,
@@ -62,57 +58,87 @@ function officialNote(source: OfficialSource, ageGroup: string, alias: string | 
 
 function officialOutcome(record: RulebookRecord, source: OfficialSource, mapping: RecMapping): Outcome {
 	const official = source.records;
-	if (official === null) return unchanged(record, "Kein offizielles Regelwerk geladen.");
+	if (official === null) return noSource("Kein offizielles Regelwerk geladen.");
 	const ageGroup = officialAgeGroup(record.ageGroup, official, mapping);
-	if (!ageGroup) return unchanged(record, "Keine Zuordnung zu einer offiziellen Altersklasse.");
+	if (!ageGroup) return noSource("Keine Zuordnung zu einer offiziellen Altersklasse.");
 	const alias = mapping.disciplineAliases[record.discipline];
 	const discipline = normalize(alias ?? record.discipline);
 	const match = official.find(
 		(entry) =>
 			entry.ageGroup === ageGroup && entry.gender === record.gender && normalize(entry.discipline) === discipline
 	);
-	if (!match) return unchanged(record, `„${record.discipline}“ fehlt in ${ageGroup}.`);
+	if (!match) return noSource(`„${record.discipline}“ fehlt in ${ageGroup}.`);
 	const usedAlias = alias === undefined ? undefined : match.discipline;
-	return { newRec: match.rec, source: "official", note: officialNote(source, ageGroup, usedAlias) };
+	return { proposedRec: match.rec, source: "official", note: officialNote(source, ageGroup, usedAlias) };
 }
 
-function waveOutcome(record: RulebookRecord, bestTimes: BestTimes | null, surchargeS: number): Outcome {
-	const key = recKey({ ...record, ageGroup: normalize(record.ageGroup) });
-	const best = bestTimes?.entries.find((entry) => recKey({ ...entry, ageGroup: normalize(entry.ageGroup) }) === key);
-	if (!bestTimes || !best) return unchanged(record, "Keine Bestzeit aus dem Vorjahr.");
-	const surcharge = Math.round(surchargeS * HUNDREDTHS_PER_SECOND);
-	const bestText = `Bestzeit ${bestTimes.year}: ${formatRecTime(best.time)}`;
-	const note = surcharge > 0 ? `${bestText} + ${formatSeconds(surcharge)}` : `${bestText} (ohne Zuschlag)`;
-	return { newRec: best.time + surcharge, source: "bestTime", note };
+function waveOutcome(record: RulebookRecord, records: readonly WaveRecord[]): Outcome {
+	const best = findRecord(records, record);
+	if (!best) return noSource("Kein Rekord in der Welle bekannt.");
+	return { proposedRec: best.time, source: "bestTime", note: `Rekord ${best.year}: ${formatRecTime(best.time)}` };
 }
 
 export function buildRecProposal(input: RecProposalInput): RecProposalRow[] {
-	const { club, official, officialName, bestTimes, mapping, waveSurchargeS = DEFAULT_WAVE_SURCHARGE_S } = input;
+	const { club, official, officialName, records, mapping } = input;
 	const source: OfficialSource = { records: official, name: officialName };
 	return club.map((record) => {
 		const { rec, ...target } = record;
 		const outcome = isWaveDiscipline(record.discipline)
-			? waveOutcome(record, bestTimes, waveSurchargeS)
+			? waveOutcome(record, records)
 			: officialOutcome(record, source, mapping);
 		return { ...target, oldRec: rec, ...outcome };
 	});
 }
 
-export interface EditedRecRow extends RecProposalRow {
-	/** Wert wurde von Hand geändert. */
-	edited: boolean;
+/**
+ * Stand einer Zeile:
+ * - adopted: neuer Wert aus der Quelle gilt
+ * - unchanged: die Quelle nennt den bisherigen Wert
+ * - record: schnellerer Wellen-Rekord wartet auf die Übernahme
+ * - noRecord: der Wellen-Rekord ist langsamer, der alte Wert bleibt
+ * - missing: keine Quelle, der Wert muss selbst geprüft werden
+ * - edited: von Hand eingetragen
+ */
+export type RecStatus = "adopted" | "unchanged" | "record" | "noRecord" | "missing" | "edited";
+
+export interface ResolvedRecRow extends RecProposalRow {
+	newRec: number;
+	status: RecStatus;
 }
 
-/** Eigene Werte (Schlüssel aus recKey) über den Vorschlag legen. */
-export function applyRecOverrides(
-	rows: readonly RecProposalRow[],
-	overrides: ReadonlyMap<string, number>
-): EditedRecRow[] {
-	return rows.map((row) => {
-		const override = overrides.get(recKey(row));
-		return override === undefined ? { ...row, edited: false } : { ...row, newRec: override, edited: true };
-	});
+export interface RecDecisions {
+	/** Schlüssel (recKey) der übernommenen Wellen-Rekorde. */
+	accepted: ReadonlySet<string>;
+	/** Eigene Werte je Schlüssel (recKey). */
+	overrides: ReadonlyMap<string, number>;
 }
+
+export const EMPTY_DECISIONS: RecDecisions = { accepted: new Set(), overrides: new Map() };
+
+/** Nur eine schnellere Zeit ist ein neuer Rekord. */
+const isRecord = (row: RecProposalRow): boolean => row.proposedRec !== null && row.proposedRec < row.oldRec;
+
+function resolveRow(row: RecProposalRow, decisions: RecDecisions): ResolvedRecRow {
+	const key = recKey(row);
+	const override = decisions.overrides.get(key);
+	if (override !== undefined) return { ...row, newRec: override, status: "edited" };
+	if (row.proposedRec === null) return { ...row, newRec: row.oldRec, status: "missing" };
+	if (row.proposedRec === row.oldRec) return { ...row, newRec: row.oldRec, status: "unchanged" };
+	if (row.source === "official") return { ...row, newRec: row.proposedRec, status: "adopted" };
+	if (!isRecord(row)) return { ...row, newRec: row.oldRec, status: "noRecord" };
+	return decisions.accepted.has(key)
+		? { ...row, newRec: row.proposedRec, status: "adopted" }
+		: { ...row, newRec: row.oldRec, status: "record" };
+}
+
+/** Eigene Werte und übernommene Rekorde über den Vorschlag legen. */
+export function resolveRecRows(rows: readonly RecProposalRow[], decisions: RecDecisions): ResolvedRecRow[] {
+	return rows.map((row) => resolveRow(row, decisions));
+}
+
+/** Schlüssel aller Wellen-Rekorde, die noch nicht übernommen sind. */
+export const pendingRecordKeys = (rows: readonly ResolvedRecRow[]): string[] =>
+	rows.filter((row) => row.status === "record").map(recKey);
 
 export interface RecChange extends RecTarget {
 	oldRec: number;
@@ -129,39 +155,34 @@ export function toRecUpdates(rows: readonly RecChange[]): RecUpdate[] {
 /** Neu minus alt in Hundertsteln; positiv heißt langsamer. */
 export const difference = (row: Pick<RecChange, "oldRec" | "newRec">): number => row.newRec - row.oldRec;
 
-export interface ProposalSummary {
-	changed: number;
-	unchanged: number;
-	noSource: number;
-	edited: number;
-}
+export type ProposalSummary = Record<RecStatus, number>;
 
-type SummaryRow = Pick<RecProposalRow, "oldRec" | "newRec" | "source"> & { edited?: boolean };
-
-function summaryCategory(row: SummaryRow): keyof ProposalSummary {
-	if (row.edited) return "edited";
-	if (row.source === "unchanged") return "noSource";
-	return difference(row) === 0 ? "unchanged" : "changed";
-}
-
-/** Jede Zeile zählt genau einmal; eigene Werte gehen vor. */
-export function summarizeProposal(rows: readonly SummaryRow[]): ProposalSummary {
-	const summary: ProposalSummary = { changed: 0, unchanged: 0, noSource: 0, edited: 0 };
-	for (const row of rows) summary[summaryCategory(row)] += 1;
+export function summarizeProposal(rows: readonly Pick<ResolvedRecRow, "status">[]): ProposalSummary {
+	const summary: ProposalSummary = { adopted: 0, unchanged: 0, record: 0, noRecord: 0, missing: 0, edited: 0 };
+	for (const row of rows) summary[row.status] += 1;
 	return summary;
 }
 
-/** „9 geändert · 27 unverändert · 3 ohne Quelle · 1 eigener Wert“; leere Zusatzgruppen entfallen. */
-export function formatProposalSummary({ changed, unchanged, noSource, edited }: ProposalSummary): string {
-	const parts = [`${changed} geändert`, `${unchanged} unverändert`];
-	if (noSource > 0) parts.push(`${noSource} ohne Quelle`);
-	if (edited > 0) parts.push(`${edited} ${edited === 1 ? "eigener Wert" : "eigene Werte"}`);
+/** Zeilen, bei denen noch etwas zu tun ist: Rekord übernehmen oder Wert selbst prüfen. */
+export const openCount = (summary: ProposalSummary): number => summary.record + summary.missing;
+
+const plural = (count: number, one: string, many: string): string => `${count} ${count === 1 ? one : many}`;
+
+/** „9 übernommen · 27 unverändert · 2 Rekorde zum Übernehmen · 3 ohne Quelle · 1 eigener Wert“; leere Zusatzgruppen entfallen. */
+export function formatProposalSummary(summary: ProposalSummary): string {
+	const parts = [`${summary.adopted} übernommen`, `${summary.unchanged} unverändert`];
+	if (summary.record > 0) parts.push(plural(summary.record, "Rekord zum Übernehmen", "Rekorde zum Übernehmen"));
+	if (summary.noRecord > 0) parts.push(plural(summary.noRecord, "Rekord langsamer", "Rekorde langsamer"));
+	if (summary.missing > 0) parts.push(`${summary.missing} ohne Quelle`);
+	if (summary.edited > 0) parts.push(plural(summary.edited, "eigener Wert", "eigene Werte"));
 	return parts.join(NOTE_SEPARATOR);
 }
 
-/** Rettung vor Welle, sonst Reihenfolge des Regelwerks; auf Wunsch nur geänderte Werte. */
-export function displayRows<T extends RecProposalRow>(rows: readonly T[], onlyChanges: boolean): T[] {
-	const visible = onlyChanges ? rows.filter((row) => difference(row) !== 0) : [...rows];
+const SETTLED: readonly RecStatus[] = ["unchanged", "noRecord"];
+
+/** Rettung vor Welle, sonst Reihenfolge des Regelwerks; auf Wunsch ohne Zeilen, bei denen der alte Wert bleibt. */
+export function displayRows<T extends ResolvedRecRow>(rows: readonly T[], hideSettled: boolean): T[] {
+	const visible = hideSettled ? rows.filter((row) => !SETTLED.includes(row.status)) : [...rows];
 	return [
 		...visible.filter((row) => !isWaveDiscipline(row.discipline)),
 		...visible.filter((row) => isWaveDiscipline(row.discipline))
