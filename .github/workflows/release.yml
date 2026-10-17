@@ -15,8 +15,12 @@ permissions:
 
 jobs:
   # Ein rotes Testergebnis darf gar nicht erst zu einem Installer führen.
+  # Rust prüft der Build-Job selbst (siehe dort), sonst kompilierte ein zweiter
+  # Windows-Runner alle Abhängigkeiten noch einmal im Debug-Profil.
   verify:
     uses: ./.github/workflows/verify.yml
+    with:
+      rust: false
 
   # Der Tag steht an einer Stelle, damit Build und Notiz dieselbe Fassung nutzen.
   target:
@@ -159,11 +163,25 @@ jobs:
 
       - name: Rust stable installieren
         uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
 
       - name: Rust-Cache
-        uses: swatinem/rust-cache@v2
+        uses: Swatinem/rust-cache@v2
         with:
-          workspaces: "./src-tauri -> target"
+          workspaces: src-tauri
+          shared-key: windows
+
+      # Clippy und Tests im Release-Profil: die so kompilierten Abhängigkeiten
+      # nutzt der Build gleich danach weiter, nur das Feature `custom-protocol`
+      # kommt dort hinzu.
+      - name: Clippy
+        working-directory: src-tauri
+        run: cargo clippy --release --all-targets -- -D warnings
+
+      - name: Rust-Tests
+        working-directory: src-tauri
+        run: cargo test --release
 
       - name: Abhängigkeiten installieren
         run: npm ci

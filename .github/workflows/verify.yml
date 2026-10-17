@@ -1,9 +1,17 @@
 name: Verify
 
 # Das gemeinsame Prüfwerk. Kein eigener Auslöser - CI und Release rufen es
-# über `workflow_call` auf.
+# über `workflow_call` auf. Das Release lässt den Rust-Job aus und prüft Rust
+# stattdessen im Release-Profil auf dem Build-Runner, damit Abhängigkeiten nur
+# einmal kompiliert werden.
 on:
   workflow_call:
+    inputs:
+      rust:
+        description: "Rust auf Windows prüfen (Clippy und Tests im Debug-Profil)"
+        type: boolean
+        required: false
+        default: true
 
 jobs:
   code:
@@ -36,6 +44,7 @@ jobs:
   # `custom-protocol` bettet Tauri `frontendDist` nicht ein.
   rust:
     name: Rust
+    if: inputs.rust
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v5
@@ -44,9 +53,12 @@ jobs:
         with:
           components: clippy
 
+      # Gemeinsamer Schlüssel mit dem Release-Build: derselbe Runner, derselbe
+      # Ordner; der Cache gilt je Stand von Cargo.lock und wird auf dem Branch gespeichert.
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
+          shared-key: windows
 
       - name: Clippy
         working-directory: src-tauri
