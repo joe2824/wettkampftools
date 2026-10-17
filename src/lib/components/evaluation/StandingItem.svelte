@@ -1,7 +1,7 @@
 <script lang="ts">
 	import ChevronDownIcon from "@lucide/svelte/icons/chevron-down";
 	import TrophyIcon from "@lucide/svelte/icons/trophy";
-	import { Badge, type BadgeVariant } from "$lib/components/ui/badge";
+	import { Badge } from "$lib/components/ui/badge";
 	import * as Collapsible from "$lib/components/ui/collapsible";
 	import { formatTrophyPoints } from "$lib/format/points";
 	import { cn } from "$lib/utils.js";
@@ -15,21 +15,24 @@
 	let { standing }: Props = $props();
 
 	const FIRST_RANK = 1;
-	const PODIUM_RANKS = 3;
+	/** Gold, Silber, Bronze für die Plätze 1 bis 3. */
+	const MEDALS: Record<number, string> = {
+		1: "border-transparent bg-[#e8b923] text-[#3b2c00]",
+		2: "border-transparent bg-[#c4c7cf] text-[#23262d]",
+		3: "border-transparent bg-[#c97d3c] text-[#381f05]"
+	};
 
 	const winner = $derived(standing.rank === FIRST_RANK);
-	const badgeVariant = $derived<BadgeVariant>(
-		winner ? "default" : standing.rank <= PODIUM_RANKS ? "secondary" : "outline"
-	);
+	const medal = $derived(MEDALS[standing.rank]);
 	const teamLabel = $derived(standing.teams.length === 1 ? "1 Mannschaft" : `${standing.teams.length} Mannschaften`);
 </script>
 
-<Collapsible.Root class={cn("rounded-lg border", winner && "border-primary/40 bg-primary/5")}>
+<Collapsible.Root class={cn("rounded-lg border", winner && "border-[#e8b923]/50 bg-[#e8b923]/5")}>
 	<Collapsible.Trigger
 		class="group grid w-full grid-cols-[4rem_1fr_auto_1.5rem] items-center gap-3 rounded-lg px-3 py-2.5 text-left hover:bg-muted/50 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
 		aria-label="Aufschlüsselung für {standing.organisation} ein- oder ausblenden"
 	>
-		<Badge variant={badgeVariant} class="h-6 min-w-10 tabular-nums">
+		<Badge variant="outline" class={cn("h-6 min-w-10 tabular-nums", medal)}>
 			{#if winner}<TrophyIcon data-icon="inline-start" aria-hidden="true" />{/if}
 			{standing.rank}.
 		</Badge>

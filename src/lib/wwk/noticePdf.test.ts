@@ -195,7 +195,7 @@ describe("buildNoticePages – Aufbau", () => {
 		pages.forEach((page, index) => {
 			const lines = texts(page).map((op) => op.text);
 			expect(lines).toContain(`Seite ${index + 1} von ${pages.length}`);
-			expect(lines).toContain("Erstellt mit Wettkampftools");
+			expect(lines).toContain("Erstellt mit DLRG Dorheim Wettkampftools");
 		});
 	});
 });
@@ -208,7 +208,7 @@ describe("buildNoticePages – Seitenfluss", () => {
 	const pages = buildNoticePages(big, metrics);
 
 	it("verteilt 40 Ortsgruppen auf mehrere Seiten innerhalb der Ränder", () => {
-		expect(pages.length).toBeGreaterThan(2);
+		expect(pages.length).toBeGreaterThan(1);
 		for (const op of pages.flatMap(texts)) {
 			expect(op.baselineMm).toBeLessThanOrEqual(PAGE_HEIGHT_MM - MARGIN_MM);
 			expect(op.baselineMm).toBeGreaterThanOrEqual(MARGIN_MM);

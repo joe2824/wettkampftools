@@ -4,10 +4,10 @@ import { TROPHY_RULES_TEXT, trophyRulesText } from "./rulesText";
 const COUNT_WITH_PLACE = "Gezählt werden die Mannschaften mit Platz in der jeweiligen Altersklasse und Geschlecht.";
 
 describe("trophyRulesText", () => {
-	it("enthält Pokalwertung und Punktesystem der WWK", () => {
+	it("zeigt das Punktesystem mit Rechenbeispiel, ohne den Regeltext zur Pokalvergabe", () => {
 		const text = TROPHY_RULES_TEXT.join("\n");
-		expect(text).toContain("Pokalwertung: Ab 2026 werden keine Pokale mehr");
-		expect(text).toContain("in der jeweiligen Wettkampf-Wertung.");
+		expect(text).not.toContain("Pokalwertung:");
+		expect(text).not.toContain("Treppchen");
 		expect(text).toContain("Punktesystem: Gewertet wird nach Altersklassen sowie männlich und weiblich getrennt.");
 		expect(text).toContain(
 			"5 Mannschaften: 1. Platz = 6 Punkte, 2. Platz = 4, 3. Platz = 3, 4. Platz = 2, 5. Platz = 1 Punkt."
