@@ -1,6 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
-import { readWorkbook, setWorkbookAdapter, writeWorkbook, type Workbook } from "$lib/platform/workbook";
-import { createFakeWorkbookAdapter } from "$lib/testing/fakeWorkbook";
+import { describe, expect, it } from "vitest";
 import { defaultSettings, type Settings } from "../settings/settings";
 import type { Team } from "./registrations";
 import {
@@ -8,9 +6,9 @@ import {
 	defaultWaveSelection,
 	expectedCounts,
 	REGISTRATION_HEADERS,
-	REGISTRATION_SHEET,
-	toRegistrationSheet,
-	verifyRegistrationSheet,
+	encodeRegistrationCsv,
+	splitCsvLine,
+	verifyRegistrationCsv,
 	type ExportRow
 } from "./registrationExport";
 
@@ -112,36 +110,71 @@ describe("REGISTRATION_HEADERS", () => {
 	});
 });
 
-describe("toRegistrationSheet", () => {
+const decode = (bytes: Uint8Array): string => new TextDecoder().decode(bytes);
+const lines = (bytes: Uint8Array): string[] => decode(bytes).split("\r\n");
+
+describe("encodeRegistrationCsv", () => {
 	const row = (overrides: Partial<Team>): ExportRow => ({ ...team(overrides), isWaveCopy: false });
 
-	it("schreibt Kopfzeile und Zeilen ins Blatt Meldungen", () => {
-		const sheet = toRegistrationSheet([row({})]);
-		expect(sheet.name).toBe(REGISTRATION_SHEET);
-		expect(sheet.rows[0]).toEqual([...REGISTRATION_HEADERS]);
-		expect(sheet.rows).toHaveLength(2);
+	it("schreibt Kopfzeile und Zeilen mit Semikolon, ohne BOM und mit Windows-Zeilenenden", () => {
+		const bytes = encodeRegistrationCsv([row({})]);
+		expect(bytes[0]).toBe("g".charCodeAt(0));
+		expect(lines(bytes)).toEqual([REGISTRATION_HEADERS.join(";"), expect.any(String), ""]);
+		// Ohne Komma in der Kopfzeile wählt JAuswertung das Semikolon, auch unter englischem Windows.
+		expect(lines(bytes)[0]).not.toContain(",");
 	});
 
-	it("setzt Zahlen als Zahl, Text als Text und leere Felder als leere Zelle", () => {
-		const sheet = toRegistrationSheet([
+	it("übernimmt Werte als Text und lässt leere Felder leer", () => {
+		const bytes = encodeRegistrationCsv([
 			row({
 				reportedPoints: "1234,5",
-				qualification: "",
 				members: [
 					{ lastName: "Meier", firstName: "Anna", yearOfBirth: "2012" },
-					{ lastName: "Mustermann", firstName: "Max", yearOfBirth: "ca. 2011" },
-					{ lastName: "Meier", firstName: "", yearOfBirth: "" }
+					{ lastName: "Mustermann", firstName: "Max", yearOfBirth: "ca. 2011" }
 				]
-			}),
-			row({ reportedPoints: "k.A." }),
-			row({ reportedPoints: "" })
+			})
 		]);
-		const [first, second, third] = sheet.rows.slice(1);
-		expect(first.slice(0, 6)).toEqual(["Musterstadt", "Musterstadt", "AK 12", "weiblich", null, 1234.5]);
-		expect(first.slice(6, 15)).toEqual(["Meier", "Anna", 2012, "Mustermann", "Max", "ca. 2011", "Meier", null, null]);
-		expect(first.slice(15)).toEqual([null, null, null, null, null, null]);
-		expect(second[5]).toBe("k.A.");
-		expect(third[5]).toBeNull();
+		const fields = lines(bytes)[1].split(";");
+		expect(fields).toHaveLength(REGISTRATION_HEADERS.length);
+		expect(fields.slice(0, 12)).toEqual([
+			"Musterstadt",
+			"Musterstadt",
+			"AK 12",
+			"weiblich",
+			"",
+			"1234,5",
+			"Meier",
+			"Anna",
+			"2012",
+			"Mustermann",
+			"Max",
+			"ca. 2011"
+		]);
+		expect(fields.slice(12).every((field) => field === "")).toBe(true);
+	});
+
+	it("schreibt Umlaute als UTF-8", () => {
+		const bytes = encodeRegistrationCsv([row({ organisation: "Mühlheim" })]);
+		expect(lines(bytes)[1]).toMatch(/^Mühlheim;/);
+		expect(bytes.length).toBeGreaterThan(decode(bytes).length);
+	});
+
+	it("ersetzt Semikolon, Anführungszeichen und Zeilenumbrüche, die JAuswertung falsch zerlegen würde", () => {
+		const bytes = encodeRegistrationCsv([row({ name: 'Team "Nord"; 2', organisation: "Muster-\r\nstadt" })]);
+		const fields = splitCsvLine(lines(bytes)[1]);
+		expect(fields.slice(0, 3)).toEqual(["Muster- stadt", "Team 'Nord', 2", "AK 12"]);
+	});
+});
+
+describe("splitCsvLine", () => {
+	it("trennt am Semikolon und schneidet Leerzeichen ab", () => {
+		expect(splitCsvLine("a; b ;;c")).toEqual(["a", "b", "", "c"]);
+		expect(splitCsvLine("a;")).toEqual(["a"]);
+	});
+
+	it("liest Anführungszeichen wie JAuswertung bis zum nächsten Anführungszeichen", () => {
+		expect(splitCsvLine('"a;b" x;c')).toEqual(["a;b", "c"]);
+		expect(splitCsvLine('"offen')).toEqual(["offen"]);
 	});
 });
 
@@ -164,77 +197,71 @@ describe("expectedCounts", () => {
 	});
 });
 
-describe("verifyRegistrationSheet", () => {
-	afterEach(() => setWorkbookAdapter(null));
-
+describe("verifyRegistrationCsv", () => {
 	const teams = [
 		team({ id: "a", ageGroup: "AK 13/14", members: [{ lastName: "Meier", firstName: "Anna", yearOfBirth: "2011" }] }),
 		team({ id: "b", ageGroup: "AK 12", gender: "männlich", organisation: "Beispielhausen", reportedPoints: "250" })
 	];
 	const rows = buildRegistrationRows(teams, new Set(["a"]), settingsWith());
+	const expected = expectedCounts(rows);
 
-	async function roundTrip(): Promise<Workbook> {
-		setWorkbookAdapter(createFakeWorkbookAdapter());
-		return readWorkbook(await writeWorkbook([toRegistrationSheet(rows)]));
-	}
+	const savedLines = (): string[] => lines(encodeRegistrationCsv(rows));
+	const encode = (text: string[]): Uint8Array => new TextEncoder().encode(text.join("\r\n"));
 
-	it("bestätigt eine vollständig zurückgelesene Datei", async () => {
-		const result = verifyRegistrationSheet(await roundTrip(), expectedCounts(rows));
-		expect(result).toEqual({ ok: true, problems: [] });
+	it("bestätigt eine vollständig zurückgelesene Datei", () => {
+		expect(verifyRegistrationCsv(encodeRegistrationCsv(rows), expected)).toEqual({ ok: true, problems: [] });
 	});
 
-	it("erkennt eine fehlende Zeile", async () => {
-		const workbook = await roundTrip();
-		workbook.sheets[0].rows.pop();
-		const result = verifyRegistrationSheet(workbook, expectedCounts(rows));
+	it("erkennt eine fehlende Zeile", () => {
+		const text = savedLines().filter((line) => line !== "");
+		text.pop();
+		const result = verifyRegistrationCsv(encode(text), expected);
 		expect(result.ok).toBe(false);
 		expect(result.problems.length).toBeGreaterThanOrEqual(2);
 		expect(result.problems.join(" ")).not.toContain("Meier");
 	});
 
-	it("erkennt eine falsche Kopfzeile", async () => {
-		const workbook = await roundTrip();
-		workbook.sheets[0].rows[0][1] = "Mannschaft";
-		const result = verifyRegistrationSheet(workbook, expectedCounts(rows));
+	it("erkennt eine falsche Kopfzeile, auch durch ein BOM", () => {
+		const text = savedLines();
+		text[0] = text[0].replace(";name;", ";Mannschaft;");
+		expect(verifyRegistrationCsv(encode(text), expected).problems).toHaveLength(1);
+		const withBom = new Uint8Array([0xef, 0xbb, 0xbf, ...encodeRegistrationCsv(rows)]);
+		expect(verifyRegistrationCsv(withBom, expected).ok).toBe(false);
+	});
+
+	it("akzeptiert die Kopfzeile unabhängig von Groß-/Kleinschreibung", () => {
+		const text = savedLines();
+		text[0] = text[0].replace("gliederung", "GLIEDERUNG");
+		expect(verifyRegistrationCsv(encode(text), expected).ok).toBe(true);
+	});
+
+	it("meldet eine Datei, die nicht in UTF-8 gespeichert ist", () => {
+		const result = verifyRegistrationCsv(new Uint8Array([0x67, 0xfc, 0x0d, 0x0a]), expected);
 		expect(result.ok).toBe(false);
-		expect(result.problems).toHaveLength(1);
+		expect(result.problems).toEqual([expect.stringContaining("UTF-8")]);
 	});
 
-	it("akzeptiert die Kopfzeile unabhängig von Groß-/Kleinschreibung", async () => {
-		const workbook = await roundTrip();
-		workbook.sheets[0].rows[0][0] = "GLIEDERUNG";
-		expect(verifyRegistrationSheet(workbook, expectedCounts(rows)).ok).toBe(true);
-	});
-
-	it("meldet ein fehlendes Blatt", () => {
-		const result = verifyRegistrationSheet(
-			{ sheets: [{ name: "Tabelle1", rows: [] }], properties: { created: null, modified: null } },
-			expectedCounts(rows)
-		);
-		expect(result.ok).toBe(false);
-		expect(result.problems).toHaveLength(1);
-	});
-
-	it("meldet Zeilen mit leeren Pflichtfeldern", async () => {
-		const workbook = await roundTrip();
-		workbook.sheets[0].rows[1][1] = null;
-		const result = verifyRegistrationSheet(workbook, expectedCounts(rows));
+	it("meldet Zeilen mit leeren Pflichtfeldern", () => {
+		const text = savedLines();
+		const fields = text[1].split(";");
+		fields[1] = "";
+		text[1] = fields.join(";");
+		const result = verifyRegistrationCsv(encode(text), expected);
 		expect(result.ok).toBe(false);
 		expect(result.problems).toEqual([expect.stringContaining("Zeile 2")]);
 	});
 
-	it("meldet unerwartete Gruppen und überspringt leere Zeilen bei der Zeilennummer", async () => {
-		const workbook = await roundTrip();
-		const sheetRows = workbook.sheets[0].rows;
-		const extra = [...sheetRows[1]];
+	it("meldet unerwartete Gruppen und überspringt leere Zeilen bei der Zeilennummer", () => {
+		const text = savedLines().filter((line) => line !== "");
+		const extra = text[1].split(";");
 		extra[2] = "AK 10";
-		extra[0] = null;
-		sheetRows.push([null], extra);
-		const result = verifyRegistrationSheet(workbook, expectedCounts(rows));
+		extra[0] = "";
+		text.push("", extra.join(";"));
+		const result = verifyRegistrationCsv(encode(text), expected);
 		expect(result.problems).toEqual([
 			"Anzahl Meldungen: 3 erwartet, 4 gefunden.",
 			"AK 10 männlich: 1 unerwartet gefunden.",
-			`Zeile ${sheetRows.length}: Gliederung, Name, Altersklasse oder Geschlecht fehlt.`
+			`Zeile ${text.length}: Gliederung, Name, Altersklasse oder Geschlecht fehlt.`
 		]);
 	});
 });

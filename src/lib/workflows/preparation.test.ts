@@ -8,9 +8,7 @@ vi.mock("$lib/platform/files", () => filesMock);
 const inputMock = vi.hoisted(() => ({ readInputFile: vi.fn() }));
 vi.mock("$lib/platform/inputFiles", () => inputMock);
 
-import { setWorkbookAdapter } from "$lib/platform/workbook";
 import { defaultSettings } from "$lib/settings/settings";
-import { createFakeWorkbookAdapter } from "$lib/testing/fakeWorkbook";
 import { buildRegistrationCsv } from "$lib/testing/fixtures";
 import { encodeWindows1252 } from "$lib/testing/latin1";
 import {
@@ -138,17 +136,15 @@ describe("exportRegistrations", () => {
 	const savedBytes = (): Uint8Array => filesMock.saveFile.mock.calls[0][0].bytes;
 
 	beforeEach(() => {
-		setWorkbookAdapter(createFakeWorkbookAdapter());
 		inputMock.readInputFile.mockImplementation(async () => ({ bytes: savedBytes() }));
 	});
 	afterEach(() => {
-		setWorkbookAdapter(null);
 		filesMock.saveFile.mockReset();
 		inputMock.readInputFile.mockReset();
 	});
 
 	it("speichert, liest zurück und bestätigt die Anzahl", async () => {
-		filesMock.saveFile.mockResolvedValue("/tmp/20261014_WWK_Meldungen.xlsx");
+		filesMock.saveFile.mockResolvedValue("/tmp/20261014_WWK_Meldungen.csv");
 		const registration = load([
 			{ gliederung: "Musterstadt", ak: "AK 13/14" },
 			{ gliederung: "Beispielhausen", ak: "AK 12", geschlecht: "männlich" }
@@ -157,37 +153,36 @@ describe("exportRegistrations", () => {
 		const outcome = await exportRegistrations(exportableRows);
 		expect(outcome.status).toBe("saved");
 		if (outcome.status !== "saved") return;
-		expect(outcome.path).toBe("/tmp/20261014_WWK_Meldungen.xlsx");
+		expect(outcome.path).toBe("/tmp/20261014_WWK_Meldungen.csv");
 		expect(outcome.expected.total).toBe(3);
 		expect(outcome.verification).toEqual({ ok: true, problems: [] });
-		expect(inputMock.readInputFile).toHaveBeenCalledWith("/tmp/20261014_WWK_Meldungen.xlsx");
+		expect(inputMock.readInputFile).toHaveBeenCalledWith("/tmp/20261014_WWK_Meldungen.csv");
 		const request = filesMock.saveFile.mock.calls[0][0];
-		expect(request.defaultName).toBe("20261014_WWK_Meldungen.xlsx");
-		expect(request.filters).toEqual([{ name: "Excel-Datei", extensions: ["xlsx"] }]);
+		expect(request.defaultName).toBe("20261014_WWK_Meldungen.csv");
+		expect(request.filters).toEqual([{ name: "CSV-Datei", extensions: ["csv"] }]);
 	});
 
 	it("exportiert fehlerhafte Zeilen nicht mit", async () => {
-		filesMock.saveFile.mockResolvedValue("/tmp/x.xlsx");
+		filesMock.saveFile.mockResolvedValue("/tmp/x.csv");
 		const registration = load([{ ak: "AK 12" }, { gliederung: "Beispielhausen", ak: "AK 12", geschlecht: "?" }]);
 		const outcome = await exportRegistrations(checkRegistration(registration, settings).exportableRows);
 		expect(outcome.status === "saved" && outcome.expected.total).toBe(1);
-		const sheets = JSON.parse(new TextDecoder().decode(filesMock.saveFile.mock.calls[0][0].bytes));
-		expect(sheets[0].rows).toHaveLength(2);
+		const text = new TextDecoder().decode(savedBytes());
+		expect(text.split("\r\n").filter((line) => line !== "")).toHaveLength(2);
 	});
 
 	it("prüft die Datei auf der Platte, nicht die Bytes im Speicher", async () => {
-		filesMock.saveFile.mockResolvedValue("/tmp/x.xlsx");
+		filesMock.saveFile.mockResolvedValue("/tmp/x.csv");
 		inputMock.readInputFile.mockImplementation(async () => {
-			const sheets = JSON.parse(new TextDecoder().decode(savedBytes()));
-			sheets[0].rows = sheets[0].rows.slice(0, 1);
-			return { bytes: new TextEncoder().encode(JSON.stringify(sheets)) };
+			const [header] = new TextDecoder().decode(savedBytes()).split("\r\n");
+			return { bytes: new TextEncoder().encode(header) };
 		});
 		const outcome = await exportRegistrations(checkRegistration(load([{ ak: "AK 12" }]), settings).exportableRows);
 		expect(outcome.status === "saved" && outcome.verification.ok).toBe(false);
 	});
 
 	it("meldet eine nicht zurücklesbare Datei als nicht bestätigt", async () => {
-		filesMock.saveFile.mockResolvedValue("/tmp/x.xlsx");
+		filesMock.saveFile.mockResolvedValue("/tmp/x.csv");
 		inputMock.readInputFile.mockRejectedValue("Die Datei bitte erneut auswählen oder hierher ziehen.");
 		const outcome = await exportRegistrations(checkRegistration(load([{ ak: "AK 12" }]), settings).exportableRows);
 		expect(outcome.status === "saved" && outcome.verification).toEqual({

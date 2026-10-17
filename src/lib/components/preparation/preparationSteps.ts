@@ -60,7 +60,7 @@ export function preparationSteps(input: PreparationStepInput): Step[] {
 			{
 				id: "export",
 				label: "Export",
-				description: "Excel-Datei zum Import in JAuswertung speichern.",
+				description: "CSV-Datei zum Import in JAuswertung speichern.",
 				status: input.exported ? "done" : "open"
 			},
 			hasRegistration

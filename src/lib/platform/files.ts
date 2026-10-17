@@ -30,7 +30,7 @@ export function writePenaltyCatalogNextTo(rulebookPath: string, bytes: Uint8Arra
 
 const pad2 = (n: number): string => String(n).padStart(2, "0");
 
-/** Dateiname mit Datum davor, z. B. "20261114_WWK_Meldungen.xlsx". */
+/** Dateiname mit Datum davor, z. B. "20261114_WWK_Meldungen.csv". */
 export function datedFileName(name: string, date: Date = new Date()): string {
 	const prefix = `${date.getFullYear()}${pad2(date.getMonth() + 1)}${pad2(date.getDate())}`;
 	return `${prefix}_${name}`;

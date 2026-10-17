@@ -3,15 +3,14 @@ import { MissingColumnsError, parseRegistrationCsv, type TextEncodingName } from
 import { logInfo } from "$lib/log";
 import { datedFileName, saveFile } from "$lib/platform/files";
 import { readInputFile } from "$lib/platform/inputFiles";
-import { readWorkbook, writeWorkbook } from "$lib/platform/workbook";
 import type { SessionRegistration } from "$lib/session.svelte";
 import type { Settings } from "$lib/settings/settings";
 import {
 	buildRegistrationRows,
 	defaultWaveSelection,
 	expectedCounts,
-	toRegistrationSheet,
-	verifyRegistrationSheet,
+	encodeRegistrationCsv,
+	verifyRegistrationCsv,
 	type ExpectedCounts,
 	type ExportRow,
 	type VerificationResult
@@ -20,9 +19,9 @@ import { parseRegistrations, type Team } from "$lib/wwk/registrations";
 import { workbookYear, type FileDates } from "$lib/wwk/results";
 import { errorTeamIds, validateTeams, type Issue } from "$lib/wwk/validation";
 import { NOT_A_TEAM_EXPORT } from "./errors";
-import { EXCEL_FILTER } from "./savedFile";
+import { CSV_FILTER } from "./savedFile";
 
-const REGISTRATION_FILE_NAME = "WWK_Meldungen.xlsx";
+const REGISTRATION_FILE_NAME = "WWK_Meldungen.csv";
 const LOCALE = "de";
 
 const ENCODING_LABELS: Record<TextEncodingName, string> = {
@@ -146,7 +145,7 @@ const READ_BACK_FAILED = "Die gespeicherte Datei konnte nicht zur Kontrolle gele
 async function verifySavedFile(path: string, expected: ExpectedCounts): Promise<VerificationResult> {
 	try {
 		const saved = await readInputFile(path);
-		return verifyRegistrationSheet(await readWorkbook(saved.bytes), expected);
+		return verifyRegistrationCsv(saved.bytes, expected);
 	} catch {
 		return { ok: false, problems: [READ_BACK_FAILED] };
 	}
@@ -154,10 +153,10 @@ async function verifySavedFile(path: string, expected: ExpectedCounts): Promise<
 
 /** Schreibt die Meldungen, liest die Datei zurück und prüft die Anzahlen. */
 export async function exportRegistrations(rows: readonly ExportRow[]): Promise<ExportOutcome> {
-	const bytes = await writeWorkbook([toRegistrationSheet(rows)]);
+	const bytes = encodeRegistrationCsv(rows);
 	const path = await saveFile({
 		defaultName: datedFileName(REGISTRATION_FILE_NAME),
-		filters: [EXCEL_FILTER],
+		filters: [CSV_FILTER],
 		bytes
 	});
 	if (path === null) return { status: "cancelled" };

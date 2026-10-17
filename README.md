@@ -38,7 +38,8 @@ können direkt aus der Anwendung installiert werden.
   Gliederung kann je Gliederung ein eigener Name gelten (z. B. „Sulzbach / Saar“),
   frei eingetragen oder aus der Meldung übernommen; er wird für die nächsten
   Jahre gemerkt.
-- Export der Meldungen für JAuswertung mit **Kontrollzahl**: So viele Meldungen
+- Export der Meldungen als CSV-Datei für JAuswertung, ganz ohne Excel, mit
+  **Kontrollzahl**: So viele Meldungen
   muss JAuswertung nach dem Import anzeigen.
 
 ### Auswertung und Pokalwertung
@@ -210,7 +211,7 @@ Hände von Berechtigten.
 2. In der Anwendung **Vorbereitung** öffnen, zuerst die **Veranstaltung**
    prüfen (Nummer und Datum), dann Meldedatei laden, Hinweise prüfen,
    Mannschaften auswählen und die Meldungen exportieren.
-3. Die Meldungen in **JAuswertung importieren** und die angezeigte Anzahl mit
+3. Die CSV-Datei in **JAuswertung als Meldungen importieren** und die angezeigte Anzahl mit
    der **Kontrollzahl** vergleichen.
 4. **Wettkampf** durchführen und in JAuswertung erfassen.
 5. Aus JAuswertung den **Excel-Export** erstellen.

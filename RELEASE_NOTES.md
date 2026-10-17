@@ -19,6 +19,8 @@ Logo, und die Seiten führen Schritt für Schritt durch den Ablauf.
   das Datum, gibt es einen Hinweis.
 - Die Meldedatei wird nach denselben Regeln wie in JAuswertung geprüft,
   auffällige Zeilen werden verständlich erklärt.
+- Die Meldungen werden als CSV-Datei für JAuswertung gespeichert; Excel wird
+  dafür nicht mehr gebraucht.
 - Nach dem Export liest die Anwendung die gespeicherte Datei noch einmal ein
   und zeigt eine **Kontrollzahl**: So viele Meldungen muss JAuswertung nach dem
   Import anzeigen.

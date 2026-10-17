@@ -1,5 +1,4 @@
-// Meldungen für JAuswertung: alle Teams plus Wellen-Kopien als Blatt „Meldungen“.
-import type { Cell, Sheet, Workbook } from "$lib/platform/workbook";
+// Meldungen für JAuswertung: alle Teams plus Wellen-Kopien als CSV-Datei.
 import type { Settings } from "../settings/settings";
 import {
 	buildAgeGroupOrder,
@@ -10,7 +9,6 @@ import {
 } from "./ageGroups";
 import { MAX_MEMBERS, type Member, type Team } from "./registrations";
 
-export const REGISTRATION_SHEET = "Meldungen";
 const WAVE_ID_SUFFIX = ":wave";
 const LOCALE = "de";
 
@@ -24,8 +22,6 @@ export const REGISTRATION_HEADERS: readonly string[] = [...BASE_HEADERS, ...MEMB
 
 const COLUMN = { organisation: 0, name: 1, ageGroup: 2, gender: 3 } as const;
 const REQUIRED_COLUMNS = Object.values(COLUMN);
-const DECIMAL_TEXT = /^-?\d+(?:[.,]\d+)?$/;
-const INTEGER_TEXT = /^\d+$/;
 
 export type ExportRow = Team & { isWaveCopy: boolean };
 
@@ -74,38 +70,6 @@ export function buildRegistrationRows(
 	);
 }
 
-const textCell = (value: string): Cell => (value === "" ? null : value);
-
-function decimalCell(value: string): Cell {
-	return DECIMAL_TEXT.test(value) ? Number(value.replace(",", ".")) : textCell(value);
-}
-
-function yearCell(value: string): Cell {
-	return INTEGER_TEXT.test(value) ? Number(value) : textCell(value);
-}
-
-function memberCells(member: Member | undefined): Cell[] {
-	if (!member) return [null, null, null];
-	return [textCell(member.lastName), textCell(member.firstName), yearCell(member.yearOfBirth)];
-}
-
-function toSheetRow(row: ExportRow): Cell[] {
-	const members = Array.from({ length: MAX_MEMBERS }, (_, i) => memberCells(row.members[i])).flat();
-	return [
-		textCell(row.organisation),
-		textCell(row.name),
-		textCell(row.ageGroup),
-		textCell(row.gender),
-		textCell(row.qualification),
-		decimalCell(row.reportedPoints),
-		...members
-	];
-}
-
-export function toRegistrationSheet(rows: readonly ExportRow[]): Sheet {
-	return { name: REGISTRATION_SHEET, rows: [[...REGISTRATION_HEADERS], ...rows.map(toSheetRow)] };
-}
-
 const groupKey = (ageGroup: string, gender: string): string =>
 	JSON.stringify([ageGroup.trim().toLowerCase(), gender.trim().toLowerCase()]);
 
@@ -125,9 +89,61 @@ export function expectedCounts(rows: readonly ExportRow[]): ExpectedCounts {
 	return { total: rows.length, byGroup: [...countGroups(rows).values()] };
 }
 
-const cellText = (cell: Cell | undefined): string => (cell === null || cell === undefined ? "" : String(cell).trim());
+/** Trennzeichen, das JAuswertung in der Kopfzeile erkennt; die Kopfzeile enthält deshalb kein Komma. */
+const CSV_SEPARATOR = ";";
+const CSV_LINE_BREAK = "\r\n";
+const LINE_BREAKS = /[\r\n]+/g;
+const QUOTE = '"';
 
-function headerMatches(header: readonly Cell[] | undefined): boolean {
+/**
+ * JAuswertung kennt in CSV kein maskiertes Anführungszeichen und trennt stur am Semikolon;
+ * beides wird deshalb im Wert ersetzt, Zeilenumbrüche werden zu Leerzeichen.
+ */
+function csvField(value: string): string {
+	return value.replace(LINE_BREAKS, " ").replaceAll(CSV_SEPARATOR, ",").replaceAll(QUOTE, "'").trim();
+}
+
+function memberFields(member: Member | undefined): string[] {
+	return member ? [member.lastName, member.firstName, member.yearOfBirth] : ["", "", ""];
+}
+
+function toFields(row: ExportRow): string[] {
+	const members = Array.from({ length: MAX_MEMBERS }, (_, i) => memberFields(row.members[i])).flat();
+	return [row.organisation, row.name, row.ageGroup, row.gender, row.qualification, row.reportedPoints, ...members].map(
+		csvField
+	);
+}
+
+/** CSV für den Meldungs-Import von JAuswertung: UTF-8 ohne BOM, sonst erkennt JAuswertung die erste Spalte nicht. */
+export function encodeRegistrationCsv(rows: readonly ExportRow[]): Uint8Array {
+	const lines = [[...REGISTRATION_HEADERS], ...rows.map(toFields)].map((fields) => fields.join(CSV_SEPARATOR));
+	return new TextEncoder().encode(lines.join(CSV_LINE_BREAK) + CSV_LINE_BREAK);
+}
+
+/** Zerlegt eine Zeile wie JAuswertung: ein Wert in Anführungszeichen reicht bis zum nächsten Anführungszeichen. */
+export function splitCsvLine(line: string, separator: string = CSV_SEPARATOR): string[] {
+	const fields: string[] = [];
+	let index = 0;
+	while (index < line.length) {
+		let end: number;
+		if (line[index] === QUOTE) {
+			const close = line.indexOf(QUOTE, index + 1);
+			const quoteEnd = close < 0 ? line.length : close;
+			fields.push(line.slice(index + 1, quoteEnd).trim());
+			end = line.indexOf(separator, quoteEnd);
+		} else {
+			end = line.indexOf(separator, index);
+			fields.push(line.slice(index, end < 0 ? line.length : end).trim());
+		}
+		if (end < 0) break;
+		index = end + 1;
+	}
+	return fields;
+}
+
+const cellText = (cell: string | undefined): string => (cell ?? "").trim();
+
+function headerMatches(header: readonly string[] | undefined): boolean {
 	if (!header) return false;
 	const extra = header.slice(REGISTRATION_HEADERS.length);
 	return (
@@ -136,17 +152,17 @@ function headerMatches(header: readonly Cell[] | undefined): boolean {
 	);
 }
 
-const isEmptyRow = (row: readonly Cell[]): boolean => row.every((cell) => cellText(cell) === "");
+const isEmptyRow = (row: readonly string[]): boolean => row.every((cell) => cellText(cell) === "");
 
 interface DataRow {
-	excelRow: number;
-	cells: Cell[];
+	line: number;
+	cells: string[];
 }
 
-/** Zeilennummern wie in Excel (Kopfzeile = 1), leere Zeilen übersprungen. */
-function dataRowsOf(sheet: Sheet): DataRow[] {
-	return sheet.rows
-		.map((cells, index) => ({ excelRow: index + 1, cells }))
+/** Zeilennummern wie im Texteditor (Kopfzeile = 1), leere Zeilen übersprungen. */
+function dataRowsOf(table: readonly string[][]): DataRow[] {
+	return table
+		.map((cells, index) => ({ line: index + 1, cells }))
 		.slice(1)
 		.filter((row) => !isEmptyRow(row.cells));
 }
@@ -154,7 +170,7 @@ function dataRowsOf(sheet: Sheet): DataRow[] {
 function incompleteRowProblems(dataRows: readonly DataRow[]): string[] {
 	return dataRows
 		.filter((row) => REQUIRED_COLUMNS.some((column) => cellText(row.cells[column]) === ""))
-		.map((row) => `Zeile ${row.excelRow}: Gliederung, Name, Altersklasse oder Geschlecht fehlt.`);
+		.map((row) => `Zeile ${row.line}: Gliederung, Name, Altersklasse oder Geschlecht fehlt.`);
 }
 
 function groupProblems(expected: readonly GroupCount[], actual: Map<string, GroupCount>): string[] {
@@ -176,15 +192,23 @@ function groupProblems(expected: readonly GroupCount[], actual: Map<string, Grou
 	return problems;
 }
 
-/** Prüft die zurückgelesene Datei gegen die erwarteten Anzahlen. Meldungen enthalten keine Namen. */
-export function verifyRegistrationSheet(workbook: Workbook, expected: ExpectedCounts): VerificationResult {
-	const wanted = REGISTRATION_SHEET.toLowerCase();
-	const sheet = workbook.sheets.find((candidate) => candidate.name.trim().toLowerCase() === wanted);
-	if (!sheet) return { ok: false, problems: [`Das Blatt „${REGISTRATION_SHEET}“ fehlt in der Datei.`] };
-	if (!headerMatches(sheet.rows[0])) {
+const BYTE_ORDER_MARK = "\uFEFF";
+const NOT_UTF8 = "Die Datei ist nicht in UTF-8 gespeichert; JAuswertung würde Umlaute falsch lesen.";
+
+/** Liest die gespeicherte CSV wie JAuswertung und prüft sie gegen die erwarteten Anzahlen. Meldungen enthalten keine Namen. */
+export function verifyRegistrationCsv(bytes: Uint8Array, expected: ExpectedCounts): VerificationResult {
+	let text: string;
+	try {
+		text = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(bytes);
+	} catch {
+		return { ok: false, problems: [NOT_UTF8] };
+	}
+	const table = text.split(/\r?\n/).map((line) => splitCsvLine(line));
+	// JAuswertung schneidet ein BOM nicht ab und findet dann die Spalte „gliederung“ nicht.
+	if (text.startsWith(BYTE_ORDER_MARK) || !headerMatches(table[0])) {
 		return { ok: false, problems: ["Die Spaltenüberschriften stimmen nicht mit der Meldedatei überein."] };
 	}
-	const dataRows = dataRowsOf(sheet);
+	const dataRows = dataRowsOf(table);
 	const problems: string[] = [];
 	if (dataRows.length !== expected.total) {
 		problems.push(`Anzahl Meldungen: ${expected.total} erwartet, ${dataRows.length} gefunden.`);

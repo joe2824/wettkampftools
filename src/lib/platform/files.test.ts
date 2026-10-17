@@ -8,7 +8,7 @@ import { datedFileName, saveFile, writePenaltyCatalogNextTo } from "./files";
 
 describe("datedFileName", () => {
 	it("stellt das Datum als JJJJMMTT voran", () => {
-		expect(datedFileName("WWK_Meldungen.xlsx", new Date(2026, 10, 14))).toBe("20261114_WWK_Meldungen.xlsx");
+		expect(datedFileName("WWK_Meldungen.csv", new Date(2026, 10, 14))).toBe("20261114_WWK_Meldungen.csv");
 	});
 
 	it("füllt Monat und Tag mit Nullen auf", () => {

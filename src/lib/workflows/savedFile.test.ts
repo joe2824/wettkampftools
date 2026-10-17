@@ -5,7 +5,7 @@ const logMock = vi.hoisted(() => ({ logError: vi.fn() }));
 vi.mock("$lib/platform/output", () => outputMock);
 vi.mock("$lib/log", () => logMock);
 
-import { EXCEL_FILTER, openAfterSave, PDF_FILTER } from "./savedFile";
+import { CSV_FILTER, EXCEL_FILTER, openAfterSave, PDF_FILTER } from "./savedFile";
 
 beforeEach(() => {
 	outputMock.openOutputFile.mockReset();
@@ -31,5 +31,6 @@ describe("Dateifilter", () => {
 	it("beschreiben PDF und Excel", () => {
 		expect(PDF_FILTER).toEqual({ name: "PDF-Datei", extensions: ["pdf"] });
 		expect(EXCEL_FILTER).toEqual({ name: "Excel-Datei", extensions: ["xlsx"] });
+		expect(CSV_FILTER).toEqual({ name: "CSV-Datei", extensions: ["csv"] });
 	});
 });

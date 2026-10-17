@@ -39,9 +39,10 @@ Weiteres:
 
 ## Manuelle Abnahme vor dem ersten Release
 
-1. **Meldungen:** Die erzeugte Meldungen-Datei in JAuswertung mit dem
+1. **Meldungen:** Die erzeugte Meldungen-CSV in JAuswertung mit dem
    Wellen-Regelwerk importieren. Die Anzahl der importierten Meldungen
-   entspricht der in der Anwendung angezeigten Kontrollzahl.
+   entspricht der in der Anwendung angezeigten Kontrollzahl; Umlaute in
+   Gliederungen und Namen kommen richtig an.
 2. **Pokalwertung:** Die Ergebnisdatei 2025 in alter und neuer Version
    auswerten. Die Pokalwertung ist gleich, bis auf dokumentierte, beabsichtigte
    Abweichungen.
