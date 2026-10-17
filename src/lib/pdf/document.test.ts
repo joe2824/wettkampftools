@@ -59,6 +59,17 @@ function numbersBefore(content: string, operator: string): number[] {
 	return (line ?? "").split(" ").slice(0, -1).map(Number);
 }
 
+/** Lage und Größe des ersten Bilds: pdf-lib verschiebt (1 0 0 1 x y cm), dreht, skaliert (w 0 0 h 0 0 cm) und schert. */
+function imagePlacement(content: string): { x: number; y: number; width: number; height: number } {
+	const matrices = content
+		.split("\n")
+		.filter((line) => line.endsWith(" cm"))
+		.map((line) => line.split(" ").slice(0, -1).map(Number));
+	const translate = matrices.find(([, , , , x, y]) => x !== 0 || y !== 0)!;
+	const scale = matrices.find(([a, , , d]) => a !== 1 || d !== 1)!;
+	return { x: translate[4], y: translate[5], width: scale[0], height: scale[3] };
+}
+
 const load = (bytes: Uint8Array) => PDFDocument.load(bytes, { updateMetadata: false });
 const images = { signature1: pngBytes(), signature2: jpegBytes() };
 
@@ -77,7 +88,7 @@ describe("renderPdf – Dokument", () => {
 		const pdf = await load(await renderPdf([[textOp()]], { fonts, images: {} }, META));
 		expect(pdf.catalog.getViewerPreferences()?.getPrintScaling()).toBe(PrintScaling.None);
 		expect(pdf.getTitle()).toBe(META.title);
-		expect(pdf.getCreator()).toBe("Wettkampftools");
+		expect(pdf.getCreator()).toBe("DLRG Dorheim Wettkampftools");
 		expect(pdf.getLanguage()).toBe("de-DE");
 	});
 
@@ -97,9 +108,22 @@ describe("renderPdf – Koordinaten", () => {
 		const [moveX, moveY] = numbersBefore(content, "m");
 		expect(moveX).toBeCloseTo(mmToPt(10), 6);
 		expect(moveY).toBeCloseTo(A4_HEIGHT_PT - mmToPt(20), 1);
-		const [, , , , imageX, imageY] = numbersBefore(content, "cm");
-		expect(imageX).toBeCloseTo(mmToPt(30), 6);
-		expect(imageY).toBeCloseTo(A4_HEIGHT_PT - mmToPt(220), 1);
+		// Das quadratische Testbild füllt die Höhe des 40 × 20 mm großen Rahmens und sitzt mittig.
+		const image = imagePlacement(content);
+		expect(image.width).toBeCloseTo(mmToPt(20), 6);
+		expect(image.height).toBeCloseTo(mmToPt(20), 6);
+		expect(image.x).toBeCloseTo(mmToPt(40), 6);
+		expect(image.y).toBeCloseTo(A4_HEIGHT_PT - mmToPt(220), 1);
+	});
+
+	it("passt das Bild wie die Vorschau unverzerrt in den Rahmen ein", async () => {
+		const tall = imageOp({ widthMm: 20, heightMm: 40 });
+		const pdf = await load(await renderPdf([[tall]], { fonts, images }, META));
+		const image = imagePlacement(pageContent(pdf));
+		expect(image.width).toBeCloseTo(mmToPt(20), 6);
+		expect(image.height).toBeCloseTo(mmToPt(20), 6);
+		expect(image.x).toBeCloseTo(mmToPt(30), 6);
+		expect(image.y).toBeCloseTo(A4_HEIGHT_PT - mmToPt(230), 1);
 	});
 
 	it("rechnet Millimeter in Punkte um", () => {

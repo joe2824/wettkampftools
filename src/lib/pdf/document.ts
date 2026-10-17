@@ -30,6 +30,7 @@ import {
 	type SignatureSlot
 } from "$lib/certificates/layout";
 import type { CircleOp, DrawOp, ImageOp, LineOp, PathOp, TextOp } from "$lib/certificates/render";
+import { APP_NAME } from "$lib/release/appName";
 
 export interface PdfAssets {
 	fonts: FontBytes;
@@ -47,7 +48,7 @@ export interface PdfMeta {
 	pageSize?: PageSizeMm;
 }
 
-const PDF_CREATOR = "Wettkampftools";
+const PDF_CREATOR = APP_NAME;
 const PDF_LANGUAGE = "de-DE";
 const BLACK = rgb(0, 0, 0);
 const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
@@ -108,14 +109,17 @@ function drawText(page: PDFPage, op: TextOp, resources: Resources): void {
 	});
 }
 
+/** Wie die Vorschau: Bild unverzerrt in den Rahmen einpassen und darin zentrieren. */
 function drawImage(page: PDFPage, op: ImageOp, resources: Resources): void {
 	const image = resources.images.get(op.slot);
 	if (!image) return;
+	const frame = { width: mmToPt(op.widthMm), height: mmToPt(op.heightMm) };
+	const { width, height } = image.scaleToFit(frame.width, frame.height);
 	page.drawImage(image, {
-		x: mmToPt(op.xMm),
-		y: resources.pdfY(op.topMm + op.heightMm),
-		width: mmToPt(op.widthMm),
-		height: mmToPt(op.heightMm)
+		x: mmToPt(op.xMm) + (frame.width - width) / 2,
+		y: resources.pdfY(op.topMm + op.heightMm) + (frame.height - height) / 2,
+		width,
+		height
 	});
 }
 
