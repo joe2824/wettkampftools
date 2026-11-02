@@ -29,7 +29,7 @@ export const DEFAULT_CLUB_PENALTY_RULES: ClubPenaltyRules = {
 	falseStartCode: "V1",
 	falseStartPoints: 100,
 	waveCode: "RW1",
-	waveName: "Retten in der Welle: Opfer nicht mit Rautek- oder Schultertragegriff herausgetragen",
+	waveName: "Retten in der Welle: Verunfallte Person nicht mit Rautek- oder Schultertragegriff herausgetragen",
 	wavePoints: 200,
 	waveMemberVariants: 4,
 	waveParagraphName: "Wellenwettkampf"

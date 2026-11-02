@@ -29,7 +29,7 @@ describe("applyClubPenaltyRules", () => {
 		expect(paragraph).toMatchObject({ name: "Wellenwettkampf", number: "4" });
 		expect(paragraph?.penalties.map((p) => p.code)).toEqual(["RW1", "RW1#1", "RW1#2", "RW1#3", "RW1#4"]);
 		expect(paragraph?.penalties[2]).toEqual({
-			name: "Retten in der Welle: Opfer nicht mit Rautek- oder Schultertragegriff herausgetragen (2. Schwimmer)",
+			name: "Retten in der Welle: Verunfallte Person nicht mit Rautek- oder Schultertragegriff herausgetragen (2. Schwimmer)",
 			code: "RW1#2",
 			kind: "STRAFPUNKTE",
 			points: 200,
