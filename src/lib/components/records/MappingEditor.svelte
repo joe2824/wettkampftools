@@ -31,7 +31,7 @@
 	<Collapsible.Trigger
 		class="group flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-medium hover:bg-muted/50 focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none"
 	>
-		Zuordnung zum offiziellen Regelwerk
+		Zuordnung zum offiziellen Regelwerk (Rettungswertung)
 		<ChevronDownIcon
 			class="size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180"
 			aria-hidden="true"
@@ -39,10 +39,12 @@
 	</Collapsible.Trigger>
 	<Collapsible.Content class="flex flex-col gap-4 border-t p-3">
 		<p class="text-sm text-muted-foreground">
-			Welche offizielle Altersklasse und Disziplin liefert den Rec-Wert? Die Zuordnung wird gespeichert.
+			Nur für die Rettungswertung (AK): Welche offizielle Altersklasse und Disziplin liefert den Rec-Wert? Die Zuordnung
+			wird gespeichert. Die Wellenwertung (AkW) braucht keine Zuordnung, ihre Rec-Werte kommen aus den Rekorden der
+			bisherigen Wettkämpfe.
 		</p>
 		<MappingTable
-			clubHeading="Altersklasse im Verein"
+			clubHeading="Altersklasse Rettung im Verein"
 			officialHeading="Offizielle Altersklasse"
 			selectLabel="Offizielle Altersklasse für"
 			names={clubAgeGroups}
@@ -51,7 +53,7 @@
 			onselect={(ageGroup, value) => onchange(setAgeGroupMapping(mapping, ageGroup, value))}
 		/>
 		<MappingTable
-			clubHeading="Disziplin im Verein"
+			clubHeading="Disziplin Rettung im Verein"
 			officialHeading="Offizielle Disziplin"
 			selectLabel="Offizielle Disziplin für"
 			names={clubDisciplines}
