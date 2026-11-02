@@ -135,6 +135,24 @@ describe("buildRecProposal", () => {
 		});
 	});
 
+	it("behandelt Disziplinen der Wellen-AK als Welle, auch ohne „Welle“ im Namen", () => {
+		const [row] = buildRecProposal({
+			...INPUT,
+			club: [rec("AkW offen", "male", 1, "4*50m Rescue Tube Rescue", 10000)],
+			records: [
+				{
+					...RECORDS[0],
+					ageGroup: "AkW offen",
+					gender: "male",
+					discipline: "4*50m Rescue Tube Rescue",
+					time: 9913,
+					year: 2019
+				}
+			]
+		});
+		expect(row).toMatchObject({ proposedRec: 9913, source: "bestTime" });
+	});
+
 	it("markiert Wellendisziplinen ohne Rekord", () => {
 		expect(find("AkW offen", "male")).toMatchObject({
 			proposedRec: null,
@@ -189,11 +207,11 @@ describe("resolveRecRows", () => {
 		expect(accepted.find((r) => recKey(r) === waveKey)).toMatchObject({ newRec: 20500, status: "adopted" });
 	});
 
-	it("behält bei einem langsameren Rekord den alten Wert, auch wenn übernommen", () => {
+	it("übernimmt auch einen langsameren Rekord, aber erst auf Wunsch", () => {
 		const row = find("AkW 12", "male");
-		expect(row).toMatchObject({ proposedRec: 18300, newRec: 18000, status: "noRecord" });
+		expect(row).toMatchObject({ proposedRec: 18300, newRec: 18000, status: "record" });
 		const accepted = resolveRecRows(proposal, decisions({ accepted: new Set([recKey(row)]) }));
-		expect(accepted.find((r) => r.ageGroup === "AkW 12")).toMatchObject({ newRec: 18000, status: "noRecord" });
+		expect(accepted.find((r) => r.ageGroup === "AkW 12")).toMatchObject({ newRec: 18300, status: "adopted" });
 	});
 
 	it("erkennt einen Rec-Wert, der schon dem Rekord entspricht", () => {
@@ -211,8 +229,10 @@ describe("resolveRecRows", () => {
 	});
 
 	it("nennt die noch offenen Rekorde", () => {
-		expect(pendingRecordKeys(rows)).toEqual([waveKey]);
-		expect(pendingRecordKeys(resolveRecRows(proposal, decisions({ accepted: new Set([waveKey]) })))).toEqual([]);
+		expect(pendingRecordKeys(rows)).toEqual([waveKey, recKey(find("AkW 12", "male"))]);
+		expect(pendingRecordKeys(resolveRecRows(proposal, decisions({ accepted: new Set([waveKey]) })))).toEqual([
+			recKey(find("AkW 12", "male"))
+		]);
 	});
 });
 
@@ -238,8 +258,8 @@ describe("summarizeProposal", () => {
 		const proposal = buildRecProposal(INPUT);
 		const rows = resolveRecRows(proposal, decisions({ overrides: new Map([[recKey(proposal[3]), 7400]]) }));
 		const summary = summarizeProposal(rows);
-		expect(summary).toEqual({ adopted: 3, unchanged: 0, record: 1, noRecord: 1, missing: 1, edited: 1 });
-		expect(openCount(summary)).toBe(2);
+		expect(summary).toEqual({ adopted: 3, unchanged: 0, record: 2, missing: 1, edited: 1 });
+		expect(openCount(summary)).toBe(3);
 	});
 });
 
@@ -259,18 +279,24 @@ describe("displayRows", () => {
 		]);
 	});
 
-	it("blendet auf Wunsch Zeilen aus, bei denen der alte Wert bleibt", () => {
-		expect(displayRows(rows, true).map((r) => r.status)).toEqual(["adopted", "adopted", "missing", "record"]);
+	it("blendet auf Wunsch unveränderte Zeilen aus", () => {
+		const unchanged = resolveRecRows(
+			buildRecProposal({ ...INPUT, club: [rec("AkW offen", "female", 0, "4*50m Retten in der Welle", 20500)] }),
+			EMPTY_DECISIONS
+		);
+		const all = [...rows, ...unchanged];
+		expect(displayRows(all, false)).toHaveLength(6);
+		expect(displayRows(all, true).map((r) => r.status)).toEqual(["adopted", "adopted", "missing", "record", "record"]);
 	});
 });
 
 describe("formatProposalSummary", () => {
 	it("nennt alle Gruppen", () => {
-		expect(formatProposalSummary({ adopted: 9, unchanged: 27, record: 2, noRecord: 1, missing: 3, edited: 1 })).toBe(
-			"9 übernommen · 27 unverändert · 2 Rekorde zum Übernehmen · 1 Rekord langsamer · 3 ohne Quelle · 1 eigener Wert"
+		expect(formatProposalSummary({ adopted: 9, unchanged: 27, record: 2, missing: 3, edited: 1 })).toBe(
+			"9 übernommen · 27 unverändert · 2 Rekorde zum Übernehmen · 3 ohne Quelle · 1 eigener Wert"
 		);
-		expect(formatProposalSummary({ adopted: 0, unchanged: 1, record: 1, noRecord: 2, missing: 0, edited: 2 })).toBe(
-			"0 übernommen · 1 unverändert · 1 Rekord zum Übernehmen · 2 Rekorde langsamer · 2 eigene Werte"
+		expect(formatProposalSummary({ adopted: 0, unchanged: 1, record: 1, missing: 0, edited: 2 })).toBe(
+			"0 übernommen · 1 unverändert · 1 Rekord zum Übernehmen · 2 eigene Werte"
 		);
 	});
 });

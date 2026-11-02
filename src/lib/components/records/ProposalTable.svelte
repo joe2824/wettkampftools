@@ -25,8 +25,7 @@
 	const STATUS: Record<RecStatus, { label: string; variant: BadgeVariant }> = {
 		adopted: { label: "Übernommen", variant: "default" },
 		unchanged: { label: "Unverändert", variant: "secondary" },
-		record: { label: "Neuer Rekord", variant: "outline" },
-		noRecord: { label: "Kein neuer Rekord", variant: "secondary" },
+		record: { label: "Rekord übernehmen?", variant: "outline" },
 		missing: { label: "Bitte prüfen", variant: "destructive" },
 		edited: { label: "Eigener Wert", variant: "outline" }
 	};

@@ -115,6 +115,10 @@ export function buildAgeGroupOrder(settings: Settings): string[] {
 	]);
 }
 
+/** Wellen-AK erkennt man am Kürzel „AkW“, Schreibweise egal. */
+export const isWaveAgeGroup = (name: string): boolean =>
+	splitLeadingToken(normalizeAgeGroupSpelling(name)).token === WAVE_PREFIX;
+
 export function classifyAgeGroup(name: string, order: readonly string[]): AgeGroupKind | null {
 	if (findIndex(name, order) < 0) return waveOutsideOrder(name, order) ? "wave" : null;
 	const { token } = splitLeadingToken(normalizeAgeGroupSpelling(name));

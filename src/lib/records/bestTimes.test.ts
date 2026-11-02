@@ -141,6 +141,27 @@ describe("extractBestTimes", () => {
 		expect(best.entries).toEqual([]);
 	});
 
+	it("erkennt Wellendisziplinen an der Wellen-AK, nicht am Namen", () => {
+		const best = extractBestTimes(
+			workbookOf([
+				row(
+					"AkW offen",
+					"männlich",
+					excelTime(9900),
+					"",
+					excelTime(16000),
+					"",
+					"4*50m Rescue Tube Rescue;4*50m Retten in der Welle"
+				)
+			]),
+			2026
+		);
+		expect(best.entries.map((entry) => [entry.discipline, entry.time])).toEqual([
+			["4*50m Rescue Tube Rescue", 9900],
+			["4*50m Retten in der Welle", 16000]
+		]);
+	});
+
 	it("übergeht unbekannte Geschlechter und Zeilen ohne Altersklasse", () => {
 		const best = extractBestTimes(
 			workbookOf([row("AkW offen", "mixed", excelTime(100), ""), row("", "weiblich", excelTime(100), "")]),

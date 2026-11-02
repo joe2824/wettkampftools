@@ -1,4 +1,5 @@
 // Zuordnung des Vereins-Regelwerks zum offiziellen DLRG-Regelwerk für die Rec-Werte.
+import { isWaveAgeGroup } from "$lib/wwk/ageGroups";
 import type { RulebookRecord } from "./rulebookRecords";
 
 export interface RecMapping {
@@ -48,14 +49,9 @@ export function parseRecMapping(input: unknown): RecMapping | null {
 	return { ageGroups: { ...ageGroups }, disciplineAliases: { ...disciplineAliases } };
 }
 
-const WAVE_MARKER = /welle/i;
-
-/** Wellendisziplinen sind vereinseigen und haben kein offizielles Gegenstück. */
-export const isWaveDiscipline = (name: string): boolean => WAVE_MARKER.test(name);
-
-/** Rec-Werte der Rettungsdisziplinen, die aus dem offiziellen Regelwerk kommen. */
+/** Rec-Werte der Rettungsdisziplinen, die aus dem offiziellen Regelwerk kommen; die Wellen-AK sind vereinseigen. */
 export const rescueRecords = (records: readonly RulebookRecord[]): RulebookRecord[] =>
-	records.filter((record) => !isWaveDiscipline(record.discipline));
+	records.filter((record) => !isWaveAgeGroup(record.ageGroup));
 
 /** Eindeutige Altersklassen- oder Disziplinnamen in Reihenfolge des Regelwerks. */
 export function distinctNames(records: readonly RulebookRecord[], field: "ageGroup" | "discipline"): string[] {

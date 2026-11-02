@@ -44,7 +44,19 @@ describe("mergeYears", () => {
 		const stored: BestTimes = { year: 2024, entries: [entry("AkW offen", "male", RETTEN, 16100)] };
 		const merged = mergeYears([Y2024, Y2019], [stored, Y2025]);
 		expect(merged.map((year) => year.year)).toEqual([2019, 2024, 2025]);
-		expect(merged[1]).toBe(stored);
+		expect(merged[1]).toEqual(stored);
+	});
+
+	it("führt umbenannte Disziplinen unter dem aktuellen Namen", () => {
+		const Y2026: BestTimes = { year: 2026, entries: [entry("AkW offen", "male", "4*50m Rescue Tube Rescue", 10100)] };
+		const years = mergeYears([Y2019], [Y2026]);
+		expect(years[0].entries.map((e) => e.discipline)).toEqual([RETTEN, "4*50m Rescue Tube Rescue"]);
+		const record = findRecord(waveRecordTable(years), {
+			ageGroup: "AkW offen",
+			gender: "male",
+			discipline: "4*50m Rescue Tube Rescue"
+		});
+		expect(record).toMatchObject({ time: 9913, year: 2019 });
 	});
 });
 

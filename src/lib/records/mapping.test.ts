@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
 	DEFAULT_REC_MAPPING,
 	distinctNames,
-	isWaveDiscipline,
 	parseRecMapping,
 	rescueRecords,
 	setAgeGroupMapping,
@@ -45,13 +44,9 @@ describe("Hilfen für die Zuordnung", () => {
 	const club = [
 		record("AK 10", "4*25m RLB"),
 		record("AK 10", "4*25m RLB"),
-		record("AkW offen", "4*50m Retten in der Welle mit Gurtretter")
+		record("AkW offen", "4*50m Retten in der Welle mit Gurtretter"),
+		record("AkW offen", "4*50m Rescue Tube Rescue")
 	];
-
-	it("erkennt Wellendisziplinen am Namen", () => {
-		expect(isWaveDiscipline("4*50m Retten in der Welle")).toBe(true);
-		expect(isWaveDiscipline("4*25m Puppenstaffel")).toBe(false);
-	});
 
 	it("liefert Rettungswerte und eindeutige Namen", () => {
 		const rescue = rescueRecords(club);

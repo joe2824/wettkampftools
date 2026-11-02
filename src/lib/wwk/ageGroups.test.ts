@@ -6,6 +6,7 @@ import {
 	compareAgeGroups,
 	displayAgeGroup,
 	equalsAgeGroup,
+	isWaveAgeGroup,
 	matchAgeGroup,
 	normalizeAgeGroupSpelling,
 	RESCUE_PREFIX,
@@ -190,6 +191,16 @@ describe("classifyAgeGroup", () => {
 
 	it("liefert null für bekannte Einträge ohne Kürzel", () => {
 		expect(classifyAgeGroup("Offen", ["Offen"])).toBeNull();
+	});
+});
+
+describe("isWaveAgeGroup", () => {
+	it("erkennt Wellen-AK am Kürzel, Schreibweise egal", () => {
+		expect(isWaveAgeGroup("AkW 13/14")).toBe(true);
+		expect(isWaveAgeGroup(" akw offen")).toBe(true);
+		expect(isWaveAgeGroup("AK 12")).toBe(false);
+		expect(isWaveAgeGroup("AK Senioren")).toBe(false);
+		expect(isWaveAgeGroup("")).toBe(false);
 	});
 });
 

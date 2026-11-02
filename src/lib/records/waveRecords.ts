@@ -24,10 +24,28 @@ export interface NewWaveRecord {
 	previous: WaveRecord | null;
 }
 
-/** Gespeicherte Jahre ersetzen gleiche Jahre der Geschichte; Ergebnis nach Jahr aufsteigend. */
+/** Umbenannte Wellendisziplinen: alter Name → aktueller Name, damit ältere Jahre weiter zählen. */
+export const WAVE_DISCIPLINE_RENAMES: Readonly<Record<string, string>> = {
+	"4*50m Retten in der Welle mit Gurtretter": "4*50m Rescue Tube Rescue"
+};
+
+const RENAMES_BY_KEY = new Map(
+	Object.entries(WAVE_DISCIPLINE_RENAMES).map(([old, current]) => [old.trim().toLowerCase(), current])
+);
+
+const currentDiscipline = (name: string): string => RENAMES_BY_KEY.get(name.trim().toLowerCase()) ?? name;
+
+function withCurrentNames(year: BestTimes): BestTimes {
+	return {
+		...year,
+		entries: year.entries.map((entry) => ({ ...entry, discipline: currentDiscipline(entry.discipline) }))
+	};
+}
+
+/** Gespeicherte Jahre ersetzen gleiche Jahre der Geschichte; Ergebnis nach Jahr aufsteigend, mit aktuellen Disziplinnamen. */
 export function mergeYears(history: readonly BestTimes[], stored: readonly BestTimes[]): BestTimes[] {
 	const byYear = new Map<number, BestTimes>();
-	for (const year of [...history, ...stored]) byYear.set(year.year, year);
+	for (const year of [...history, ...stored]) byYear.set(year.year, withCurrentNames(year));
 	return [...byYear.values()].sort((a, b) => a.year - b.year);
 }
 

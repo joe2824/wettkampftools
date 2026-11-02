@@ -42,7 +42,7 @@
 
 	<p class="text-sm text-muted-foreground">
 		Rettungswerte kommen direkt aus dem DLRG-Regelwerk und gelten sofort. Für die Welle gilt der Rekord aller bisherigen
-		Wettkämpfe; er wird erst per Klick übernommen, wenn er schneller ist als der bisherige Rec-Wert.
+		Wettkämpfe; er wird per Klick übernommen, auch wenn er langsamer ist als der bisherige Rec-Wert.
 	</p>
 
 	{#if open > 0}
@@ -53,7 +53,7 @@
 				<ul class="list-disc pl-4">
 					{#if summary.record > 0}
 						<li>
-							{summary.record === 1 ? "Ein neuer Wellen-Rekord wartet" : `${summary.record} neue Wellen-Rekorde warten`}
+							{summary.record === 1 ? "Ein Wellen-Rekord wartet" : `${summary.record} Wellen-Rekorde warten`}
 							auf die Übernahme.
 						</li>
 					{/if}

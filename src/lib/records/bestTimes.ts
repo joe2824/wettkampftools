@@ -4,8 +4,8 @@
 // „Disziplinen“ nennt die Namen in der Reihenfolge der Zeitspalten, durch „;“ getrennt.
 import { parseRecTime } from "$lib/format/time";
 import type { Cell, Workbook } from "$lib/platform/workbook";
+import { isWaveAgeGroup } from "$lib/wwk/ageGroups";
 import { findSheet } from "$lib/wwk/results";
-import { isWaveDiscipline } from "./mapping";
 import { GENDER_ORDER, type RecordGender } from "./rulebookRecords";
 
 export interface BestTimeTarget {
@@ -101,10 +101,10 @@ function rowTimes(row: Cell[], columns: RowColumns): RowTime[] {
 	const disciplines = cellText(row[columns.disciplines])
 		.split(DISCIPLINE_SEPARATOR)
 		.map((name) => name.trim());
-	if (!ageGroup || !gender) return [];
+	if (!isWaveAgeGroup(ageGroup) || !gender) return [];
 	return columns.times.flatMap(({ index, time, penalty }) => {
 		const discipline = disciplines[index] ?? "";
-		if (!isWaveDiscipline(discipline)) return [];
+		if (!discipline) return [];
 		const value = cellTime(row[time]);
 		if (value === null) return [];
 		return [{ ageGroup, gender, discipline, time: value, penalized: penalty >= 0 && !withoutPenalty(row[penalty]) }];
