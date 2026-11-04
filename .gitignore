@@ -31,3 +31,6 @@ __pycache__/
 .env*
 *.key
 *.pem
+
+# Arbeitsunterlagen des Gangsta-Frameworks (nur lokal)
+docs/gangsta/

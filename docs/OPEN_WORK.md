@@ -1,43 +1,19 @@
 # Was offen ist
 
-Stand: 2026-10-15, Branch `dev`. Der Neuaufbau mit Tauri und SvelteKit ist
-fertig, die Python-Version ist entfernt (letzter Stand: Tag `v1.0.1.2`). Offen
-sind die manuelle Abnahme unter Windows, die GitHub-Secrets für den Updater
-und das erste Release.
+Stand: 2026-11-04, Branch `main`. Die Betas v2.0.0-beta.1 bis beta.5 sind
+veröffentlicht, die Secrets für den Updater angelegt. Offen sind das erste
+stabile Release und die manuelle Abnahme unter Windows.
 
-## Abgleich mit der früheren Python-Version (`app.py`, bis `v1.0.1.2`)
+## Nächste Schritte
 
-Im Code umgesetzt; geprüft wird das Verhalten bei der manuellen Abnahme.
+1. **Erstes Release:** auf `main` `./scripts/release.sh 2.0.0` (Tag `v2.0.0`),
+   danach `main` zurück nach `dev` holen.
+2. **Manuelle Abnahme** unter Windows (Liste unten).
+3. **Release-Notes danach:** `RELEASE_NOTES.md` gilt nur für `v2.0.0`. Für das
+   nächste Release löschen (dann entstehen die Notes aus den
+   `Release-Note:`-Trailern) oder auf den neuen Tag ändern.
 
-Seiten:
-
-- [x] Wellenwettkampf – Vorbereitung (Meldedatei laden, Mannschaften je
-      Gliederung auswählen, Export für JAuswertung)
-- [x] Wellenwettkampf – Auswertung (Pokalwertung, Excel-Ausgabe)
-- [x] Tools – Urkunden sortieren (jetzt: Urkunden als PDF)
-- [x] Tools – Entfernungen berechnen
-- [x] Einstellungen
-
-Einstellungen (alle sechs, mit den Standardwerten des Originals):
-
-- [x] Altersklassen (hinzufügen, löschen, sortieren)
-- [x] Senioren-Altersklassen Mannschaft
-- [x] Senioren-Altersklassen Einzel
-- [x] Wellen-Starterlaubnis ab
-- [x] Senioren-Altersklassen vereinfachen
-- [x] Nicht angetretene Teams bei der Auswertung ausschließen
-
-Weiteres:
-
-- [x] Update-Prüfung beim Start (jetzt mit Installation aus der Anwendung)
-- [x] Info (Version, Autor, GitHub)
-- [x] Warnung, wenn die Ergebnisdatei nicht aus dem aktuellen Jahr stammt
-- [x] Seriendruck-Tabelle für die bisherige Word-Vorlage (Notlösung neben dem
-      PDF)
-- [x] Gespeicherte Standortdaten der Gliederungen für Entfernungen ohne Internet
-- [x] Übernahme der Einstellungen der alten Version beim ersten Start
-
-## Manuelle Abnahme vor dem ersten Release
+## Manuelle Abnahme unter Windows
 
 1. **Meldungen:** Die erzeugte Meldungen-CSV in JAuswertung mit dem
    Wellen-Regelwerk importieren. Die Anzahl der importierten Meldungen
@@ -81,23 +57,14 @@ Weiteres:
      unterbieten; Werkzeuge → Wellen-Zeiten zeigt Verlauf, Rekord, Durchschnitt, längste Zeit und die grobe Dauer der Welle aus den Meldungen; beim
      Regelwerk fürs neue Jahr erscheinen schnellere Rekorde mit Button
      „übernehmen“.
-
-## Nächste Schritte
-
-1. **Updater:** Der Public Key ist eingetragen. Im GitHub-Repo die Secrets
-   `TAURI_SIGNING_PRIVATE_KEY` und `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`
-   anlegen. Der private Schlüssel kommt nie ins Repo.
-2. **Manuelle Abnahme** unter Windows (Liste oben).
-3. **Betas vor dem ersten Release:** aus `dev` mit
-   `./scripts/release.sh --beta` (oder Actions → „Beta aus dev“). Ohne
-   stabilen Tag beginnt die Serie bei der Version aus `package.json`, also
-   `v2.0.0-beta.1`, `v2.0.0-beta.2`, … `RELEASE_NOTES.md` mit erster Zeile
-   „# Wettkampftools v2.0.0“ gilt dabei auch für diese Betas.
-4. **Erstes Release:** `dev` nach `main` mergen, dann
-   `./scripts/release.sh 2.0.0` (Tag `v2.0.0`). Der Release-Ablauf nimmt die
-   Notes aus `RELEASE_NOTES.md`; die erste Zeile muss den Tag genau nennen
-   (`v2.0.0`, nicht `v2.0.0-beta.3`). Für spätere Releases die Datei löschen
-   oder auf den neuen Tag ändern; ohne Datei entstehen die Notes aus den
-   `Release-Note:`-Trailern der Commits.
+   - Starts: eine Mannschaft nur in der Welle, eine nur in der Rettung →
+     Export in JAuswertung importieren; die Kontrollzahl stimmt, die
+     Mannschaft ohne Rettung fehlt in ihrer Altersklasse.
+   - Schriftgröße mit Strg + Plus/Minus/0 und unter Einstellungen →
+     Darstellung; bleibt nach einem Neustart.
+   - Lange Seiten scrollen: Kopf- und Aktionsleiste bleiben stehen, unter der
+     Aktionsleiste kein Rand; neue Seite beginnt oben.
+   - Update-Dialog zeigt die Release-Notes formatiert (Überschriften, Listen,
+     Fett).
 
 Echte Meldungen und Ergebnisdateien für die Abnahme bleiben außerhalb des Repos.
