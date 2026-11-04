@@ -31,6 +31,9 @@ Logo, und die Seiten führen Schritt für Schritt durch den Ablauf.
 - **Mannschaftsnamen:** Je Gliederung lässt sich ein eigener Name festlegen
   (z. B. „Sulzbach / Saar“ statt „Sulzbach“) oder per Klick aus der Meldung
   übernehmen. Er wird gemerkt und in den folgenden Jahren verwendet.
+- **Starts in Rettung und Welle:** Je Mannschaft lässt sich wählen, ob sie in
+  der Rettung, in der Welle oder in beiden startet. Die Rettung ist für alle
+  vorausgewählt; die Liste der Gliederungen zeigt beide Anzahlen.
 
 ### Auswertung und Pokalwertung
 
@@ -117,6 +120,8 @@ Logo, und die Seiten führen Schritt für Schritt durch den Ablauf.
   wieder einlesen.
 - Beim Verlassen der Einstellungen mit ungespeicherten Änderungen fragt die
   Anwendung nach.
+- Die **Schriftgröße** lässt sich mit Strg + Plus, Strg + Minus und Strg + 0
+  oder unter Einstellungen → Darstellung anpassen.
 
 ### Updates und Info
 
