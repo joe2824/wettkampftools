@@ -1,6 +1,6 @@
 # Was offen ist
 
-Stand: 2026-11-04, Branch `main`. Die Betas v2.0.0-beta.1 bis beta.5 sind
+Stand: 2026-11-04, Branch `main`. Die Betas v2.0.0-beta.1 bis beta.6 sind
 veröffentlicht, die Secrets für den Updater angelegt. Offen sind das erste
 stabile Release und die manuelle Abnahme unter Windows.
 
