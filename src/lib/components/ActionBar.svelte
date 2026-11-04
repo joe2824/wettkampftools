@@ -33,7 +33,7 @@
 <style>
 	/*
 	 * Leiste reicht über die ganze Breite des Inhaltsbereichs (main ist Container mit p-6),
-	 * die Knöpfe bleiben in der Spalte der Seite. Unten schließt sie bündig mit dem Fenster ab.
+	 * die Knöpfe bleiben in der Spalte der Seite. Unten schließt sie bündig mit dem Inhaltsbereich ab.
 	 */
 	.action-bar {
 		--page-padding: 1.5rem;

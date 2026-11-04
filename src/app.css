@@ -172,10 +172,6 @@
 	* {
 		@apply border-border outline-ring/50;
 	}
-	html {
-		/* Scrollbar-Spur immer reservieren -> kein Layout-Shift beim Ein-/Ausblenden */
-		scrollbar-gutter: stable;
-	}
 	body {
 		@apply bg-background text-foreground font-sans;
 	}

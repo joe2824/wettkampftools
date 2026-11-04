@@ -8,6 +8,7 @@
 	import * as Sidebar from "$lib/components/ui/sidebar";
 	import { Toaster } from "$lib/components/ui/sonner";
 	import { onMount } from "svelte";
+	import { afterNavigate } from "$app/navigation";
 	import { logError } from "$lib/log";
 	import { toast } from "svelte-sonner";
 	import { initApp, migrationMessage, setAsideMessage } from "$lib/appInit";
@@ -23,6 +24,12 @@
 	const SAVE_FAILED_TOAST = "competition-save-failed";
 
 	let { children } = $props();
+
+	// Nur der Inhaltsbereich scrollt, nicht das Fenster; neue Seiten beginnen deshalb hier oben.
+	let inset = $state<HTMLElement | null>(null);
+	afterNavigate(({ type }) => {
+		if (type !== "popstate") inset?.scrollTo({ top: 0 });
+	});
 
 	// Ungespeicherte Einstellungen gehen beim Schließen des Fensters nicht verloren.
 	saveSettingsOnClose(settingsStore, () => saveSettings(settingsStore));
@@ -67,12 +74,14 @@
 	mobileOffset={{ bottom: TOAST_BOTTOM_OFFSET }}
 />
 <ProjectOpenDialog />
-<Sidebar.Provider>
+<Sidebar.Provider class="h-svh overflow-hidden">
 	<AppSidebar />
-	<Sidebar.Inset>
-		<header class="flex h-12 shrink-0 items-center gap-1 border-b px-2">
+	<Sidebar.Inset bind:ref={inset} class="overflow-y-auto [scrollbar-gutter:stable]">
+		<header
+			class="sticky top-0 z-20 flex h-12 shrink-0 items-center gap-1 border-b bg-background/95 px-2 backdrop-blur supports-backdrop-filter:bg-background/80"
+		>
 			<Sidebar.Trigger />
-			<Separator orientation="vertical" class="mx-1 data-[orientation=vertical]:h-4" />
+			<Separator orientation="vertical" class="mx-1 data-vertical:h-4 data-vertical:self-center" />
 			<FileMenu />
 		</header>
 		<main class="@container flex flex-1 flex-col p-6">
