@@ -4,6 +4,7 @@
 	import ProjectOpenDialog from "$lib/components/project/ProjectOpenDialog.svelte";
 	import AppSidebar from "$lib/components/shell/AppSidebar.svelte";
 	import FileMenu from "$lib/components/shell/FileMenu.svelte";
+	import FontScaleShortcuts from "$lib/components/shell/FontScaleShortcuts.svelte";
 	import { Separator } from "$lib/components/ui/separator";
 	import * as Sidebar from "$lib/components/ui/sidebar";
 	import { Toaster } from "$lib/components/ui/sonner";
@@ -74,6 +75,7 @@
 	mobileOffset={{ bottom: TOAST_BOTTOM_OFFSET }}
 />
 <ProjectOpenDialog />
+<FontScaleShortcuts />
 <Sidebar.Provider class="h-svh overflow-hidden">
 	<AppSidebar />
 	<Sidebar.Inset bind:ref={inset} class="overflow-y-auto [scrollbar-gutter:stable]">
