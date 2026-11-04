@@ -7,5 +7,4 @@ src/lib/components/ui
 package-lock.json
 docs/gangsta
 static
-.venv
 coverage

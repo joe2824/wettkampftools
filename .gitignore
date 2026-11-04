@@ -23,10 +23,6 @@ src-tauri/target/
 src-tauri/gen/
 coverage/
 
-# Python (frühere Version)
-.venv/
-__pycache__/
-
 # Schlüssel und Umgebungsdateien
 .env*
 *.key
