@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Markdown from "$lib/components/Markdown.svelte";
 	import * as Alert from "$lib/components/ui/alert";
 	import { Badge } from "$lib/components/ui/badge";
 	import { Button } from "$lib/components/ui/button";
@@ -17,7 +18,7 @@
 </script>
 
 <Dialog.Root open={updater.dialogOpen && updater.version !== null} onOpenChange={handleOpenChange}>
-	<Dialog.Content class="sm:max-w-md">
+	<Dialog.Content class="sm:max-w-lg">
 		<Dialog.Header>
 			<Dialog.Title class="flex items-center gap-2">
 				Neue Version verfügbar
@@ -32,8 +33,8 @@
 		</Dialog.Header>
 
 		{#if updater.notes}
-			<div class="max-h-40 overflow-y-auto rounded-lg border border-border bg-muted/30 p-3 text-sm whitespace-pre-line">
-				{updater.notes}
+			<div class="max-h-72 overflow-y-auto rounded-lg border border-border bg-muted/30 p-3">
+				<Markdown source={updater.notes} />
 			</div>
 		{/if}
 
