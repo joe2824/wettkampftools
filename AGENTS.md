@@ -40,6 +40,8 @@ Tag beginnt `--beta` bei der Version aus `package.json` (`2.0.0-beta.1`).
 `RELEASE_NOTES.md` muss in der ersten Zeile den Tag genau nennen; Betas dürfen
 ihre Basisversion nennen (`v2.0.0` für `v2.0.0-beta.N`). Die Prüfung steckt in
 `node scripts/version.mjs notes <tag>` und gilt in Skripten und Workflows.
+Ohne `RELEASE_NOTES.md` entstehen die Notes aus den `Release-Note:`-Trailern;
+nach einem Release die Datei also löschen oder auf den nächsten Tag ändern.
 Jeder Build lädt sein `latest.json` auch an das feste Release `beta`. Der
 Rust-Teil (`update_channel`) liest beim Start `betaUpdates` aus `settings.json`
 und stellt den Updater dann auf das Beta-Manifest um, mit dem stabilen als
@@ -244,6 +246,4 @@ Jargon-Problem — nur Technik- und Architektur-Vokabular raus.
 
 ## Stand der Arbeit
 
-[`docs/OPEN_WORK.md`](docs/OPEN_WORK.md) hält fest, was offen ist — vor größeren
-Änderungen lesen. Abgeschlossene Vorhaben stehen in der Commit-History, nicht
-als Datei.
+Abgeschlossene Vorhaben stehen in der Commit-History, nicht als Datei.
