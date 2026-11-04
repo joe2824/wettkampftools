@@ -105,6 +105,29 @@ describe("restore", () => {
 		expect(store.savedAt).toBe(SAVED_AT);
 	});
 
+	it("stellt die Mannschaften ohne Rettungsstart wieder her", async () => {
+		await saveCompetitionState({
+			savedAt: SAVED_AT,
+			registration: {
+				fileName: "meldungen.csv",
+				csvBase64: encodeBase64(csv),
+				waveSelection: ["r1"],
+				rescueExcluded: ["r1", "weg"]
+			}
+		});
+		await store.restore(settings);
+		expect([...(session.registration?.rescueExcluded ?? [])]).toEqual(["r1"]);
+	});
+
+	it("startet bei älterem Stand alle in der Rettung", async () => {
+		await saveCompetitionState({
+			savedAt: SAVED_AT,
+			registration: { fileName: "meldungen.csv", csvBase64: encodeBase64(csv), waveSelection: ["r1"] }
+		});
+		await store.restore(settings);
+		expect(session.registration?.rescueExcluded.size).toBe(0);
+	});
+
 	it("wendet beim Wiederherstellen die eigenen Mannschaftsnamen an", async () => {
 		await saveCompetitionState({
 			savedAt: SAVED_AT,

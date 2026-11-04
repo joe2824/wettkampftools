@@ -18,6 +18,7 @@ import {
 	loadRegistrations,
 	registrationSettingsKey,
 	registrationYearWarning,
+	setTeamsInRescue,
 	setTeamsInWave,
 	summarizeRegistration,
 	uniqueIssueMessages
@@ -42,6 +43,7 @@ describe("loadRegistrations", () => {
 		expect(registration.fileName).toBe("meldungen.csv");
 		expect(registration.teams).toHaveLength(3);
 		expect([...registration.waveSelection].sort()).toEqual(["r2", "r3"]);
+		expect(registration.rescueExcluded.size).toBe(0);
 		expect(summarizeRegistration(registration)).toEqual({
 			teams: 3,
 			organisations: 2,
@@ -88,6 +90,12 @@ describe("checkRegistration", () => {
 		expect(check.errors.map((issue) => issue.code)).toEqual(["gender.invalid"]);
 		expect(check.excludedRows.map((row) => row.organisation)).toEqual(["Beispielhausen"]);
 		expect(check.exportableRows).toHaveLength(2);
+	});
+
+	it("exportiert Mannschaften, die nur in der Welle starten, ohne Rettungsmeldung", () => {
+		const registration = load([{ gliederung: "Musterstadt", ak: "AK 13/14" }]);
+		const check = checkRegistration({ ...registration, rescueExcluded: new Set(["r1"]) }, settings);
+		expect(check.rows.map((row) => row.ageGroup)).toEqual(["AkW 13/14"]);
 	});
 
 	it("fasst gleiche Meldungen von Original und Wellen-Kopie zusammen", () => {
@@ -213,5 +221,25 @@ describe("registrationYearWarning", () => {
 
 	it("prüft ohne Erstellungsdatum nur das Änderungsdatum", () => {
 		expect(registrationYearWarning({ createdMs: null, modifiedMs: at(2026) }, today)).toBeNull();
+	});
+});
+
+describe("setTeamsInRescue", () => {
+	it("merkt sich, wer nicht in der Rettung startet", () => {
+		const excluded = setTeamsInRescue(new Set(), ["r1", "r2"], false);
+		expect([...excluded].sort()).toEqual(["r1", "r2"]);
+		expect([...setTeamsInRescue(excluded, ["r1"], true)]).toEqual(["r2"]);
+	});
+});
+
+describe("groupByOrganisation mit Rettungsauswahl", () => {
+	it("zählt Mannschaften, die nirgends starten", () => {
+		const registration = load([
+			{ gliederung: "Musterstadt", ak: "AK 13/14" },
+			{ gliederung: "Musterstadt", ak: "AK 12" }
+		]);
+		const [group] = groupByOrganisation(registration.teams, new Set(["r1"]), new Set(["r1", "r2"]));
+		expect(group.notStarting).toBe(1);
+		expect(group.rescue).toBe(0);
 	});
 });

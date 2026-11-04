@@ -81,7 +81,9 @@
 	});
 
 	function resetWave() {
-		if (registration) session.setWaveSelection(defaultWaveSelection(registration.teams, settings));
+		if (!registration) return;
+		session.setWaveSelection(defaultWaveSelection(registration.teams, settings));
+		session.setRescueExcluded([]);
 	}
 </script>
 
@@ -89,7 +91,7 @@
 	<header class="flex flex-col gap-1">
 		<h1 class="text-2xl font-bold">Vorbereitung</h1>
 		<p class="text-muted-foreground">
-			Meldungen aus dem DLRG-Meldeportal prüfen, Wellenstarter wählen und für JAuswertung speichern.
+			Meldungen aus dem DLRG-Meldeportal prüfen, Starts in Rettung und Welle wählen und für JAuswertung speichern.
 		</p>
 	</header>
 
@@ -118,6 +120,8 @@
 					selection={registration.waveSelection}
 					eligible={defaultWaveSelection(registration.teams, settings)}
 					onchange={(selection) => session.setWaveSelection(selection)}
+					rescueExcluded={registration.rescueExcluded}
+					onrescuechange={(excluded) => session.setRescueExcluded(excluded)}
 					onreset={resetWave}
 				/>
 			{:else if step.id === "export" && check}

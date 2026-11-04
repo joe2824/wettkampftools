@@ -8,7 +8,8 @@ const registration: SessionRegistration = {
 	encoding: "utf-8",
 	teams: [],
 	renames: [],
-	waveSelection: new Set()
+	waveSelection: new Set(),
+	rescueExcluded: new Set()
 };
 
 const results: SessionResults = {

@@ -48,7 +48,12 @@ export interface PreparationCheck {
 export interface OrganisationGroup {
 	organisation: string;
 	teams: Team[];
+	/** Teams in der Welle. */
 	selected: number;
+	/** Teams in der Rettung. */
+	rescue: number;
+	/** Teams, die weder in der Rettung noch in der Welle starten. */
+	notStarting: number;
 }
 
 export type ExportOutcome =
@@ -64,7 +69,16 @@ export function loadRegistrations(bytes: Uint8Array, fileName: string, settings:
 		const settingsKey = registrationSettingsKey(settings);
 		return {
 			ok: true,
-			registration: { fileName, sourceBytes: bytes, settingsKey, encoding, teams, renames, waveSelection }
+			registration: {
+				fileName,
+				sourceBytes: bytes,
+				settingsKey,
+				encoding,
+				teams,
+				renames,
+				waveSelection,
+				rescueExcluded: new Set()
+			}
 		};
 	} catch (error) {
 		if (error instanceof MissingColumnsError) return { ok: false, message: NOT_A_TEAM_EXPORT };
@@ -95,7 +109,12 @@ export function summarizeRegistration(registration: SessionRegistration): Regist
 
 /** Prüft genau die Zeilen, die exportiert würden (Teams plus Wellen-Kopien). */
 export function checkRegistration(registration: SessionRegistration, settings: Settings): PreparationCheck {
-	const rows = buildRegistrationRows(registration.teams, registration.waveSelection, settings);
+	const rows = buildRegistrationRows(
+		registration.teams,
+		registration.waveSelection,
+		settings,
+		registration.rescueExcluded
+	);
 	const issues = validateTeams(rows, { rulebook: settings.rulebook });
 	const blocked = errorTeamIds(issues);
 	return {
@@ -112,14 +131,20 @@ export function uniqueIssueMessages(issues: readonly Issue[]): string[] {
 	return [...new Set(issues.map((issue) => issue.message))];
 }
 
-export function groupByOrganisation(teams: readonly Team[], selection: ReadonlySet<string>): OrganisationGroup[] {
+export function groupByOrganisation(
+	teams: readonly Team[],
+	selection: ReadonlySet<string>,
+	rescueExcluded: ReadonlySet<string> = new Set()
+): OrganisationGroup[] {
 	const groups = new Map<string, Team[]>();
 	for (const team of teams) groups.set(team.organisation, [...(groups.get(team.organisation) ?? []), team]);
 	return [...groups]
 		.map(([organisation, members]) => ({
 			organisation,
 			teams: members,
-			selected: members.filter((team) => selection.has(team.id)).length
+			selected: members.filter((team) => selection.has(team.id)).length,
+			rescue: members.filter((team) => !rescueExcluded.has(team.id)).length,
+			notStarting: members.filter((team) => rescueExcluded.has(team.id) && !selection.has(team.id)).length
 		}))
 		.sort((a, b) => a.organisation.localeCompare(b.organisation, LOCALE));
 }
@@ -137,6 +162,15 @@ export function setTeamsInWave(
 		else if (!eligible || eligible.has(id)) next.add(id);
 	}
 	return next;
+}
+
+/** Setzt oder entfernt Teams in der Rettung; gespeichert wird, wer nicht in der Rettung startet. */
+export function setTeamsInRescue(
+	rescueExcluded: ReadonlySet<string>,
+	teamIds: readonly string[],
+	inRescue: boolean
+): Set<string> {
+	return setTeamsInWave(rescueExcluded, teamIds, !inRescue);
 }
 
 const READ_BACK_FAILED = "Die gespeicherte Datei konnte nicht zur Kontrolle gelesen werden. Bitte erneut speichern.";

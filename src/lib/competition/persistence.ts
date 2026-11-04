@@ -22,6 +22,8 @@ export interface StoredRegistration {
 	/** Original-CSV, Base64-kodiert. */
 	csvBase64: string;
 	waveSelection: string[];
+	/** Fehlt in älteren Ständen: dann starten alle in der Rettung. */
+	rescueExcluded?: string[];
 }
 
 export interface StoredHidden {
@@ -79,7 +81,11 @@ function stringList(value: unknown): string[] | null {
 function parseRegistration(raw: unknown): StoredRegistration | null {
 	if (!isRecord(raw) || !isString(raw.fileName) || !isString(raw.csvBase64)) return null;
 	const waveSelection = stringList(raw.waveSelection);
-	return waveSelection ? { fileName: raw.fileName, csvBase64: raw.csvBase64, waveSelection } : null;
+	if (!waveSelection) return null;
+	const registration: StoredRegistration = { fileName: raw.fileName, csvBase64: raw.csvBase64, waveSelection };
+	const rescueExcluded = stringList(raw.rescueExcluded);
+	if (rescueExcluded && rescueExcluded.length > 0) registration.rescueExcluded = rescueExcluded;
+	return registration;
 }
 
 function parseHidden(raw: unknown): StoredHidden | null {

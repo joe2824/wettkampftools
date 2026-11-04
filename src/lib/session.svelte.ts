@@ -16,6 +16,8 @@ export interface SessionRegistration {
 	renames: Rename[];
 	/** IDs der Mannschaften, die in der Welle starten. */
 	waveSelection: Set<string>;
+	/** IDs der Mannschaften, die nicht in der Rettung starten. */
+	rescueExcluded: Set<string>;
 }
 
 export interface SessionResults {
@@ -53,6 +55,12 @@ export class SessionState {
 	setWaveSelection(teamIds: Iterable<string>): void {
 		if (this.registration === null) return;
 		this.registration = { ...this.registration, waveSelection: new Set(teamIds) };
+	}
+
+	/** Ohne geladene Meldungen passiert nichts. */
+	setRescueExcluded(teamIds: Iterable<string>): void {
+		if (this.registration === null) return;
+		this.registration = { ...this.registration, rescueExcluded: new Set(teamIds) };
 	}
 
 	clear(): void {

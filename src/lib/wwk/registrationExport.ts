@@ -53,13 +53,19 @@ function waveCopy(team: Team): ExportRow {
 	return { ...team, id: team.id + WAVE_ID_SUFFIX, ageGroup: toWaveAgeGroup(team.ageGroup), isWaveCopy: true };
 }
 
-/** Sortierung wie bisher: AK aufsteigend, Geschlecht und Gliederung absteigend. */
+/**
+ * Sortierung wie bisher: AK aufsteigend, Geschlecht und Gliederung absteigend.
+ * Teams in `rescueExcluded` starten nur in der Welle (falls gewählt).
+ */
 export function buildRegistrationRows(
 	teams: readonly Team[],
 	waveSelection: ReadonlySet<string>,
-	settings: Settings
+	settings: Settings,
+	rescueExcluded: ReadonlySet<string> = new Set()
 ): ExportRow[] {
-	const originals: ExportRow[] = teams.map((team) => ({ ...team, isWaveCopy: false }));
+	const originals: ExportRow[] = teams
+		.filter((team) => !rescueExcluded.has(team.id))
+		.map((team) => ({ ...team, isWaveCopy: false }));
 	const copies = teams.filter((team) => waveSelection.has(team.id)).map(waveCopy);
 	const byAgeGroup = compareAgeGroups(buildAgeGroupOrder(settings));
 	return [...originals, ...copies].sort(

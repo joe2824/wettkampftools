@@ -88,6 +88,12 @@ describe("buildRegistrationRows", () => {
 		]);
 	});
 
+	it("lässt Teams ohne Rettungsstart weg, ihre Wellen-Kopie bleibt", () => {
+		const teams = [team({ id: "a", ageGroup: "AK 13/14" }), team({ id: "b", ageGroup: "AK 15/16" })];
+		const rows = buildRegistrationRows(teams, new Set(["a"]), settingsWith(), new Set(["a", "b"]));
+		expect(rows.map((row) => row.id)).toEqual(["a:wave"]);
+	});
+
 	it("behält bei Gleichstand die Eingabereihenfolge", () => {
 		const teams = [team({ id: "x", name: "Musterstadt 1" }), team({ id: "y", name: "Musterstadt 2" })];
 		expect(buildRegistrationRows(teams, new Set(), settingsWith()).map((row) => row.id)).toEqual(["x", "y"]);

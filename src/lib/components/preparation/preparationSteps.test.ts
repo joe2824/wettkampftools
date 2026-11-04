@@ -22,7 +22,7 @@ describe("preparationSteps", () => {
 		expect(preparationSteps(base).map((step) => step.id)).toEqual(["event", "load", "check", "wave", "export"]);
 	});
 
-	it("sperrt Prüfen, Welle und Export ohne Meldedatei", () => {
+	it("sperrt Prüfen, Starts und Export ohne Meldedatei", () => {
 		const steps = preparationSteps({ ...base, hasRegistration: false });
 		expect(steps.map((step) => step.status)).toEqual(["done", "open", "locked", "locked", "locked"]);
 		expect(steps[2].lockedReason).toBe("Zuerst die Meldedatei laden.");

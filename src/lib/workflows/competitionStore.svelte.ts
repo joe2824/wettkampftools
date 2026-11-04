@@ -152,7 +152,8 @@ export class CompetitionStore {
 			snapshot.registration = {
 				fileName: registration.fileName,
 				csvBase64: encodeBase64(registration.sourceBytes),
-				waveSelection: [...registration.waveSelection]
+				waveSelection: [...registration.waveSelection],
+				rescueExcluded: [...registration.rescueExcluded]
 			};
 		}
 		if (results) {
@@ -179,7 +180,8 @@ export class CompetitionStore {
 			}
 			const known = new Set(outcome.registration.teams.map((team) => team.id));
 			const waveSelection = new Set(stored.waveSelection.filter((id) => known.has(id)));
-			this.#session.setRegistration({ ...outcome.registration, waveSelection });
+			const rescueExcluded = new Set((stored.rescueExcluded ?? []).filter((id) => known.has(id)));
+			this.#session.setRegistration({ ...outcome.registration, waveSelection, rescueExcluded });
 		} catch {
 			logError("competition.registrationRestoreFailed");
 		}

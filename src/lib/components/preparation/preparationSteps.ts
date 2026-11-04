@@ -50,8 +50,8 @@ export function preparationSteps(input: PreparationStepInput): Step[] {
 		needsRegistration(
 			{
 				id: "wave",
-				label: "Welle",
-				description: "Welche Mannschaften starten zusätzlich in der Welle?",
+				label: "Starts",
+				description: "Welche Mannschaften starten in der Rettung, welche in der Welle?",
 				status: "done"
 			},
 			hasRegistration

@@ -98,6 +98,15 @@ describe("parseCompetitionState", () => {
 		});
 	});
 
+	it("liest die Mannschaften ohne Rettungsstart", () => {
+		const raw = {
+			schemaVersion: 2,
+			savedAt: SAVED_AT,
+			registration: { fileName: "m.csv", csvBase64: "", waveSelection: [], rescueExcluded: ["r1", 7] }
+		};
+		expect(parseCompetitionState(raw)?.state.registration?.rescueExcluded).toEqual(["r1"]);
+	});
+
 	it("liest den alten einteiligen Stand samt Ergebnissen", () => {
 		const parsed = parseCompetitionState(legacyFile());
 		expect(parsed?.state).toEqual(fullState());
