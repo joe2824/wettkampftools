@@ -35,6 +35,10 @@ const RENAMES_BY_KEY = new Map(
 
 const currentDiscipline = (name: string): string => RENAMES_BY_KEY.get(name.trim().toLowerCase()) ?? name;
 
+/** Schlüssel mit aktuellem Disziplinnamen: ein Regelwerk mit dem alten Namen findet denselben Rekord. */
+const recordKey = (target: BestTimeTarget): string =>
+	bestTimeKey({ ...target, discipline: currentDiscipline(target.discipline) });
+
 function withCurrentNames(year: BestTimes): BestTimes {
 	return {
 		...year,
@@ -54,7 +58,7 @@ export function waveRecordTable(years: readonly BestTimes[]): WaveRecord[] {
 	const best = new Map<string, WaveRecord>();
 	for (const { year, entries } of [...years].sort((a, b) => a.year - b.year)) {
 		for (const entry of entries) {
-			const key = bestTimeKey(entry);
+			const key = recordKey(entry);
 			const current = best.get(key);
 			if (!current || entry.time < current.time) best.set(key, { ...entry, year });
 		}
@@ -68,7 +72,7 @@ export function waveStatistics(years: readonly BestTimes[]): WaveStatistic[] {
 	const sums = new Map<string, { total: number; teams: number; slowest: number; slowestYear: number; years: number }>();
 	for (const { year, entries } of [...years].sort((a, b) => a.year - b.year)) {
 		for (const entry of entries) {
-			const key = bestTimeKey(entry);
+			const key = recordKey(entry);
 			const sum = sums.get(key) ?? { total: 0, teams: 0, slowest: 0, slowestYear: year, years: 0 };
 			sum.total += entry.average * entry.teams;
 			sum.teams += entry.teams;
@@ -78,7 +82,7 @@ export function waveStatistics(years: readonly BestTimes[]): WaveStatistic[] {
 		}
 	}
 	return records.map((record) => {
-		const sum = sums.get(bestTimeKey(record))!;
+		const sum = sums.get(recordKey(record))!;
 		const { ageGroup, gender, discipline } = record;
 		return {
 			ageGroup,
@@ -104,11 +108,11 @@ export interface YearPoint {
 
 /** Verlauf einer Altersklasse, eines Geschlechts und einer Disziplin über die Jahre, aufsteigend. */
 export function waveYearSeries(years: readonly BestTimes[], target: BestTimeTarget): YearPoint[] {
-	const key = bestTimeKey(target);
+	const key = recordKey(target);
 	return [...years]
 		.sort((a, b) => a.year - b.year)
 		.flatMap(({ year, entries }) => {
-			const entry = entries.find((candidate) => bestTimeKey(candidate) === key);
+			const entry = entries.find((candidate) => recordKey(candidate) === key);
 			return entry
 				? [{ year, time: entry.time, average: entry.average, slowest: entry.slowest, teams: entry.teams }]
 				: [];
@@ -122,8 +126,8 @@ export function currentDisciplines(years: readonly BestTimes[]): string[] {
 }
 
 export function findRecord(table: readonly WaveRecord[], target: BestTimeTarget): WaveRecord | undefined {
-	const key = bestTimeKey(target);
-	return table.find((record) => bestTimeKey(record) === key);
+	const key = recordKey(target);
+	return table.find((record) => recordKey(record) === key);
 }
 
 /** Zeiten eines Wettkampfs, die den Rekord aller anderen Jahre unterbieten; die erste Zeit einer Disziplin zählt mit. */

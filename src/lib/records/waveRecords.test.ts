@@ -85,6 +85,12 @@ describe("findRecord", () => {
 		expect(findRecord(table, entry("akw offen", "male", RETTEN.toUpperCase(), 0))?.time).toBe(16000);
 		expect(findRecord(table, entry("AkW 15/16", "male", RETTEN, 0))).toBeUndefined();
 	});
+
+	it("findet den Rekord einer umbenannten Disziplin auch unter dem alten Namen", () => {
+		const table = waveRecordTable(mergeYears([Y2019, Y2025], []));
+		expect(findRecord(table, entry("AkW offen", "male", GURT, 0))).toMatchObject({ time: 9913, year: 2019 });
+		expect(findRecord(table, entry("AkW 13/14", "female", GURT, 0))?.time).toBe(11660);
+	});
 });
 
 describe("waveStatistics", () => {
@@ -115,6 +121,11 @@ describe("waveYearSeries", () => {
 		const series = waveYearSeries([Y2025, Y2019, Y2024], entry("akw offen", "male", RETTEN, 0));
 		expect(series.map((point) => point.year)).toEqual([2019, 2024, 2025]);
 		expect(series[2]).toEqual({ year: 2025, time: 16000, average: 16500, slowest: 17000, teams: 1 });
+	});
+
+	it("liefert den Verlauf einer umbenannten Disziplin auch unter dem alten Namen", () => {
+		const series = waveYearSeries(mergeYears([Y2019, Y2025], []), entry("AkW offen", "male", GURT, 0));
+		expect(series.map((point) => point.year)).toEqual([2019]);
 	});
 });
 
