@@ -1,0 +1,3 @@
+# LF auch unter Windows: Prettier und die Shell-Skripte erwarten es.
+* text=auto eol=lf
+*.bat text eol=crlf
