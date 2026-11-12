@@ -77,7 +77,7 @@ Ausstehende sofort geschrieben (höchstens 2 s).
 Rust bleibt schlank und kennt keine Fachlogik: `src-tauri/src/` mit `workbook`
 (Excel lesen/schreiben), `dialogs` (Öffnen- und Speichern-Dialog), `grants`
 (Freigaben: im Öffnen-Dialog gewählte oder abgelegte Dateien sind nur lesbar, im
-Speichern-Dialog gewählte nur beschreibbar), `input` (freigegebene Dateien samt
+Speichern-Dialog gewählte nur beschreibbar und erst nach dem Schreiben lesbar), `input` (freigegebene Dateien samt
 Erstellungsdatum lesen), `output` (Dateien schreiben, öffnen, im Ordner zeigen),
 `penalty_catalog` (Strafenkatalog `<Name>m.def` neben ein gerade gespeichertes
 Regelwerk), `legacy_settings`

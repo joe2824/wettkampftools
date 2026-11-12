@@ -6,7 +6,8 @@ use std::path::{Path, PathBuf};
 use tauri::ipc::{InvokeBody, Request};
 
 /// Nur diese Endungen schreibt die Anwendung selbst.
-const OUTPUT_EXTENSIONS: [&str; 8] = [
+const OUTPUT_EXTENSIONS: [&str; 9] = [
+    "csv",
     "xlsx",
     "pdf",
     "json",
@@ -99,11 +100,15 @@ pub(crate) fn raw_request<'a>(request: &'a Request<'_>) -> Result<(String, &'a [
 }
 
 /// Schreibt eine Ausgabedatei an das im Speichern-Dialog gewählte Ziel.
+///
+/// Die geschriebene Datei ist danach lesbar: die Meldungen werden zur Kontrolle zurückgelesen.
 #[tauri::command]
 pub fn write_output_file(app: tauri::AppHandle, request: Request<'_>) -> Result<(), String> {
     let (path, bytes) = raw_request(&request)?;
     let target = check_write_target(Path::new(&path), write_scope(&app))?;
-    std::fs::write(target, bytes).map_err(|_| WRITE_ERROR.to_string())
+    std::fs::write(&target, bytes).map_err(|_| WRITE_ERROR.to_string())?;
+    crate::input::allow_read_paths(&app, std::slice::from_ref(&target));
+    Ok(())
 }
 
 /// Prüft eine Ausgabedatei und gibt ihren normalisierten Pfad zurück.
@@ -178,6 +183,7 @@ mod tests {
             "e.wwkprojekt",
             "f.def",
             "g.wk",
+            "h.csv",
         ] {
             let file = temp_file(name);
             let checked = check_output_target(&file.0, allow_all).expect("erlaubt");
@@ -228,6 +234,7 @@ mod tests {
             "b.pdf",
             "c.json",
             "d.rwm",
+            "j.csv",
             "E.PDF",
             "f.wwkprojekt",
             "g.png",
