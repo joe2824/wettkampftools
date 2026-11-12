@@ -12,10 +12,11 @@
 
 	interface Props {
 		check: PreparationCheck;
+		teamCount: number;
 		renames: Rename[];
 	}
 
-	let { check, renames }: Props = $props();
+	let { check, teamCount, renames }: Props = $props();
 
 	let renamesOpen = $state(false);
 
@@ -25,7 +26,7 @@
 </script>
 
 <p class="text-sm text-muted-foreground">
-	{check.rows.length} Meldungen geprüft, davon {waveRows} für den Wellenwettkampf.
+	{teamCount} Mannschaften mit {check.rows.length} Meldungen geprüft, davon {waveRows} für den Wellenwettkampf.
 </p>
 
 {#if errorMessages.length === 0 && warningMessages.length === 0}

@@ -112,7 +112,7 @@
 			{:else if step.id === "load"}
 				<LoadStep {registration} error={loadError} yearWarning={fileYearWarning} onfile={handleFile} />
 			{:else if step.id === "check" && registration && check}
-				<CheckStep {check} renames={registration.renames} />
+				<CheckStep {check} teamCount={registration.teams.length} renames={registration.renames} />
 				<TeamNamesCard teams={registration.teams} />
 			{:else if step.id === "wave" && registration}
 				<WaveStep

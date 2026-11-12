@@ -53,7 +53,8 @@
 
 <div class="flex flex-wrap items-center justify-between gap-2">
 	<p class="text-sm text-muted-foreground">
-		{totalRescue} von {teams.length} Mannschaften starten in der Rettung, {totalSelected} in der Welle.
+		{totalRescue} von {teams.length} Mannschaften starten in der Rettung, {totalSelected} in der Welle: zusammen
+		{totalRescue + totalSelected} Meldungen.
 		{#if totalNotStarting > 0}
 			<span class="text-destructive">{totalNotStarting} starten gar nicht.</span>
 		{/if}
